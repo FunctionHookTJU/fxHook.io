@@ -3,106 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宇佐见函钩的个人网站</title>
+    <title>宇佐见函钩 - 个人网站</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        /* 全局样式 */
+        :root {
+            --primary-color: #00a1d6;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --light-text: #fff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
+            box-sizing: border-box;
         }
-        。container {
-            max-width: 800px;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 20px;
         }
+
+        /* 导航栏样式 */
         header {
-            text-align: center;
-            padding: 20px 0;
-            background-color: #00a1d6;
-            color: white;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        。section {
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--light-text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: #f0f0f0;
+        }
+
+        /* 主要内容样式 */
+        main {
+            padding: 2rem 0;
+        }
+
+        /* 个人信息卡片 */
+        .profile-card {
             background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary-color);
+        }
+
+        .profile-info h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .profile-info p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        /* 内容部分样式 */
+        .content-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .content-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .content-section p {
+            margin-bottom: 1rem;
+        }
+
+        /* 图片展示样式 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .image-card {
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
         }
-        h2 {
-            color: #00a1d6;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
         }
-        。video-container {
+
+        .image-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* 视频部分样式 */
+        .video-section {
             position: relative;
             padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
-            max-width: 100%;
+            margin-top: 1.5rem;
         }
-        。video-container iframe {
+
+        .video-section iframe {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            border-radius: 8px;
         }
-        a {
-            color: #00a1d6;
+
+        /* 服务器信息样式 */
+        .server-info {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .server-info p {
+            margin-bottom: 0.8rem;
+        }
+
+        .server-info strong {
+            color: var(--primary-color);
+        }
+
+        /* 图标链接样式 */
+        .icon-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .icon-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
             text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
         }
-        a:hover {
+
+        .icon-link:hover {
             text-decoration: underline;
         }
-        。server-info {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 15px;
-            margin-top: 15px;
+
+        /* 页脚样式 */
+        footer {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--light-text);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .copyright {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>宇佐见函钩的个人网站</h1>
-        </header>
-        
-        <div class="section">
-            <h2>个人简介</h2>
-            <p>大家好，我是宇佐见函钩，一个热爱分享的博主。以下是我的个人网站，欢迎访问。</p>
-        </div>
-        
-        <div class="section">
+    <header>
+        <nav>
+            <div class="logo">宇佐见函钩</div>
+            <ul class="nav-links">
+                <li><a href="#about">关于我</a></li>
+                <li><a href="#bilibili">B站空间</a></li>
+                <li><a href="#contact">联系方式</a></li>
+                <li><a href="#mc-server">MC服务器</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="profile-card" id="about">
+            <img src="https://i.imgs.ovh/2025/07/05/qie2C.png" alt="个人头像" class="profile-image">
+            <div class="profile-info">
+                <h1>宇佐见函钩</h1>
+                <p>一个热爱分享的博主</p>
+                <p>以下是我的个人网站，欢迎访问</p>
+                <div class="icon-links">
+                    <a href="https://space.bilibili.com/491772375" class="icon-link" target="_blank">
+                        <span>B站空间</span>
+                    </a>
+                    <a href="1225230685@qq.com" class="icon-link">
+                        <span>邮箱联系</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section" id="bilibili">
             <h2>我的 B 站空间</h2>
             <p>这是我个人的 B 站空间：<a href="https://space.bilibili.com/491772375" target="_blank">宇佐见函钩的个人空间</a>。</p>
             <p>在这里，我会发布各种有趣的内容，包括游戏、生活分享等，希望大家喜欢。</p>
-            <div class="video-container">
-                <a href="https://imgloc.com/image/qie2C"><img src="https://i.imgs.ovh/2025/07/05/qie2C.png" alt="qie2C.png" border="0"></a>
-                <a href="https://imgloc.com/image/qi8bq"><img src="https://i.imgs.ovh/2025/07/05/qi8bq.md.jpeg" alt="qi8bq.md.jpeg" border="0"></a>
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="https://i.imgs.ovh/2025/07/05/qie2C.png" alt="B站图片1">
+                </div>
+                <div class="image-card">
+                    <img src="https://i.imgs.ovh/2025/07/05/qi8bq.md.jpeg" alt="B站图片2">
+                </div>
             </div>
-        </div>
-        
-        <div class="section">
-            <h2>联系方式</h2>
-            <p>如果你有任何问题或想与我交流，可以通过以下方式联系我：</p>
-            <p>QQ 邮箱：1225230685@qq.com</p>
-        </div>
-        
-        <div class="section">
+        </section>
+
+        <section class="content-section" id="latest-video">
             <h2>我的最新视频</h2>
             <p>我最近发布了一个有趣的视频，标题是《孩子们，酒神二技能吸引不了我》，这是视频链接：<a href="https://www.bilibili.com/video/BV1VSNsz9EaS" target="_blank">点我观看</a>。</p>
-            <div class="video-container">
+            <div class="video-section">
                 <img src="https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png" alt="Video Thumbnail">
             </div>
             <p>在这个视频中，我们讨论了关于游戏《明日方舟》中角色酒神的一些有趣话题，欢迎大家观看并留言交流。</p>
-        </div>
-        
-        <div class="section">
+        </section>
+
+        <section class="content-section" id="mc-server">
             <h2>我的 Minecraft 服务器</h2>
-            <p>我最近开设了一个 Minecraft 服务器，今天已开服，欢迎大家加入体验！</p>
             <div class="server-info">
                 <p><strong>服务器状态：</strong>今日已开服</p>
                 <p><strong>整合包：</strong>Create F&M 3</p>
@@ -110,11 +333,20 @@
                 <p><strong>服务器地址1：</strong><a href="frp-box.com:31903" target="_blank">frp-box.com:31903</a></p>
                 <p><strong>服务器地址2：</strong><a href="frp-bar.com:32546" target="_blank">frp-bar.com:32546</a></p>
             </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#about">关于我</a>
+                    <a href="#bilibili">B站空间</a>
+                    <a href="#mc-server">MC服务器</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
         </div>
-        
-        <footer style="text-align: center; padding: 20px; background-color: #00a1d6; color: white; margin-top: 20px;">
-            <p>© 2025 宇佐见函钩. 保留所有权利.</p>
-        </footer>
-    </div>
+    </footer>
 </body>
 </html>
