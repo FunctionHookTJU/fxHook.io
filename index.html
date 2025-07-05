@@ -12,7 +12,7 @@
             background-color: #f5f5f5;
             color: #333;
         }
-        。container {
+        .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
@@ -23,7 +23,7 @@
             background-color: #00a1d6;
             color: white;
         }
-        。section {
+        .section {
             background-color: white;
             border-radius: 8px;
             padding: 20px;
@@ -35,14 +35,14 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
         }
-        。video-container {
+        .video-container {
             position: relative;
             padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
             max-width: 100%;
         }
-        。video-container iframe {
+        .video-container iframe {
             position: absolute;
             top: 0;
             left: 0;
@@ -55,6 +55,12 @@
         }
         a:hover {
             text-decoration: underline;
+        }
+        .server-info {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -72,7 +78,6 @@
         <div class="section">
             <h2>我的 B 站空间</h2>
             <p>这是我个人的 B 站空间：<a href="https://space.bilibili.com/491772375" target="_blank">宇佐见函钩的个人空间</a>。</p>
-            <p>在这里，我会发布各种有趣的内容，包括游戏、生活分享等，希望大家喜欢。</p>
             <div class="video-container">
                 <img src="https://i0.hdslb.com/bfs/banner/b14eda494c459f1baf766f57e66e0cacedaded14.png" alt="Bilibili Banner">
             </div>
@@ -86,11 +91,23 @@
         
         <div class="section">
             <h2>我的最新视频</h2>
-            <p>我最近发布了一个有趣的视频，标题是《孩子们，酒神二技能吸引不了我》，这是视频链接：<a href="https://www.bilibili.com/video/BV1VSNsz9EaS" target="_blank">点我观看</a>。</p>
+            <p>《孩子们，酒神二技能吸引不了我》，这是视频链接：<a href="https://www.bilibili.com/video/BV1VSNsz9EaS" target="_blank">点我观看</a>。</p>
             <div class="video-container">
                 <img src="https://i0.hdslb.com/bfs/static/jinkela/long/images/512.png" alt="Video Thumbnail">
             </div>
             <p>在这个视频中，我们讨论了关于游戏《明日方舟》中角色酒神的一些有趣话题，欢迎大家观看并留言交流。</p>
+        </div>
+        
+        <div class="section">
+            <h2>我的 Minecraft 服务器</h2>
+            <p>我最近开设了一个 Minecraft 服务器，今天已开服，欢迎大家加入体验！</p>
+            <div class="server-info">
+                <p><strong>服务器状态：</strong>今日已开服</p>
+                <p><strong>整合包：</strong>Create F&M 3</p>
+                <p><strong>版本：</strong>neoforge 1.21.1</p>
+                <p><strong>服务器地址1：</strong><a href="frp-box.com:31903" target="_blank">frp-box.com:31903</a></p>
+                <p><strong>服务器地址2：</strong><a href="frp-bar.com:32546" target="_blank">frp-bar.com:32546</a></p>
+            </div>
         </div>
         
         <footer style="text-align: center; padding: 20px; background-color: #00a1d6; color: white; margin-top: 20px;">
@@ -99,5 +116,3 @@
     </div>
 </body>
 </html>
-
-
