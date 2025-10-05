@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系方式 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="style/style.css">
+    <script src="scripts/loadHeader.js"></script>
+    <style>
+        /* 友链部分样式 */
+        .friends-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        
+        .friends-section h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            justify-items: center;
+        }
+        
+        .friend-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 320px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .friend-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .friend-avatar {
+            text-align: center;
+            padding: 1.5rem 0;
+            background-color: var(--background-color);
+        }
+        
+        .friend-avatar img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .friend-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .friend-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+        
+        .friend-desc {
+            font-size: 0.9rem;
+            color: black;  
+            margin-bottom: 1.5rem; 
+            line-height: 1.6;
+        }
+        
+        .friend-link {
+            display: inline-block;
+            background-color: #3498db;
+            color: rgb(255, 255, 255);
+            text-decoration: none;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        
+        .friend-link:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部将通过JavaScript动态加载 -->
+    <div id="header-placeholder"></div>
+    
+    <main class="container">
+        <section class="friends-section">
+            <h2>友链</h2>
+            <div class="friends-grid">
+                <!-- 友链卡片 1 -->
+                <div class="friend-card">
+                    <div class="friend-avatar">
+                        <img src='resources/2C.jpg' alt="Github">
+                    </div>
+                    <div class="friend-info">
+                        <h3 class="friend-name">我的Github主页</h3>
+                        <p class="friend-desc">Github主页，时不时更新内容</p>
+                        <a href="https://github.com/FunctionHookTJU?tab=repositories" class="friend-link">进入主页</a>
+                    </div>
+                </div>
+                <div class="friend-card">
+                    <div class="friend-avatar">
+                        <img src="https://kuiningzzzz.github.io/assets/images/yui.png" alt="Kuiningzzzz">
+                    </div>
+                    <div class="friend-info">
+                        <h3 class="friend-name">张嘉宇</h3>
+                        <p class="friend-desc">亲爱的高中同学，牛逼的北大cs学生，在计算机方面有很多自己的小巧思</p>
+                        <a href="https://kuiningzzzz.github.io/" class="friend-link">进入主页</a>
+                    </div>
+                </div>
+                
+                <!-- 可以添加更多友链卡片 -->
+                <!-- <div class="friend-card">
+                    <div class="friend-avatar">
+                        <img src="https://via.placeholder.com/120" alt="朋友名称">
+                    </div>
+                    <div class="friend-info">
+                        <h3 class="friend-name">朋友名称</h3>
+                        <p class="friend-desc">朋友网站的简短描述</p>
+                        <a href="#" class="friend-link">进入主页</a>
+                    </div>
+                </div> -->
+            </div>
+        </section>
+    </main>
+    
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2023 宇佐见函钩 | <a href="index.html#about">关于我</a> | <a href="index.html#bilibili">B站空间</a></p>
+    </footer>
+    
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHeader();
+        });
+    </script>
+</body>
+</html>
