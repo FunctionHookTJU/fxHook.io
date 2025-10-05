@@ -4,246 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学习笔记 - 宇佐见函钩</title>
-    <style>
-        /* 全局样式 */
-        :root {
-            --primary-color: #00a1d6;
-            --secondary-color: #f5f5f5;
-            --text-color: #333;
-            --light-text: #fff;
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* 导航栏样式 */
-        header {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 2rem;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-
-        .nav-links li {
-            margin-left: 2rem;
-        }
-
-        .nav-links a {
-            color: var(--light-text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-        }
-
-        .nav-links a:hover {
-            color: #f0f0f0;
-        }
-
-        /* 主要内容样式 */
-        main {
-            padding: 2rem 0;
-        }
-
-        .content-section {
-            background-color: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--card-shadow);
-        }
-
-        .content-section h2 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary-color);
-        }
-
-        /* PDF列表样式 */
-        .pdf-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .pdf-item {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        .pdf-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .pdf-item h3 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .pdf-item p {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        /* PDF查看器样式 */
-        .pdf-viewer {
-            display: none;
-            margin-top: 2rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .pdf-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .pdf-container {
-            height: 70vh;
-        }
-
-        .pdf-container embed {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* 返回顶部按钮 */
-        .back-to-top {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--primary-color);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            display: none;
-        }
-
-        /* 页脚样式 */
-        footer {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 2rem 0;
-            margin-top: 3rem;
-        }
-
-        .footer-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .footer-links a {
-            color: var(--light-text);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
-
-        .copyright {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .pdf-list {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style/style.css">
+    <script src="scripts/loadHeader.js"></script>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">宇佐见函钩</div>
-            <ul class="nav-links">
-                <li><a href="index.html">首页</a></li>
-                <li><a href="diary.html">日记</a></li>
-                <li><a href="index.html#about">关于我</a></li>
-                <li><a href="index.html#bilibili">B站空间</a></li>
-            </ul>
-        </nav>
-    </header>
+    <!-- header将通过JavaScript动态加载 -->
 
     <main class="container">
         <section class="content-section">
@@ -251,22 +16,22 @@
             <p>这里是我整理的一些学习笔记，可以直接在线查看PDF文档。</p>
             
             <div class="pdf-list">
-                <div class="pdf-item" onclick="openPDF('malloclab暑假学习笔记.pdf')">
+                <div class="pdf-item" onclick="openPDF('resources/malloclab暑假学习笔记.pdf')">
                     <h3>Malloclab学习笔记</h3>
                     <p>关于计算机系统中的内存分配实验的学习总结和心得体会</p>
                 </div>
                 
-                <div class="pdf-item" onclick="openPDF('proxylab暑假学习笔记.pdf')">
+                <div class="pdf-item" onclick="openPDF('resources/proxylab暑假学习笔记.pdf')">
                     <h3>Proxylab学习笔记</h3>
                     <p>网络编程中的代理服务器实验学习总结</p>
                 </div>
                 
-                <div class="pdf-item" onclick="openPDF('shelllab暑假学习笔记.pdf')">
+                <div class="pdf-item" onclick="openPDF('resources/shelllab暑假学习笔记.pdf')">
                     <h3>Shelllab学习笔记</h3>
                     <p>操作系统课程中的Shell实验学习总结</p>
                 </div>
                 
-                <div class="pdf-item" onclick="openPDF('Lab5.pdf')">
+                <div class="pdf-item" onclick="openPDF('resources/Lab5.pdf')">
                     <h3>Lab5学习笔记</h3>
                     <p>Lab5实验的相关学习内容和总结</p>
                 </div>
@@ -310,8 +75,9 @@
             // 设置PDF文件路径
             pdfEmbed.src = pdfName;
             
-            // 设置标题
-            pdfTitle.textContent = pdfName;
+            // 设置标题（仅显示文件名）
+            const fileName = pdfName.split('/').pop();
+            pdfTitle.textContent = fileName;
             
             // 显示PDF查看器
             pdfViewer.style.display = 'block';
