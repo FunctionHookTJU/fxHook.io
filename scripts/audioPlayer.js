@@ -15,7 +15,7 @@ class AudioPlayer {
         }
 
         // 创建音频元素
-        this.audio = new Audio('../resources/BATTLEPLAN_ARCLIGHT.mp3');
+        this.audio = new Audio('/resources/BATTLEPLAN_ARCLIGHT.mp3');
         this.audio.loop = true; // 设置循环播放
         this.audio.volume = 0.3; // 设置初始音量为30%
         
