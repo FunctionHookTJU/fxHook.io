@@ -75,7 +75,7 @@
 如果您对网站有任何建议或想要添加友链，请通过以下方式联系我：
 - 邮箱：1225230685@qq.com
 - B站空间：<a href="https://space.bilibili.com/491772375" target="_blank">宇佐见函钩的个人空间</a>
-- Github：<a href="https://github.com/FunctionHookTJU?tab=repositories" target="_blank">FunctionHookTJU</a>
+- Github：<a href="https://github.com/FunctionHookTJU" target="_blank">FunctionHookTJU</a>
 
 ## 📅 更新日志
 - 2025年8月：完成网站基础框架搭建
