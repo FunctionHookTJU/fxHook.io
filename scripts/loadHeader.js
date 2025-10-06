@@ -1,52 +1,52 @@
-// 加载通用header的函数
-function loadHeader() {
-    fetch('header.html')
-        .then(response => response.text())
-        .then(html => {
-            // 找到body的第一个子元素（应该是header或main）
-            const body = document.querySelector('body');
-            const firstChild = body.firstElementChild;
-            
-            // 创建一个临时容器来解析HTML
-            const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = html;
-            
-            // 获取解析后的header元素
-            const header = tempContainer.querySelector('header');
-            
-            // 如果body已经有header元素，替换它；否则在最前面添加
-            if (firstChild && firstChild.tagName === 'HEADER') {
-                body.replaceChild(header, firstChild);
-            } else {
-                body.insertBefore(header, firstChild);
-            }
-            
-            // 可选：高亮当前页面的导航项
-            highlightCurrentPage();
-        })
-        .catch(error => console.error('加载header失败:', error));
+// 动态加载header组件
+async function loadHeader() {
+    try {
+        const response = await fetch('header.html');
+        const html = await response.text();
+        const headerContainer = document.createElement('div');
+        headerContainer.innerHTML = html;
+        
+        // 将header添加到页面顶部
+        document.body.insertBefore(headerContainer.firstElementChild, document.body.firstChild);
+        
+        // 高亮当前页面的导航项
+        highlightCurrentPage();
+        
+        // 加载音频播放器
+        loadAudioPlayer();
+        
+    } catch (error) {
+        console.error('加载header失败:', error);
+    }
 }
 
-// 高亮当前页面导航项的函数
+// 高亮当前页面的导航项
 function highlightCurrentPage() {
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.nav-links a');
     
     navLinks.forEach(link => {
-        const linkPath = new URL(link.href).pathname;
-        // 如果是首页，或者路径匹配
-        if ((currentPath === '/' || currentPath.endsWith('index.html')) && linkPath.endsWith('index.html')) {
+        if (link.getAttribute('href') === currentPath || 
+            (link.getAttribute('href') === 'index.html' && currentPath === '/')) {
             link.style.fontWeight = 'bold';
             link.style.color = '#fff';
-        } else if (currentPath.includes('study.html') && linkPath.includes('study.html')) {
-            link.style.fontWeight = 'bold';
-            link.style.color = '#fff';
-        } else if (currentPath.includes('diary.html') && linkPath.includes('diary.html')) {
-            link.style.fontWeight = 'bold';
-            link.style.color = '#fff';
+            link.style.textDecoration = 'underline';
         }
     });
 }
 
-// 在页面加载完成后执行
+// 加载音频播放器
+function loadAudioPlayer() {
+    // 检查是否已经加载过音频播放器
+    if (window.audioPlayer) {
+        return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'scripts/audioPlayer.js';
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
+// 页面加载完成后执行
 window.addEventListener('DOMContentLoaded', loadHeader);

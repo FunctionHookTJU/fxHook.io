@@ -1,7 +1,7 @@
 /* 全局样式 */
 :root {
-    --primary-color: #00a1d6;
-    --secondary-color: #f5f5f5;
+    --primary-color: #8527d2b2;
+    --secondary-color: #f5f5f5eb;
     --text-color: #333;
     --light-text: #fff;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -14,12 +14,34 @@
     box-sizing: border-box;
 }
 
+/* 修改body样式，添加背景图片 */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--secondary-color);
+    background-image: url('../resources/img/background.png');/*此处添加背景图片*/
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--text-color);
     line-height: 1.6;
+    /* 添加半透明遮罩，增强可读性 */
+    position: relative;
 }
+
+/* 添加背景遮罩层 */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(245, 245, 245, 0.29);
+    z-index: -1;
+}
+
+
 
 /* 容器样式 */
 .container {
@@ -147,15 +169,17 @@ main {
     margin-top: 1.5rem;
 }
 
-/* 将重复的.image-card定义合并为一个，并确保1:1比例 */
+/* 将重复的.image-card定义合并为一个，并调整图片尺寸 */
 .image-card {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: var(--transition);
     position: relative;
-    width: 100%;
-    padding-bottom: 100%; /* 1:1 比例 - 宽度和高度相等 */
+    width: 80%; /* 缩小卡片宽度，原图是100% */
+    max-width: 300px; /* 设置最大宽度限制 */
+    margin: 0 auto; /* 居中显示 */
+    padding-bottom: 80%; /* 保持1:1比例，与宽度相匹配 */
     overflow: hidden;
 }
 
@@ -487,6 +511,152 @@ footer {
     
     aside {
         order: -1;
+    }
+}
+
+
+/* 音频播放器样式 */
+#audio-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(133, 39, 210, 0.8); /* 使用主题紫色 */
+    color: white;
+    padding: 10px 15px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+#audio-player:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background-color: rgba(133, 39, 210, 0.9);
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.player-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.player-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.volume-slider-container {
+    width: 80px;
+}
+
+#volume-slider {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    outline: none;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.3s ease;
+}
+
+#volume-slider::-moz-range-thumb:hover {
+    transform: scale(1.3);
+}
+
+.music-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    #audio-player {
+        bottom: 10px;
+        right: 10px;
+        padding: 8px 12px;
+    }
+    
+    .music-title {
+        display: none; /* 在移动端隐藏标题以节省空间 */
+    }
+    
+    .volume-slider-container {
+        width: 60px;
+    }
+}
+
+/* 静音按钮样式 */
+#mute-button-container {
+    list-style: none;
+}
+
+.mute-btn {
+    background: none;
+    border: none;
+    color: var(--light-text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 50%;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mute-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.mute-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* 确保在小屏幕上正确显示 */
+@media (max-width: 768px) {
+    .mute-btn {
+        font-size: 1rem;
+        padding: 3px 8px;
     }
 }
 
