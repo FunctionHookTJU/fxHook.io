@@ -1,13 +1,30 @@
 // 动态加载header组件
+// 添加标志变量防止重复加载
+let headerLoaded = false;
+
 async function loadHeader() {
+    // 如果已经加载过header，则不再执行
+    if (headerLoaded) {
+        return;
+    }
+    
     try {
         const response = await fetch('header.html');
         const html = await response.text();
-        const headerContainer = document.createElement('div');
-        headerContainer.innerHTML = html;
         
-        // 将header添加到页面顶部
-        document.body.insertBefore(headerContainer.firstElementChild, document.body.firstChild);
+        // 查找header占位符并插入内容
+        const headerPlaceholder = document.getElementById('header-placeholder');
+        if (headerPlaceholder) {
+            headerPlaceholder.innerHTML = html;
+        } else {
+            // 如果没有找到占位符，则回退到原来的方式
+            const headerContainer = document.createElement('div');
+            headerContainer.innerHTML = html;
+            document.body.insertBefore(headerContainer.firstElementChild, document.body.firstChild);
+        }
+        
+        // 设置标志为已加载
+        headerLoaded = true;
         
         // 高亮当前页面的导航项
         highlightCurrentPage();
