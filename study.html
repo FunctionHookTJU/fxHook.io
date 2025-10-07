@@ -11,30 +11,44 @@
     <!-- header将通过JavaScript动态加载 -->
     
     <main class="container">
+        // 在学习笔记段落后面添加折叠栏目
         <section class="content-section">
             <h2>学习笔记</h2>
             <p>也是借了北大大佬的光（<a href="https://kuiningzzzz.github.io/" target="_blank">@奎宁zzzz</a>），跟风做了个人主页，放一点学习生活的内容，总比整天闲着强。</p>
-            <p>CSAPP的实验报告，学校要求写的，因为大一下学期写那五个实验报告太坐牢，于是暑假自己预习时候提前写好了，当然预习的时候写这玩意更坐牢，跟看天书没什么两样</p>
             
-            <div class="pdf-list">
-                <div class="pdf-item" onclick="openPDF('resources/files/malloclab暑假学习笔记.pdf')">
-                    <h3>Malloclab学习笔记</h3>
-                    <p>关于计算机系统中的内存分配实验的学习总结和心得体会</p>
+            <!-- CSAPP实验折叠栏目 -->
+            <div class="collapsible-section">
+                <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                    <h3>CSAPP实验</h3>
+                    <p>学校要求写的CSAPP的实验报告，写的时候非常坐牢</p>
+                    <span class="collapse-icon">▼</span>
                 </div>
                 
-                <div class="pdf-item" onclick="openPDF('resources/files/proxylab暑假学习笔记.pdf')">
-                    <h3>Proxylab学习笔记</h3>
-                    <p>网络编程中的代理服务器实验学习总结</p>
-                </div>
-                
-                <div class="pdf-item" onclick="openPDF('resources/files/shelllab暑假学习笔记.pdf')">
-                    <h3>Shelllab学习笔记</h3>
-                    <p>操作系统课程中的Shell实验学习总结</p>
-                </div>
-                
-                <div class="pdf-item" onclick="openPDF('resources/files/Lab5.pdf')">
-                    <h3>Lab5学习笔记</h3>
-                    <p>Lab5实验的相关学习内容和总结</p>
+                <div class="collapsible-content">
+                    <div class="pdf-item" onclick="openPDF('resources/files/实验1-位操作.pdf')">
+                        <h3>Lab1学习笔记</h3>
+                        <p>实验1 Bit Lab的相关学习内容和总结</p>
+                    </div>
+
+                    <div class="pdf-item" onclick="openPDF('resources/files/实验2-整数与浮点数.pdf')">
+                        <h3>Lab2学习笔记</h3>
+                        <p>实验2 Data Lab的相关学习内容和总结</p>
+                    </div>
+
+                    <div class="pdf-item" onclick="openPDF('resources/files/实验3-拆弹专家.pdf')">
+                        <h3>Lab3学习笔记</h3>
+                        <p>实验3 Bomb Lab的相关学习内容和总结</p>
+                    </div>
+
+                    <div class="pdf-item" onclick="openPDF('resources/files/实验4-代码注入攻击.pdf')">
+                        <h3>Lab4学习笔记</h3>
+                        <p>实验4 Attack Lab的相关学习内容和总结</p>
+                    </div>
+
+                    <div class="pdf-item" onclick="openPDF('resources/files/Lab5.pdf')">
+                        <h3>Lab5学习笔记</h3>
+                        <p>实验5 Cache Lab的相关学习内容和总结</p>
+                    </div>
                 </div>
             </div>
             
@@ -48,23 +62,6 @@
                 </div>
             </div>
         </section>
-    </main>
-
-    <div class="back-to-top" id="backToTop" onclick="scrollToTop()">
-        ↑
-    </div>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-links">
-                    <a href="index.html#about">关于我</a>
-                    <a href="index.html#bilibili">B站空间</a>
-                </div>
-                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
-            </div>
-        </div>
-    </footer>
 
     <script>
         // 打开PDF函数
@@ -113,6 +110,47 @@
                 backToTop.style.display = 'none';
             }
         });
+        
+        // 折叠栏目功能
+        function toggleCollapsible(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.collapse-icon');
+            
+            // 切换内容的显示/隐藏
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.textContent = '▼';
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.textContent = '▲';
+            }
+        }
+        
+        // 页面加载完成后初始化折叠栏目
+        document.addEventListener('DOMContentLoaded', function() {
+            // 关闭所有折叠栏目
+            const contents = document.querySelectorAll('.collapsible-content');
+            contents.forEach(content => {
+                content.style.maxHeight = null;
+            });
+        });
     </script>
+    </main>
+
+    <div class="back-to-top" id="backToTop" onclick="scrollToTop()">
+        ↑
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="index.html#about">关于我</a>
+                    <a href="index.html#bilibili">B站空间</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

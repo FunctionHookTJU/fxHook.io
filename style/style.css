@@ -729,3 +729,57 @@ footer {
     display: inline-block;
     margin: 0.5rem;
 }
+
+/* 折叠栏目样式 */
+.collapsible-section {
+    margin-top: 1.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.collapsible-header {
+    background-color: #f8f9fa;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.collapsible-header:hover {
+    background-color: #e9ecef;
+}
+
+.collapsible-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+.collapse-icon {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background-color: white;
+}
+
+.collapsible-content > * {
+    padding: 1rem 1.5rem;
+}
+
+.collapsible-content .pdf-item {
+    border-bottom: 1px solid #f0f0f0;
+    margin: 0;
+    border-radius: 0;
+}
+
+.collapsible-content .pdf-item:last-child {
+    border-bottom: none;
+}
