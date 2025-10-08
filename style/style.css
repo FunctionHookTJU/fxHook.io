@@ -27,6 +27,9 @@ body {
     line-height: 1.6;
     /* 添加半透明遮罩，增强可读性 */
     position: relative;
+    min-height: 100vh;
+    
+    
 }
 
 /* 添加背景遮罩层 */
@@ -102,6 +105,7 @@ nav {
 /* 主要内容样式 */
 main {
     padding: 2rem 0;
+    flex: 1;
 }
 
 /* 日记页面主内容区 */
@@ -462,10 +466,7 @@ footer {
     background-color: var(--primary-color);
     color: var(--light-text);
     padding: 2rem 0;
-    margin-top: 3rem;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+    margin-top: auto;
 }
 
 .footer-content {
