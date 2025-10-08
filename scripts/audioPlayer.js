@@ -15,10 +15,28 @@ class AudioPlayer {
             return;
         }
 
-        // 创建音频元素
-        this.audio = new Audio('/resources/BATTLEPLAN_ARCLIGHT.mp3');
+        // 获取正确的音频路径
+        const audioPath = this.getAudioPath();
+        console.log('尝试加载音频:', audioPath);
+        
+        this.audio = new Audio(audioPath);
         this.audio.loop = true; // 设置循环播放
         this.audio.volume = 0.3; // 设置初始音量为30%
+        
+        // 添加错误处理
+        this.audio.addEventListener('error', (e) => {
+            console.error('音频加载失败');
+            console.error('音频源:', this.audio.src);
+            console.error('当前页面URL:', window.location.href);
+            if (this.audio.error) {
+                console.error('错误代码:', this.audio.error.code);
+                console.error('错误信息:', this.audio.error.message);
+            }
+        });
+        
+        this.audio.addEventListener('loadeddata', () => {
+            console.log('音频加载成功');
+        });
         
         // 尝试恢复之前的播放状态
         this.restorePlaybackState();
@@ -35,6 +53,11 @@ class AudioPlayer {
         window.addEventListener('beforeunload', () => {
             this.savePlaybackState();
         });
+    }
+    
+    getAudioPath() {
+        // 网易云音乐外链
+        return 'http://music.163.com/song/media/outer/url?id=2736706230.mp3';
     }
 
     tryPlay() {
