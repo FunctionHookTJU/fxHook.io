@@ -173,6 +173,39 @@ main {
     margin-top: 1.5rem;
 }
 
+/* 自定义tooltip样式 */
+.image-card {
+    position: relative;
+}
+
+.image-card img {
+    cursor: pointer;
+}
+
+.image-card::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.image-card:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: 15px;
+}
+
 /* 将重复的.image-card定义合并为一个，并调整图片尺寸 */
 .image-card {
     border-radius: 12px;
