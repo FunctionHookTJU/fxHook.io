@@ -4,6 +4,7 @@ class AudioPlayer {
         this.isInitialized = false;
         this.isMuted = false;
         this.previousVolume = 0.3; // 存储静音前的音量
+        this.isFirstLoad = true; // 标记是否为首次加载
         this.setupAudio();
     }
 
@@ -14,10 +15,31 @@ class AudioPlayer {
             return;
         }
 
-        // 创建音频元素
-        this.audio = new Audio('/resources/BATTLEPLAN_ARCLIGHT.mp3');
+        // 获取正确的音频路径
+        const audioPath = this.getAudioPath();
+        console.log('尝试加载音频:', audioPath);
+        
+        this.audio = new Audio(audioPath);
         this.audio.loop = true; // 设置循环播放
         this.audio.volume = 0.3; // 设置初始音量为30%
+        
+        // 添加错误处理
+        this.audio.addEventListener('error', (e) => {
+            console.error('音频加载失败');
+            console.error('音频源:', this.audio.src);
+            console.error('当前页面URL:', window.location.href);
+            if (this.audio.error) {
+                console.error('错误代码:', this.audio.error.code);
+                console.error('错误信息:', this.audio.error.message);
+            }
+        });
+        
+        this.audio.addEventListener('loadeddata', () => {
+            console.log('音频加载成功');
+        });
+        
+        // 尝试恢复之前的播放状态
+        this.restorePlaybackState();
         
         this.isInitialized = true;
         
@@ -26,10 +48,42 @@ class AudioPlayer {
         
         // 设置静音按钮事件监听
         this.setupMuteButtonListener();
+        
+        // 监听页面卸载事件，保存播放状态
+        window.addEventListener('beforeunload', () => {
+            this.savePlaybackState();
+        });
+    }
+    
+    getAudioPath() {
+        // 网易云音乐外链
+        return 'http://music.163.com/song/media/outer/url?id=2736706230.mp3';
     }
 
     tryPlay() {
         if (!this.audio) return;
+        
+        // 检查是否有保存的播放状态
+        const savedState = sessionStorage.getItem('audioPlaybackState');
+        let shouldAutoPlay = true;
+        
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                // 如果之前没有播放，则不自动播放
+                if (!state.wasPlaying) {
+                    shouldAutoPlay = false;
+                }
+            } catch (error) {
+                console.warn('解析播放状态失败:', error);
+            }
+        }
+        
+        if (!shouldAutoPlay) {
+            console.log('检测到之前未播放，等待用户交互');
+            this.setupUserInteractionListener();
+            return;
+        }
         
         // 尝试播放，处理浏览器的自动播放策略限制
         const playPromise = this.audio.play();
@@ -159,6 +213,48 @@ class AudioPlayer {
     isPlaying() {
         return this.audio && !this.audio.paused;
     }
+
+    // 保存播放状态到sessionStorage
+    savePlaybackState() {
+        if (!this.audio) return;
+        
+        const playbackState = {
+            currentTime: this.audio.currentTime,
+            volume: this.audio.volume,
+            isMuted: this.isMuted,
+            previousVolume: this.previousVolume,
+            wasPlaying: !this.audio.paused && !this.isMuted
+        };
+        
+        sessionStorage.setItem('audioPlaybackState', JSON.stringify(playbackState));
+    }
+
+    // 从sessionStorage恢复播放状态
+    restorePlaybackState() {
+        const savedState = sessionStorage.getItem('audioPlaybackState');
+        if (!savedState || !this.audio) return;
+        
+        try {
+            const state = JSON.parse(savedState);
+            
+            // 恢复播放位置
+            if (state.currentTime > 0) {
+                this.audio.currentTime = state.currentTime;
+            }
+            
+            // 恢复音量和静音状态
+            this.previousVolume = state.previousVolume || 0.3;
+            this.isMuted = state.isMuted || false;
+            
+            if (this.isMuted) {
+                this.audio.volume = 0;
+            } else {
+                this.audio.volume = state.volume || 0.3;
+            }
+        } catch (error) {
+            console.warn('恢复播放状态失败:', error);
+        }
+    }
 }
 
 // 创建全局播放器实例
@@ -200,6 +296,17 @@ function setupAudioPlayerUI() {
         volumeSlider.addEventListener('input', (e) => {
             window.audioPlayer.setVolume(parseFloat(e.target.value));
         });
+        
+        // 恢复音量滑块状态
+        const savedState = sessionStorage.getItem('audioPlaybackState');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                volumeSlider.value = state.isMuted ? 0 : (state.volume || 0.3);
+            } catch (error) {
+                console.warn('恢复音量滑块状态失败:', error);
+            }
+        }
     }
     
     // 更新播放按钮状态
