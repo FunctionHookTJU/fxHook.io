@@ -27,9 +27,13 @@ body {
     line-height: 1.6;
     /* 添加半透明遮罩，增强可读性 */
     position: relative;
+
+    /* 布局改成Flex */
+    display: flex;
+    flex-flow: column nowrap;
+
+    /* 最小高度是100vh */
     min-height: 100vh;
-    
-    
 }
 
 /* 添加背景遮罩层 */
@@ -51,6 +55,9 @@ body::before {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+
+    /* 自动延展 */
+    flex: 1;
 }
 
 /* 日记页面特殊容器样式 */
@@ -499,7 +506,8 @@ footer {
     background-color: var(--primary-color);
     color: var(--light-text);
     padding: 2rem 0;
-    margin-top: auto;
+    margin-top: 3rem;
+    width: 100%;
 }
 
 .footer-content {
