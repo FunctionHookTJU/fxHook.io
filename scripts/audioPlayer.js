@@ -57,7 +57,8 @@ class AudioPlayer {
     
     getAudioPath() {
         // 网易云音乐外链
-        return 'http://music.163.com/song/media/outer/url?id=2736706230.mp3';
+        return 'http://music.163.com/song/media/outer/url?id=2672191019.mp3';
+        
     }
 
     tryPlay() {
