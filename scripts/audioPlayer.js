@@ -5,6 +5,7 @@ class AudioPlayer {
         this.isMuted = false;
         this.previousVolume = 0.3; // 存储静音前的音量
         this.isFirstLoad = true; // 标记是否为首次加载
+        this.audioSourceIndex = 0; // 音频源索引，0表示第一个音频源，1表示第二个音频源
         this.setupAudio();
     }
 
@@ -49,6 +50,9 @@ class AudioPlayer {
         // 设置静音按钮事件监听
         this.setupMuteButtonListener();
         
+        // 设置音频源切换按钮事件监听
+        this.setupAudioSourceButtonListener();
+        
         // 监听页面卸载事件，保存播放状态
         window.addEventListener('beforeunload', () => {
             this.savePlaybackState();
@@ -56,9 +60,12 @@ class AudioPlayer {
     }
     
     getAudioPath() {
-        // 网易云音乐外链
-        return 'http://music.163.com/song/media/outer/url?id=2672191019.mp3';
-        
+        // 根据audioSourceIndex返回不同的音频源
+        if (this.audioSourceIndex === 0) {
+            return 'http://music.163.com/song/media/outer/url?id=2672191019.mp3';
+        } else {
+            return 'http://music.163.com/song/media/outer/url?id=2736706230.mp3';
+        }
     }
 
     tryPlay() {
@@ -159,6 +166,25 @@ class AudioPlayer {
         }
     }
 
+    // 设置音频源切换按钮监听器
+    setupAudioSourceButtonListener() {
+        // 等待DOM加载完成
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.attachAudioSourceButtonEvent());
+        } else {
+            this.attachAudioSourceButtonEvent();
+        }
+    }
+
+    attachAudioSourceButtonEvent() {
+        const toggleButton = document.getElementById('toggle-audio-source');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                this.toggleAudioSource();
+            });
+        }
+    }
+
     // 更新静音按钮显示
     updateMuteButton() {
         const muteButton = document.getElementById('mute-button');
@@ -172,6 +198,43 @@ class AudioPlayer {
         const volumeSlider = document.getElementById('volume-slider');
         if (volumeSlider) {
             volumeSlider.value = this.isMuted ? 0 : this.previousVolume;
+        }
+    }
+
+    // 切换音频源
+    toggleAudioSource() {
+        // 切换音频源索引
+        this.audioSourceIndex = 1 - this.audioSourceIndex;
+        
+        // 保存当前播放状态
+        const wasPlaying = this.audio && !this.audio.paused;
+        const currentTime = this.audio ? this.audio.currentTime : 0;
+        
+        // 重新加载音频
+        if (this.audio) {
+            this.audio.pause();
+            this.audio.src = this.getAudioPath();
+            
+            // 恢复播放状态
+            if (wasPlaying) {
+                this.audio.addEventListener('loadeddata', () => {
+                    this.audio.currentTime = currentTime;
+                    this.audio.play().catch(e => console.error('播放失败:', e));
+                }, { once: true });
+            }
+        }
+        
+        // 更新UI
+        this.updateAudioSourceButton();
+        
+        return this.audioSourceIndex;
+    }
+    
+    // 更新音频源切换按钮显示
+    updateAudioSourceButton() {
+        const toggleButton = document.getElementById('toggle-audio-source');
+        if (toggleButton) {
+            toggleButton.textContent = this.audioSourceIndex === 0 ? '🎵1' : '🎵2';
         }
     }
 
