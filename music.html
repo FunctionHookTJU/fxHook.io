@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐切换 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="style/style.css">
+    <script src="scripts/loadHeader.js"></script>
+    <style>
+        .music-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .music-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .music-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: #f9f9f9;
+        }
+        
+        .music-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .music-item.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .music-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .music-controls {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .control-btn:hover {
+            background-color: #6a1b9a;
+            transform: translateY(-2px);
+        }
+        
+        .current-music-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+        }
+        
+        .search-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        #search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- header将通过JavaScript动态加载 -->
+    
+    <main class="container">
+        <section class="content-section">
+            <h2>音乐切换</h2>
+            <p>选择您喜欢的音乐作为网站背景音乐。点击音乐项即可切换。</p>
+            
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="搜索音乐...">
+            </div>
+            
+            <div class="music-list" id="music-list">
+                <!-- 音乐列表将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="current-music-info" id="current-music-info">
+                <h3>当前播放</h3>
+                <p id="current-music">暂无音乐播放</p>
+            </div>
+            
+            <div class="music-controls">
+                <button id="play-btn" class="control-btn">播放</button>
+                <button id="pause-btn" class="control-btn">暂停</button>
+                <button id="mute-btn" class="control-btn">静音</button>
+                <input type="range" id="volume-control" min="0" max="1" step="0.05" value="0.3">
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="index.html">首页</a>
+                    <a href="https://github.com/FunctionHookTJU">Github</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 等待DOM加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 音乐列表数据
+            const musicList = [
+                { id: '2672191019', title: '默认音乐' },
+                { id: '2736706230', title: '备用音乐' }
+                // 可以根据需要添加更多音乐
+            ];
+            
+            // 获取DOM元素
+            const musicListElement = document.getElementById('music-list');
+            const currentMusicElement = document.getElementById('current-music');
+            const searchInput = document.getElementById('search-input');
+            const playBtn = document.getElementById('play-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const muteBtn = document.getElementById('mute-btn');
+            const volumeControl = document.getElementById('volume-control');
+            
+            // 初始化音乐列表
+            function initMusicList() {
+                musicListElement.innerHTML = '';
+                
+                musicList.forEach(music => {
+                    const musicItem = document.createElement('div');
+                    musicItem.className = 'music-item';
+                    musicItem.dataset.id = music.id;
+                    musicItem.innerHTML = `
+                        <div class="music-title">${music.title}</div>
+                        <div class="music-id">ID: ${music.id}</div>
+                    `;
+                    
+                    // 点击事件
+                    musicItem.addEventListener('click', function() {
+                        // 移除其他项的active状态
+                        document.querySelectorAll('.music-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        
+                        // 添加当前项的active状态
+                        this.classList.add('active');
+                        
+                        // 切换音乐
+                        if (window.audioPlayer && window.audioPlayer.changeMusic) {
+                            window.audioPlayer.changeMusic(music.id);
+                            currentMusicElement.textContent = `${music.title} (ID: ${music.id})`;
+                        }
+                    });
+                    
+                    musicListElement.appendChild(musicItem);
+                });
+            }
+            
+            // 搜索功能
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredMusic = musicList.filter(music => 
+                    music.title.toLowerCase().includes(searchTerm) || 
+                    music.id.includes(searchTerm)
+                );
+                
+                musicListElement.innerHTML = '';
+                
+                filteredMusic.forEach(music => {
+                    const musicItem = document.createElement('div');
+                    musicItem.className = 'music-item';
+                    musicItem.dataset.id = music.id;
+                    musicItem.innerHTML = `
+                        <div class="music-title">${music.title}</div>
+                        <div class="music-id">ID: ${music.id}</div>
+                    `;
+                    
+                    // 添加点击事件
+                    musicItem.addEventListener('click', function() {
+                        // 移除其他项的active状态
+                        document.querySelectorAll('.music-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        
+                        // 添加当前项的active状态
+                        this.classList.add('active');
+                        
+                        // 切换音乐
+                        if (window.audioPlayer && window.audioPlayer.changeMusic) {
+                            window.audioPlayer.changeMusic(music.id);
+                            currentMusicElement.textContent = `${music.title} (ID: ${music.id})`;
+                        }
+                    });
+                    
+                    musicListElement.appendChild(musicItem);
+                });
+            });
+            
+            // 控制按钮事件
+            playBtn.addEventListener('click', function() {
+                if (window.audioPlayer) {
+                    window.audioPlayer.togglePlay();
+                    if (window.audioPlayer.isPlaying()) {
+                        this.textContent = '暂停';
+                    }
+                }
+            });
+            
+            pauseBtn.addEventListener('click', function() {
+                if (window.audioPlayer) {
+                    window.audioPlayer.togglePlay();
+                    if (!window.audioPlayer.isPlaying()) {
+                        playBtn.textContent = '播放';
+                    }
+                }
+            });
+            
+            muteBtn.addEventListener('click', function() {
+                if (window.audioPlayer) {
+                    const isMuted = window.audioPlayer.toggleMute();
+                    this.textContent = isMuted ? '取消静音' : '静音';
+                }
+            });
+            
+            volumeControl.addEventListener('input', function() {
+                if (window.audioPlayer) {
+                    window.audioPlayer.setVolume(parseFloat(this.value));
+                }
+            });
+            
+            // 初始化
+            initMusicList();
+            
+            // 更新当前播放信息
+            if (window.audioPlayer && window.audioPlayer.getCurrentMusicId) {
+                const currentId = window.audioPlayer.getCurrentMusicId();
+                const currentMusic = musicList.find(music => music.id === currentId);
+                if (currentMusic) {
+                    currentMusicElement.textContent = `${currentMusic.title} (ID: ${currentMusic.id})`;
+                    // 设置active状态
+                    const activeItem = document.querySelector(`.music-item[data-id="${currentId}"]`);
+                    if (activeItem) {
+                        activeItem.classList.add('active');
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
