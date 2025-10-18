@@ -9,7 +9,11 @@ async function loadHeader() {
     }
     
     try {
-        const response = await fetch('header.html');
+        // 检测当前文件所在的位置，确定路径前缀
+        const isInSubfolder = window.location.pathname.includes('/md/');
+        const pathPrefix = isInSubfolder ? '../' : '';
+        
+        const response = await fetch(`${pathPrefix}header.html`);
         const html = await response.text();
         
         // 查找header占位符并插入内容
@@ -26,11 +30,23 @@ async function loadHeader() {
         // 设置标志为已加载
         headerLoaded = true;
         
+        // 动态调整导航链接路径
+        if (isInSubfolder) {
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                // 只处理相对路径，跳过绝对路径和锚点
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('#')) {
+                    link.setAttribute('href', `../${href}`);
+                }
+            });
+        }
+        
         // 高亮当前页面的导航项
         highlightCurrentPage();
         
         // 加载音频播放器
-        loadAudioPlayer();
+        loadAudioPlayer(pathPrefix);
         
     } catch (error) {
         console.error('加载header失败:', error);
@@ -53,14 +69,14 @@ function highlightCurrentPage() {
 }
 
 // 加载音频播放器
-function loadAudioPlayer() {
+function loadAudioPlayer(pathPrefix) {
     // 检查是否已经加载过音频播放器
     if (window.audioPlayer) {
         return;
     }
     
     const script = document.createElement('script');
-    script.src = 'scripts/audioPlayer.js';
+    script.src = `${pathPrefix}scripts/audioPlayer.js`;
     script.defer = true;
     document.head.appendChild(script);
 }
