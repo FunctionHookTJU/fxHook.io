@@ -3,28 +3,51 @@ class AudioPlayer {
         this.audio = null;
         this.isInitialized = false;
         this.isMuted = false;
-        this.previousVolume = 0.3; // 存储静音前的音量
-        this.isFirstLoad = true; // 标记是否为首次加载
-        this.audioSourceIndex = 0; // 音频源索引，0表示第一个音频源，1表示第二个音频源
+        this.previousVolume = 0.3;
+        this.isFirstLoad = true;
+        
+        // 音乐列表 - 在这里添加更多音乐
+        this.audioSources = [
+            {
+                url: 'http://music.163.com/song/media/outer/url?id=2742468679.mp3',
+                name: '音乐1'
+            },
+            {
+                url: 'http://music.163.com/song/media/outer/url?id=2672191019.mp3',
+                name: '音乐2'
+            },
+            {
+                url: 'http://music.163.com/song/media/outer/url?id=2736706230.mp3',
+                name: '音乐3'
+            },
+            
+            // 在这里添加更多音乐，格式如下：
+            // {
+            //     url: 'http://music.163.com/song/media/outer/url?id=XXXXXX.mp3',
+            //     name: '音乐名称'
+            // }
+        ];
+        
+        this.audioSourceIndex = 0;
         this.setupAudio();
     }
 
     setupAudio() {
-        // 检查浏览器是否支持Audio API
         if (!window.Audio) {
             console.warn('浏览器不支持音频播放');
             return;
         }
 
-        // 获取正确的音频路径
+        // 先尝试恢复之前的播放状态（包括音乐索引）
+        this.restorePlaybackState();
+        
         const audioPath = this.getAudioPath();
         console.log('尝试加载音频:', audioPath);
         
         this.audio = new Audio(audioPath);
-        this.audio.loop = true; // 设置循环播放
-        this.audio.volume = 0.3; // 设置初始音量为30%
+        this.audio.loop = true;
+        this.audio.volume = 0.3;
         
-        // 添加错误处理
         this.audio.addEventListener('error', (e) => {
             console.error('音频加载失败');
             console.error('音频源:', this.audio.src);
@@ -37,48 +60,71 @@ class AudioPlayer {
         
         this.audio.addEventListener('loadeddata', () => {
             console.log('音频加载成功');
+            // 恢复播放进度
+            const savedState = sessionStorage.getItem('audioPlaybackState');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    if (state.currentTime > 0) {
+                        this.audio.currentTime = state.currentTime;
+                    }
+                } catch (error) {
+                    console.warn('恢复播放进度失败:', error);
+                }
+            }
         });
         
-        // 尝试恢复之前的播放状态
-        this.restorePlaybackState();
-        
         this.isInitialized = true;
-        
-        // 尝试播放，处理浏览器自动播放策略限制
         this.tryPlay();
         
-        // 设置静音按钮事件监听
-        this.setupMuteButtonListener();
+        // 立即尝试设置监听器，如果失败则等待 DOM 加载完成
+        this.setupEventListeners();
         
-        // 设置音频源切换按钮事件监听
-        this.setupAudioSourceButtonListener();
-        
-        // 监听页面卸载事件，保存播放状态
         window.addEventListener('beforeunload', () => {
             this.savePlaybackState();
         });
     }
     
+    setupEventListeners() {
+        // 设置静音按钮监听器
+        this.setupMuteButtonListener();
+        // 设置音频源切换按钮监听器
+        this.setupAudioSourceButtonListener();
+        // 更新UI显示
+        this.updateAllUI();
+    }
+    
+    updateAllUI() {
+        this.updateMuteButton();
+        this.updateAudioSourceButton();
+        this.updateMusicTitle();
+        this.updateVolumeSlider();
+    }
+    
     getAudioPath() {
-        // 根据audioSourceIndex返回不同的音频源
-        if (this.audioSourceIndex === 0) {
-            return 'http://music.163.com/song/media/outer/url?id=2672191019.mp3';
-        } else {
-            return 'http://music.163.com/song/media/outer/url?id=2736706230.mp3';
+        // 确保索引在有效范围内
+        if (this.audioSourceIndex < 0 || this.audioSourceIndex >= this.audioSources.length) {
+            this.audioSourceIndex = 0;
         }
+        return this.audioSources[this.audioSourceIndex].url;
+    }
+    
+    getCurrentMusicName() {
+        if (this.audioSourceIndex >= 0 && this.audioSourceIndex < this.audioSources.length) {
+            return this.audioSources[this.audioSourceIndex].name;
+        }
+        return '背景音乐';
     }
 
     tryPlay() {
         if (!this.audio) return;
         
-        // 检查是否有保存的播放状态
         const savedState = sessionStorage.getItem('audioPlaybackState');
         let shouldAutoPlay = true;
         
         if (savedState) {
             try {
                 const state = JSON.parse(savedState);
-                // 如果之前没有播放，则不自动播放
                 if (!state.wasPlaying) {
                     shouldAutoPlay = false;
                 }
@@ -93,7 +139,6 @@ class AudioPlayer {
             return;
         }
         
-        // 尝试播放，处理浏览器的自动播放策略限制
         const playPromise = this.audio.play();
         
         if (playPromise !== undefined) {
@@ -101,7 +146,6 @@ class AudioPlayer {
                 console.log('音乐开始播放');
             }).catch(error => {
                 console.warn('自动播放失败，等待用户交互:', error);
-                // 添加用户交互监听，一旦用户交互就开始播放
                 this.setupUserInteractionListener();
             });
         }
@@ -116,7 +160,6 @@ class AudioPlayer {
                 playPromise.catch(e => console.error('播放失败:', e));
             }
             
-            // 移除监听器，避免重复添加
             document.removeEventListener('click', playOnInteraction);
             document.removeEventListener('keydown', playOnInteraction);
             document.removeEventListener('touchstart', playOnInteraction);
@@ -127,7 +170,6 @@ class AudioPlayer {
         document.addEventListener('touchstart', playOnInteraction);
     }
 
-    // 添加静音控制方法
     toggleMute() {
         if (!this.audio) return;
         
@@ -140,52 +182,36 @@ class AudioPlayer {
             this.audio.volume = this.previousVolume;
         }
         
-        // 更新UI
         this.updateMuteButton();
         this.updateVolumeSlider();
         
         return this.isMuted;
     }
 
-    // 设置静音按钮监听器
     setupMuteButtonListener() {
-        // 等待DOM加载完成
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.attachMuteButtonEvent());
-        } else {
-            this.attachMuteButtonEvent();
-        }
-    }
-
-    attachMuteButtonEvent() {
         const muteButton = document.getElementById('mute-button');
         if (muteButton) {
-            muteButton.addEventListener('click', () => {
+            // 移除可能存在的旧监听器
+            muteButton.replaceWith(muteButton.cloneNode(true));
+            const newMuteButton = document.getElementById('mute-button');
+            newMuteButton.addEventListener('click', () => {
                 this.toggleMute();
             });
         }
     }
 
-    // 设置音频源切换按钮监听器
     setupAudioSourceButtonListener() {
-        // 等待DOM加载完成
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.attachAudioSourceButtonEvent());
-        } else {
-            this.attachAudioSourceButtonEvent();
-        }
-    }
-
-    attachAudioSourceButtonEvent() {
         const toggleButton = document.getElementById('toggle-audio-source');
         if (toggleButton) {
-            toggleButton.addEventListener('click', () => {
+            // 移除可能存在的旧监听器
+            toggleButton.replaceWith(toggleButton.cloneNode(true));
+            const newToggleButton = document.getElementById('toggle-audio-source');
+            newToggleButton.addEventListener('click', () => {
                 this.toggleAudioSource();
             });
         }
     }
 
-    // 更新静音按钮显示
     updateMuteButton() {
         const muteButton = document.getElementById('mute-button');
         if (muteButton) {
@@ -193,7 +219,6 @@ class AudioPlayer {
         }
     }
 
-    // 更新音量滑块
     updateVolumeSlider() {
         const volumeSlider = document.getElementById('volume-slider');
         if (volumeSlider) {
@@ -201,40 +226,44 @@ class AudioPlayer {
         }
     }
 
-    // 切换音频源
     toggleAudioSource() {
-        // 切换音频源索引
-        this.audioSourceIndex = 1 - this.audioSourceIndex;
+        // 循环切换到下一个音频源
+        this.audioSourceIndex = (this.audioSourceIndex + 1) % this.audioSources.length;
         
-        // 保存当前播放状态
         const wasPlaying = this.audio && !this.audio.paused;
         const currentTime = this.audio ? this.audio.currentTime : 0;
         
-        // 重新加载音频
         if (this.audio) {
             this.audio.pause();
             this.audio.src = this.getAudioPath();
             
-            // 恢复播放状态
             if (wasPlaying) {
                 this.audio.addEventListener('loadeddata', () => {
-                    this.audio.currentTime = currentTime;
                     this.audio.play().catch(e => console.error('播放失败:', e));
                 }, { once: true });
             }
         }
         
-        // 更新UI
         this.updateAudioSourceButton();
+        this.updateMusicTitle();
+        
+        // 立即保存状态，确保切换音乐后立即保存
+        this.savePlaybackState();
         
         return this.audioSourceIndex;
     }
     
-    // 更新音频源切换按钮显示
     updateAudioSourceButton() {
         const toggleButton = document.getElementById('toggle-audio-source');
         if (toggleButton) {
-            toggleButton.textContent = this.audioSourceIndex === 0 ? '🎵1' : '🎵2';
+            toggleButton.textContent = `🎵${this.audioSourceIndex + 1}`;
+        }
+    }
+    
+    updateMusicTitle() {
+        const titleElement = document.querySelector('.music-title');
+        if (titleElement) {
+            titleElement.textContent = this.getCurrentMusicName();
         }
     }
 
@@ -253,24 +282,18 @@ class AudioPlayer {
         
         const newVolume = Math.max(0, Math.min(1, volume));
         
-        // 如果当前是静音状态且设置了非零音量，则取消静音
         if (this.isMuted && newVolume > 0) {
             this.isMuted = false;
             this.previousVolume = newVolume;
         } 
-        // 如果设置了零音量，则进入静音状态
         else if (newVolume === 0 && !this.isMuted) {
             this.isMuted = true;
-            // 不需要更新previousVolume，因为用户是明确设置为0
         }
-        // 如果不是静音状态且设置了非零音量，更新音量
         else if (!this.isMuted) {
             this.previousVolume = newVolume;
         }
         
         this.audio.volume = newVolume;
-        
-        // 更新UI
         this.updateMuteButton();
     }
 
@@ -278,7 +301,6 @@ class AudioPlayer {
         return this.audio && !this.audio.paused;
     }
 
-    // 保存播放状态到sessionStorage
     savePlaybackState() {
         if (!this.audio) return;
         
@@ -287,33 +309,39 @@ class AudioPlayer {
             volume: this.audio.volume,
             isMuted: this.isMuted,
             previousVolume: this.previousVolume,
-            wasPlaying: !this.audio.paused && !this.isMuted
+            wasPlaying: !this.audio.paused && !this.isMuted,
+            audioSourceIndex: this.audioSourceIndex  // 保存当前音乐索引
         };
         
         sessionStorage.setItem('audioPlaybackState', JSON.stringify(playbackState));
     }
 
-    // 从sessionStorage恢复播放状态
     restorePlaybackState() {
         const savedState = sessionStorage.getItem('audioPlaybackState');
-        if (!savedState || !this.audio) return;
+        if (!savedState) return;
         
         try {
             const state = JSON.parse(savedState);
             
-            // 恢复播放位置
-            if (state.currentTime > 0) {
-                this.audio.currentTime = state.currentTime;
+            // 恢复音乐索引
+            if (typeof state.audioSourceIndex === 'number') {
+                this.audioSourceIndex = state.audioSourceIndex;
             }
             
             // 恢复音量和静音状态
             this.previousVolume = state.previousVolume || 0.3;
             this.isMuted = state.isMuted || false;
             
-            if (this.isMuted) {
-                this.audio.volume = 0;
-            } else {
-                this.audio.volume = state.volume || 0.3;
+            if (this.audio) {
+                if (state.currentTime > 0) {
+                    this.audio.currentTime = state.currentTime;
+                }
+                
+                if (this.isMuted) {
+                    this.audio.volume = 0;
+                } else {
+                    this.audio.volume = state.volume || 0.3;
+                }
             }
         } catch (error) {
             console.warn('恢复播放状态失败:', error);
@@ -324,30 +352,37 @@ class AudioPlayer {
 // 创建全局播放器实例
 window.audioPlayer = new AudioPlayer();
 
+// 当 header 加载完成后，更新 UI
+window.addEventListener('headerLoaded', () => {
+    if (window.audioPlayer) {
+        window.audioPlayer.setupEventListeners();
+    }
+});
+
 // 页面加载完成后设置播放器UI
 window.addEventListener('DOMContentLoaded', () => {
     setupAudioPlayerUI();
 });
 
 function setupAudioPlayerUI() {
-    // 创建播放器控制界面
     const playerContainer = document.createElement('div');
     playerContainer.id = 'audio-player';
     playerContainer.innerHTML = `
         <div class="player-controls">
             <button id="play-pause-btn" class="player-btn">🔇</button>
+            <button id="toggle-audio-source-player" class="player-btn">🎵1</button>
             <div class="volume-slider-container">
                 <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.3">
             </div>
-            <span class="music-title">背景音乐</span>
+            <span class="music-title">${window.audioPlayer.getCurrentMusicName()}</span>
         </div>
     `;
     
     document.body.appendChild(playerContainer);
     
-    // 添加控制事件
     const playPauseBtn = document.getElementById('play-pause-btn');
     const volumeSlider = document.getElementById('volume-slider');
+    const toggleButtonPlayer = document.getElementById('toggle-audio-source-player');
     
     if (playPauseBtn) {
         playPauseBtn.addEventListener('click', () => {
@@ -361,7 +396,6 @@ function setupAudioPlayerUI() {
             window.audioPlayer.setVolume(parseFloat(e.target.value));
         });
         
-        // 恢复音量滑块状态
         const savedState = sessionStorage.getItem('audioPlaybackState');
         if (savedState) {
             try {
@@ -373,12 +407,20 @@ function setupAudioPlayerUI() {
         }
     }
     
-    // 更新播放按钮状态
+    if (toggleButtonPlayer) {
+        toggleButtonPlayer.addEventListener('click', () => {
+            window.audioPlayer.toggleAudioSource();
+            // 同步更新播放器上的按钮
+            toggleButtonPlayer.textContent = `🎵${window.audioPlayer.audioSourceIndex + 1}`;
+        });
+        // 更新按钮显示
+        toggleButtonPlayer.textContent = `🎵${window.audioPlayer.audioSourceIndex + 1}`;  
+    }
+    
     function updatePlayButton() {
         if (!playPauseBtn) return;
         playPauseBtn.textContent = window.audioPlayer.isPlaying() ? '🔊' : '🔇';
     }
     
-    // 初始化播放按钮状态
     updatePlayButton();
 }

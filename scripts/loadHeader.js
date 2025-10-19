@@ -46,7 +46,10 @@ async function loadHeader() {
         highlightCurrentPage();
         
         // 加载音频播放器
-        loadAudioPlayer(pathPrefix);
+        await loadAudioPlayer(pathPrefix);
+        
+        // 触发 header 加载完成事件
+        window.dispatchEvent(new Event('headerLoaded'));
         
     } catch (error) {
         console.error('加载header失败:', error);
@@ -69,16 +72,23 @@ function highlightCurrentPage() {
 }
 
 // 加载音频播放器
-function loadAudioPlayer(pathPrefix) {
+async function loadAudioPlayer(pathPrefix) {
     // 检查是否已经加载过音频播放器
     if (window.audioPlayer) {
+        // 如果已经加载过，只需要更新 UI
+        if (window.audioPlayer.setupEventListeners) {
+            window.audioPlayer.setupEventListeners();
+        }
         return;
     }
     
-    const script = document.createElement('script');
-    script.src = `${pathPrefix}scripts/audioPlayer.js`;
-    script.defer = true;
-    document.head.appendChild(script);
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = `${pathPrefix}scripts/audioPlayer.js`;
+        script.defer = true;
+        script.onload = resolve;
+        document.head.appendChild(script);
+    });
 }
 
 // 页面加载完成后执行
