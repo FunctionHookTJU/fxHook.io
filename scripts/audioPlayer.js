@@ -9,16 +9,16 @@ class AudioPlayer {
         // 音乐列表 - 在这里添加更多音乐
         this.audioSources = [
             {
-                url: 'http://music.163.com/song/media/outer/url?id=2742468679.mp3',
-                name: '音乐1'
+                url: 'http://music.163.com/song/media/outer/url?id=2736706230.mp3',
+                name: '音乐3'
             },
             {
                 url: 'http://music.163.com/song/media/outer/url?id=2672191019.mp3',
                 name: '音乐2'
             },
             {
-                url: 'http://music.163.com/song/media/outer/url?id=2736706230.mp3',
-                name: '音乐3'
+                url: 'http://music.163.com/song/media/outer/url?id=2742468679.mp3',
+                name: '音乐1'
             },
             
             // 在这里添加更多音乐，格式如下：
