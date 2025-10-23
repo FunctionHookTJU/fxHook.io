@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# 移除 .html 扩展名
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.html [NC,L]
+
+# 如果用户访问带 .html 的 URL，重定向到不带扩展名的版本
+RewriteCond %{THE_REQUEST} ^GET\ /[^?\s]+\.html
+RewriteRule (.*)\.html$ /$1 [R=301,L]
