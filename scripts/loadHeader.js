@@ -10,10 +10,10 @@ async function loadHeader() {
     
     try {
         // 检测当前文件所在的位置，确定路径前缀
-        const isInSubfolder = window.location.pathname.includes('/md/');
+        const isInSubfolder = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/docs/');
         const pathPrefix = isInSubfolder ? '../' : '';
         
-        const response = await fetch(`${pathPrefix}header.html`);
+        const response = await fetch(`${pathPrefix}components/header.html`);
         const html = await response.text();
         
         // 查找header占位符并插入内容

@@ -1,0 +1,40 @@
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 编辑器和IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# 临时文件
+*.log
+*.tmp
+*.bak
+*.cache
+
+# Node模块（如果将来使用）
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 构建输出（如果将来使用构建工具）
+dist/
+build/
+.output/
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
