@@ -18,7 +18,7 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--secondary-color);
-    background-image: url('https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/resources/img/background.png');/*此处添加背景图片*/
+    background-image: url('https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/background.png');/*此处添加背景图片*/
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
