@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NeoChat - 宇佐见函钩</title>
     <link rel="stylesheet" href="../styles/style.css">
@@ -20,7 +20,15 @@
         body {
             font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 主容器样式 */
+        .chat-wrapper {
+            padding-top: 80px;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -32,7 +40,9 @@
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             width: 450px;
+            max-width: 90%;
             text-align: center;
+            margin: 20px;
         }
 
         #login-container h1 {
@@ -124,14 +134,19 @@
 
         #chat-container {
             display: none;
-            width: 100%;
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
             max-width: 1200px;
-            height: 90vh;
+            height: calc(100vh - 90px);
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
             flex-direction: column;
+            z-index: 100;
         }
 
         #chat-header {
@@ -400,17 +415,44 @@
 <body>
     <!-- Header 通过 JavaScript 动态加载 -->
     
-    <div id="login-container">
+    <div class="chat-wrapper">
+        <div id="login-container">
         <h1>🚀 NeoChat</h1>
         <div class="subtitle">增强版 WebSocket 聊天客户端</div>
+        
+        <!-- 桥接服务器下载区域 -->
+        <div style="background: #f0f9ff; border: 2px solid #3b82f6; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 24px;">🔧</span>
+                <div style="text-align: left;">
+                    <strong style="color: #1e40af;">需要桥接服务器？</strong>
+                    <div style="font-size: 12px; color: #64748b;">首次使用或无法连接时请下载</div>
+                </div>
+            </div>
+            <button onclick="downloadBridge()" style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 8px;">
+                📥 下载桥接服务器 (bridge_server.py)
+            </button>
+            <details style="margin-top: 10px;">
+                <summary style="cursor: pointer; color: #3b82f6; font-size: 13px; user-select: none;">📖 使用说明（点击展开）</summary>
+                <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 6px; text-align: left; font-size: 12px; line-height: 1.6;">
+                    <strong>步骤 1:</strong> 下载桥接服务器<br>
+                    <strong>步骤 2:</strong> 安装 Python 和 websockets 库<br>
+                    <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px;">pip install websockets</code><br>
+                    <strong>步骤 3:</strong> 运行桥接服务器（快速启动）<br>
+                    <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px;">python bridge_server.py 122.246.0.254 17201</code><br>
+                    <small style="color: #666;">💡 当前内网穿透地址: <strong>122.246.0.254:17201</strong></small><br>
+                    <strong>步骤 4:</strong> 或运行交互式配置<br>
+                    <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px;">python bridge_server.py</code><br>
+                    <strong>步骤 5:</strong> 在上方输入 <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px;">localhost:8080</code> 连接
+                </div>
+            </details>
+        </div>
         
         <div class="input-group">
             <label for="server-address">服务器地址</label>
             <input type="text" id="server-address" placeholder="例如: localhost:8080 或 ws://localhost:8080" value="localhost:8080">
             <div class="server-presets">
                 <button class="preset-btn" onclick="setServer('localhost:8080')">桥接</button>
-                <button class="preset-btn" onclick="setServer('localhost:9999')">直连WS</button>
-                <button class="preset-btn" onclick="setServer('127.0.0.1:8080')">127.0.0.1</button>
             </div>
             <small style="color: #888; margin-top: 5px; display: block;">
                 💡 提示: 使用桥接服务器(8080)连接TCP服务器，或直连WebSocket服务器(9999)
@@ -426,6 +468,7 @@
         
         <div id="status-msg"></div>
         <div id="debug-info" class="debug-info" style="display: none;"></div>
+    </div>
     </div>
 
     <div id="chat-container">
@@ -456,6 +499,192 @@
         let isManualDisconnect = false;
         let connectionUrl = '';
         let debugMode = true; // 启用调试模式
+
+        // 桥接服务器源码
+        const bridgeServerCode = `"""
+WebSocket to TCP 桥接服务器
+允许浏览器客户端通过 WebSocket 连接到 TCP 服务器
+支持配置文件或命令行参数指定目标服务器
+"""
+
+import asyncio
+import websockets
+import json
+import logging
+import sys
+import os
+
+class WSToTCPBridge:
+    def __init__(self, ws_host='0.0.0.0', ws_port=8080, tcp_host='127.0.0.1', tcp_port=9999):
+        self.ws_host = ws_host
+        self.ws_port = ws_port
+        self.tcp_host = tcp_host
+        self.tcp_port = tcp_port
+        
+        logging.getLogger('websockets.server').setLevel(logging.WARNING)
+        logging.getLogger('websockets.protocol').setLevel(logging.WARNING)
+    
+    async def handle_websocket(self, websocket):
+        tcp_reader = None
+        tcp_writer = None
+        
+        try:
+            print(f"[WebSocket] 新连接，正在连接到 TCP 服务器...")
+            tcp_reader, tcp_writer = await asyncio.open_connection(self.tcp_host, self.tcp_port)
+            print(f"[TCP] 已连接到 {self.tcp_host}:{self.tcp_port}")
+            
+            ws_to_tcp = asyncio.create_task(self.forward_ws_to_tcp(websocket, tcp_writer))
+            tcp_to_ws = asyncio.create_task(self.forward_tcp_to_ws(tcp_reader, websocket))
+            
+            await asyncio.gather(ws_to_tcp, tcp_to_ws, return_exceptions=True)
+            
+        except Exception as e:
+            print(f"[错误] 桥接错误: {e}")
+        finally:
+            if tcp_writer:
+                tcp_writer.close()
+                await tcp_writer.wait_closed()
+            print(f"[断开] 连接已关闭")
+    
+    async def forward_ws_to_tcp(self, websocket, tcp_writer):
+        try:
+            async for message in websocket:
+                tcp_writer.write((message + '\\\\n').encode('utf-8'))
+                await tcp_writer.drain()
+        except:
+            pass
+    
+    async def forward_tcp_to_ws(self, tcp_reader, websocket):
+        try:
+            while True:
+                data = await tcp_reader.readline()
+                if not data:
+                    break
+                await websocket.send(data.decode('utf-8').strip())
+        except:
+            pass
+    
+    async def start(self):
+        print("=" * 60)
+        print("WebSocket-to-TCP 桥接服务器")
+        print("=" * 60)
+        print(f"WebSocket 监听: {self.ws_host}:{self.ws_port}")
+        print(f"TCP 目标服务器: {self.tcp_host}:{self.tcp_port}")
+        print("=" * 60)
+        
+        async with websockets.serve(self.handle_websocket, self.ws_host, self.ws_port):
+            print("✓ 桥接服务器已启动")
+            print("✓ 浏览器客户端请连接: ws://localhost:8080")
+            print("=" * 60)
+            await asyncio.Future()
+
+def load_config():
+    config_file = 'bridge_config.json'
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                print(f"✓ 已加载配置文件: {config_file}")
+                return config
+        except Exception as e:
+            print(f"⚠ 配置文件加载失败: {e}")
+    return {}
+
+def save_default_config():
+    config = {
+        "tcp_host": "127.0.0.1",
+        "tcp_port": 9999,
+        "ws_host": "0.0.0.0",
+        "ws_port": 8080,
+        "comment": "修改 tcp_host 和 tcp_port 以连接到内网穿透地址"
+    }
+    
+    try:
+        with open('bridge_config.json', 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+        print("✓ 已创建默认配置文件: bridge_config.json")
+        return True
+    except Exception as e:
+        print(f"✗ 创建配置文件失败: {e}")
+        return False
+
+if __name__ == '__main__':
+    print("=" * 60)
+    print("NeoChat 桥接服务器配置")
+    print("=" * 60)
+    
+    if not os.path.exists('bridge_config.json'):
+        print("\\\\n未找到配置文件，正在创建...")
+        save_default_config()
+        print("\\\\n" + "=" * 60)
+        print("配置向导")
+        print("=" * 60)
+        
+        choice = input("\\\\n选择 TCP 服务器类型:\\\\n1. 本地服务器 (127.0.0.1:9999)\\\\n2. 内网穿透服务器 (需要输入地址)\\\\n请选择 [1/2]: ").strip()
+        
+        if choice == '2':
+            tcp_host = input("请输入内网穿透地址 (例如: 111.161.121.11): ").strip()
+            tcp_port = input("请输入端口 (例如: 57424): ").strip()
+            
+            try:
+                tcp_port = int(tcp_port)
+                config = {
+                    "tcp_host": tcp_host,
+                    "tcp_port": tcp_port,
+                    "ws_host": "0.0.0.0",
+                    "ws_port": 8080,
+                    "comment": "桥接到内网穿透服务器"
+                }
+                with open('bridge_config.json', 'w', encoding='utf-8') as f:
+                    json.dump(config, f, indent=4, ensure_ascii=False)
+                print(f"✓ 配置已保存: {tcp_host}:{tcp_port}")
+            except:
+                print("✗ 配置无效，使用默认配置")
+        else:
+            print("✓ 使用本地服务器配置")
+    
+    config = load_config()
+    
+    tcp_host = config.get('tcp_host', '127.0.0.1')
+    tcp_port = config.get('tcp_port', 9999)
+    ws_host = config.get('ws_host', '0.0.0.0')
+    ws_port = config.get('ws_port', 8080)
+    
+    if len(sys.argv) >= 3:
+        tcp_host = sys.argv[1]
+        try:
+            tcp_port = int(sys.argv[2])
+            print(f"✓ 使用命令行参数: {tcp_host}:{tcp_port}")
+        except:
+            print("✗ 命令行参数无效，使用配置文件")
+    
+    bridge = WSToTCPBridge(
+        ws_host=ws_host,
+        ws_port=ws_port,
+        tcp_host=tcp_host,
+        tcp_port=tcp_port
+    )
+    
+    try:
+        asyncio.run(bridge.start())
+    except KeyboardInterrupt:
+        print("\\\\n桥接服务器已关闭")
+`;
+
+        // 下载桥接服务器
+        function downloadBridge() {
+            const blob = new Blob([bridgeServerCode], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bridge_server.py';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ 桥接服务器下载成功！\\n\\n请按照使用说明操作：\\n1. 安装 Python 和 websockets 库\\n2. 运行 python bridge_server.py\\n3. 配置内网穿透地址\\n4. 返回此页面连接 localhost:8080');
+        }
 
         // 加载保存的配置
         window.onload = function() {
@@ -621,7 +850,7 @@
                         // 延迟一下再切换界面，确保服务器收到用户名
                         setTimeout(() => {
                             // 切换到聊天界面
-                            document.getElementById('login-container').style.display = 'none';
+                            document.querySelector('.chat-wrapper').style.display = 'none';
                             document.getElementById('chat-container').style.display = 'flex';
                             document.getElementById('username-display').textContent = username;
                             document.getElementById('message-input').focus();
@@ -673,7 +902,7 @@
                         addSystemMessage('与服务器的连接已断开', 'error');
                         
                         // 如果还在登录界面
-                        if (document.getElementById('login-container').style.display !== 'none') {
+                        if (document.querySelector('.chat-wrapper').style.display !== 'none') {
                             connectBtn.disabled = false;
                             connectBtn.textContent = '连接';
                             
@@ -765,7 +994,7 @@
             
             // 返回登录界面
             document.getElementById('chat-container').style.display = 'none';
-            document.getElementById('login-container').style.display = 'block';
+            document.querySelector('.chat-wrapper').style.display = 'flex';
             document.getElementById('connect-btn').disabled = false;
             document.getElementById('connect-btn').textContent = '连接';
             
