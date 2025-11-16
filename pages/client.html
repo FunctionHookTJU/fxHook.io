@@ -513,7 +513,7 @@
         // 开始轮询
         function startPolling() {
             pollMessages();
-            pollInterval = setInterval(pollMessages, 1000);
+            pollInterval = setInterval(pollMessages, 500); // 500ms轮询一次，更及时
         }
 
         // 轮询消息
@@ -604,25 +604,27 @@
 
         // 添加消息到界面
         function addMessage(msg) {
-            // 生成消息唯一标识用于去重（不包含时间，因为时间格式可能不同）
-            const messageKey = `${msg.username}:${msg.message}`;
-            const now = Date.now();
-            
-            // 检查是否在最近5秒内已经显示过相同的消息
-            if (recentMessages.has(messageKey)) {
-                const lastTime = recentMessages.get(messageKey);
-                if (now - lastTime < 5000) { // 5秒内的重复消息忽略
-                    return;
+            // 只对自己的消息进行去重检查
+            if (msg.username === username) {
+                const messageKey = `${msg.username}:${msg.message}`;
+                const now = Date.now();
+                
+                // 检查是否在最近3秒内已经显示过相同的消息
+                if (recentMessages.has(messageKey)) {
+                    const lastTime = recentMessages.get(messageKey);
+                    if (now - lastTime < 3000) { // 3秒内的重复消息忽略
+                        return;
+                    }
                 }
-            }
-            
-            // 记录这条消息
-            recentMessages.set(messageKey, now);
-            
-            // 清理5秒前的旧记录
-            for (const [key, time] of recentMessages.entries()) {
-                if (now - time > 5000) {
-                    recentMessages.delete(key);
+                
+                // 记录这条消息
+                recentMessages.set(messageKey, now);
+                
+                // 清理3秒前的旧记录
+                for (const [key, time] of recentMessages.entries()) {
+                    if (now - time > 3000) {
+                        recentMessages.delete(key);
+                    }
                 }
             }
 
