@@ -152,19 +152,43 @@ class AudioPlayer {
     }
 
     setupUserInteractionListener() {
-        const playOnInteraction = () => {
+        // 在用户第一次交互时尝试播放，但忽略在一些 UI 元素上的点击（例如 details/summary 或播放器控件）
+        const playOnInteraction = (e) => {
             if (!this.audio || !this.audio.paused) return;
-            
+
+            // 如果是键盘事件，允许触发（如回车/空格）
+            const isKeyEvent = e && e.type && e.type.startsWith('key');
+
+            // 对点击事件，忽略发生在 <details> / <summary> 或 音频控件 内的交互
+            if (!isKeyEvent && e && e.target) {
+                try {
+                    const tgt = e.target;
+                    // 只在点击 <summary> 本身时忽略（避免展开说明触发播放），
+                    // 不再忽略在 <details> 内的任意子元素点击。
+                    if (tgt.closest && tgt.closest('summary')) {
+                        return;
+                    }
+                    // 忽略点击音频控件或菜单上的按钮
+                    if (tgt.closest && (tgt.closest('#audio-player') || tgt.closest('#mute-button') || tgt.closest('#toggle-audio-source') || tgt.closest('.player-controls'))) {
+                        return;
+                    }
+                } catch (err) {
+                    // 忽略检测错误，继续尝试播放
+                    console.warn('检测交互目标时出错:', err);
+                }
+            }
+
             const playPromise = this.audio.play();
             if (playPromise) {
                 playPromise.catch(e => console.error('播放失败:', e));
             }
-            
+
+            // 移除监听器（确保使用相同函数引用）
             document.removeEventListener('click', playOnInteraction);
             document.removeEventListener('keydown', playOnInteraction);
             document.removeEventListener('touchstart', playOnInteraction);
         };
-        
+
         document.addEventListener('click', playOnInteraction);
         document.addEventListener('keydown', playOnInteraction);
         document.addEventListener('touchstart', playOnInteraction);
