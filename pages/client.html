@@ -371,28 +371,36 @@
             }
 
             // 使用固定的服务器地址
-            serverUrl = 'http://25a9a83.r37.cpolar.top';
+            serverUrl = 'https://25a9a83.r37.cpolar.top';
             username = usernameInput;
 
             // 保存配置
             localStorage.setItem('neochat_http_username', usernameInput);
 
-            showStatus('正在连接服务器...', 'info');
+            showStatus(`正在连接服务器 ${serverUrl}...`, 'info');
+            console.log('尝试连接到:', serverUrl);
 
             try {
                 // 加入聊天
-                const response = await fetch(`${serverUrl}/join?username=${encodeURIComponent(username)}`, {
+                const joinUrl = `${serverUrl}/join?username=${encodeURIComponent(username)}`;
+                console.log('请求 URL:', joinUrl);
+                
+                const response = await fetch(joinUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    mode: 'cors'
                 });
+
+                console.log('响应状态:', response.status, response.statusText);
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
+                console.log('服务器响应:', data);
 
                 if (data.success) {
                     sessionId = data.session_id;
@@ -414,8 +422,23 @@
                     showStatus(data.error || '连接失败', 'error');
                 }
             } catch (error) {
-                showStatus(`连接失败: ${error.message}`, 'error');
-                console.error('连接错误:', error);
+                let errorMsg = `连接失败: ${error.message}`;
+                
+                // 提供更详细的错误提示
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMsg += '\n\n可能的原因:\n' +
+                               '1. 服务器未启动或地址不可达\n' +
+                               '2. CORS 跨域限制（服务器需要设置 CORS 头）\n' +
+                               '3. 网络连接问题\n' +
+                               '4. 如果是 HTTPS 页面，无法访问 HTTP 服务器';
+                } else if (error.message.includes('Mixed Content')) {
+                    errorMsg += '\n\n⚠️ Mixed Content 错误：HTTPS 页面无法访问 HTTP 服务器\n' +
+                               '解决方案：将服务器也部署为 HTTPS';
+                }
+                
+                showStatus(errorMsg, 'error');
+                console.error('连接错误详情:', error);
+                console.error('错误堆栈:', error.stack);
             }
         }
 
