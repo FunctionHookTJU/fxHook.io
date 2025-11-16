@@ -9,54 +9,64 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
-    <script src="../scripts/loadHeader.js"></script>
+    <script src="../scripts/loadHeader.js" defer></script>
     <style>
-        /* 聊天页面布局 */
-        .chat-page {
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 2rem 40px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* 聊天室容器 */
-        .chat-container {
-            width: 100%;
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
         }
 
-        /* 登录卡片 */
-        .login-card {
-            background-color: white;
-            border-radius: 12px;
-            padding: 3rem;
-            box-shadow: var(--card-shadow);
+        .chat-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 450px;
+            max-width: 90%;
             text-align: center;
-            max-width: 500px;
-            margin: 4rem auto;
         }
 
-        .login-card h1 {
-            color: var(--primary-color);
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+        #login-container h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
         }
 
-        .login-card .subtitle {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
         }
 
         .input-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
             text-align: left;
         }
 
         .input-group label {
             display: block;
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
         }
 
         .input-group input {
@@ -64,117 +74,132 @@
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 14px;
             transition: border-color 0.3s;
         }
 
         .input-group input:focus {
             outline: none;
-            border-color: var(--primary-color);
+            border-color: #667eea;
         }
 
-        .btn-primary {
+        .server-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            padding: 6px 10px;
+            background: #f3f4f6;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: #e5e7eb;
+            border-color: #667eea;
+        }
+
+        .btn {
             width: 100%;
-            padding: 14px;
-            background: var(--primary-color);
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.2s;
         }
 
-        .btn-primary:hover {
-            opacity: 0.9;
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(133, 39, 210, 0.3);
         }
 
-        .status-message {
-            margin-top: 1rem;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.95rem;
+        .btn:active {
+            transform: translateY(0);
         }
 
-        .status-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* 聊天界面 */
-        .chat-window {
+        #chat-container {
             display: none;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
+            width: 100%;
+            max-width: 1400px;
+            height: calc(100vh - 140px);
+            min-height: 600px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
-            height: calc(100vh - 200px);
-            min-height: 700px;
             flex-direction: column;
         }
 
-        .chat-window.active {
-            display: flex;
-        }
-
-        .chat-header {
-            background: var(--primary-color);
+        #chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1.5rem;
+            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .chat-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
+        #chat-header h2 {
+            font-size: 24px;
         }
 
-        .chat-info {
-            font-size: 0.9rem;
-            opacity: 0.9;
+        #connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
         }
 
-        .btn-disconnect {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
         }
 
-        .btn-disconnect:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .status-dot.disconnected {
+            background: #ef4444;
+            animation: none;
         }
 
-        /* 消息区域 */
-        .messages-area {
+        .status-dot.connecting {
+            background: #fbbf24;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 1.5rem;
-            background: #f9f9f9;
+            padding: 20px;
+            background: #f8f9fa;
         }
 
-        /* 消息气泡 */
         .message {
-            margin-bottom: 1rem;
-            animation: fadeIn 0.3s ease;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
+        @keyframes slideIn {
             from {
                 opacity: 0;
                 transform: translateY(10px);
@@ -187,505 +212,744 @@
 
         .message-system {
             text-align: center;
-            color: #999;
-            font-size: 0.85rem;
-            padding: 0.5rem;
+            color: #6b7280;
+            font-size: 13px;
+            padding: 8px 16px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 0 auto;
+            width: fit-content;
         }
 
-        .message-other,
-        .message-self {
+        .message-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .message-user {
             display: flex;
-            flex-direction: column;
-            max-width: 70%;
+            gap: 12px;
         }
 
-        .message-other {
-            align-items: flex-start;
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
         }
 
-        .message-self {
-            align-items: flex-end;
-            margin-left: auto;
+        .message-content {
+            flex: 1;
         }
 
         .message-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.3rem;
+            gap: 10px;
+            margin-bottom: 5px;
         }
 
         .message-username {
             font-weight: 600;
-            color: var(--primary-color);
-            font-size: 0.9rem;
+            color: #374151;
         }
 
         .message-time {
-            font-size: 0.75rem;
-            color: #999;
+            font-size: 12px;
+            color: #9ca3af;
         }
 
-        .message-bubble {
-            padding: 10px 14px;
+        .message-text {
+            background: white;
+            padding: 10px 15px;
             border-radius: 12px;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             word-wrap: break-word;
-            line-height: 1.5;
         }
 
-        .message-other .message-bubble {
+        .message-server .message-avatar {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        }
+
+        #input-container {
+            padding: 20px 30px;
             background: white;
-            color: #333;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .message-self .message-bubble {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        /* 输入区域 */
-        .input-area {
-            padding: 1rem;
-            background: white;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #e5e7eb;
             display: flex;
-            gap: 0.5rem;
+            gap: 12px;
         }
 
-        .message-input {
+        #message-input {
             flex: 1;
-            padding: 10px 14px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: inherit;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 14px;
             resize: none;
-            max-height: 100px;
+            font-family: inherit;
             transition: border-color 0.3s;
         }
 
-        .message-input:focus {
+        #message-input:focus {
             outline: none;
-            border-color: var(--primary-color);
+            border-color: #667eea;
         }
 
-        .btn-send {
-            padding: 10px 24px;
-            background: var(--primary-color);
+        #send-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.2s;
         }
 
-        .btn-send:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        #send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
         }
 
-        .btn-send:disabled {
+        #send-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        #send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
-        /* 响应式 */
-        @media (max-width: 768px) {
-            .chat-window {
-                height: calc(100vh - 120px);
-            }
+        .status-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
 
-            .login-card {
-                margin: 2rem auto;
-                padding: 2rem;
-            }
+        .status-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
 
-            .message-other,
-            .message-self {
-                max-width: 85%;
-            }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .debug-info div {
+            margin: 3px 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .disconnect-btn {
+            margin-left: 15px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .disconnect-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body>
     <!-- Header 通过 JavaScript 动态加载 -->
-
-    <div class="chat-page" id="chatPage" style="display: none;">
-        <div class="chat-container">
-            <!-- 登录界面 -->
-            <div class="login-card" id="loginCard">
-                <h1>🤓☝️ 聊天室</h1>
-                <p class="subtitle">加入实时聊天，与其他访客交流</p>
-                
-                <div class="input-group">
-                    <label for="usernameInput">你的昵称</label>
-                    <input type="text" id="usernameInput" placeholder="输入昵称..." maxlength="20">
-                </div>
-
-                <button class="btn-primary" onclick="joinChat()">进入聊天室</button>
-
-                <div id="statusMessage"></div>
-            </div>
-
-            <!-- 聊天窗口 -->
-            <div class="chat-window" id="chatWindow">
-                <div class="chat-header">
-                    <div>
-                        <h2>💬 聊天室</h2>
-                        <div class="chat-info" id="chatInfo">正在连接...</div>
-                    </div>
-                    <button class="btn-disconnect" onclick="leaveChat()">离开</button>
-                </div>
-
-                <div class="messages-area" id="messagesArea"></div>
-
-                <div class="input-area">
-                    <textarea 
-                        class="message-input" 
-                        id="messageInput" 
-                        placeholder="输入消息... (Enter发送，Shift+Enter换行)"
-                        rows="1"></textarea>
-                    <button class="btn-send" id="sendBtn" onclick="sendMessage()">发送</button>
+    <div id="header-placeholder"></div>
+    
+    <div class="chat-wrapper">
+    <div id="login-container">
+        <h1>🚀 NeoChat</h1>
+        <div class="subtitle">HTTP REST API 聊天客户端</div>
+        
+        <!-- HTTP 服务器使用说明 -->
+        <div style="background: #f0f9ff; border: 2px solid #3b82f6; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 24px;">📖</span>
+                <div style="text-align: left;">
+                    <strong style="color: #1e40af;">使用说明</strong>
+                    <div style="font-size: 12px; color: #64748b;">默认连接到公网服务器</div>
                 </div>
             </div>
+            <details open style="margin-top: 10px;">
+                <summary style="cursor: pointer; color: #3b82f6; font-size: 13px; user-select: none; font-weight: 600;">🚀 快速开始</summary>
+                <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 6px; text-align: left; font-size: 12px; line-height: 1.8;">
+                    <strong>默认服务器：</strong><br>
+                    <code style="background: #f1f5f9; padding: 6px 10px; border-radius: 3px; display: block; margin: 5px 0;">https://195463df.r37.cpolar.top</code>
+                    <small style="color: #666;">💡 直接输入用户名即可连接，无需修改服务器地址</small><br><br>
+                    <strong>本地测试：</strong> 如需连接本地服务器，请修改为 <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 3px;">localhost:9999</code>
+                </div>
+            </details>
         </div>
+        
+        <div class="input-group">
+            <label for="server-address">服务器地址</label>
+            <input type="text" id="server-address" placeholder="例如: localhost:9999 或 http://localhost:9999" value="https://195463df.r37.cpolar.top">
+            <div class="server-presets">
+                <button class="preset-btn" onclick="setServer('https://195463df.r37.cpolar.top')">公网</button>
+                <button class="preset-btn" onclick="setServer('localhost:9999')">本地</button>
+            </div>
+            <small style="color: #888; margin-top: 5px; display: block;">
+                💡 提示: 默认使用公网服务器，直接连接即可
+            </small>
+        </div>
+        
+        <div class="input-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" placeholder="输入你的昵称" value="">
+        </div>
+        
+        <button class="btn" id="connect-btn" onclick="connect()">连接</button>
+        
+        <div id="status-msg"></div>
+        <div id="debug-info" class="debug-info" style="display: none;"></div>
     </div>
 
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-links">
-                    <a href="../index.html#about">关于我</a>
-                    <a href="https://github.com/FunctionHookTJU" target="_blank">Github</a>
+    <div id="chat-container">
+        <div id="chat-header">
+            <div>
+                <h2>NeoChat 聊天室</h2>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div id="connection-status">
+                    <div class="status-dot"></div>
+                    <span id="username-display"></span>
                 </div>
-                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+                <button class="disconnect-btn" onclick="disconnect()">断开连接</button>
             </div>
         </div>
-    </footer>
+        <div id="messages-container"></div>
+        <div id="input-container">
+            <textarea id="message-input" rows="1" placeholder="输入消息..." onkeypress="handleKeyPress(event)"></textarea>
+            <button id="send-btn" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+    </div>
 
     <script>
-        // 全局变量
+        let sessionId = null;
         let username = '';
-        let sessionId = '';
-        let messageIndex = 0;
-        let pollInterval = null;
-        let isConnected = false;
-        let isSending = false; // 防止重复发送
-        const serverUrl = 'https://25a9a83.r37.cpolar.top';
-        const recentMessages = new Map(); // 用于消息去重，存储最近的消息
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let isManualDisconnect = false;
+        let connectionUrl = '';
+        let debugMode = true; // 启用调试模式
+        let pollingInterval = null;
+        let lastMessageIndex = 0;
+        let displayedMessages = new Set(); // 已显示消息的唯一标识
 
-        // 页面加载时恢复用户名
-        window.addEventListener('DOMContentLoaded', () => {
-            // 显示聊天页面
-            document.getElementById('chatPage').style.display = 'block';
+        // 加载保存的配置
+        window.onload = function() {
+            const savedUsername = localStorage.getItem('neochat_username');
+            const savedServer = localStorage.getItem('neochat_server');
             
-            const savedUsername = localStorage.getItem('chatUsername');
             if (savedUsername) {
-                document.getElementById('usernameInput').value = savedUsername;
+                document.getElementById('username').value = savedUsername;
+            }
+            if (savedServer) {
+                document.getElementById('server-address').value = savedServer;
             }
 
-            // 输入框回车发送
-            const input = document.getElementById('messageInput');
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+            addDebugLog('页面加载完成');
+            addDebugLog('浏览器: ' + navigator.userAgent);
+            addDebugLog('WebSocket 支持: ' + ('WebSocket' in window ? '✓' : '✗'));
+        };
 
-            // 用户名输入框回车加入
-            const usernameInput = document.getElementById('usernameInput');
-            usernameInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    joinChat();
-                }
-            });
-
-            // 自动调整输入框高度
-            input.addEventListener('input', () => {
-                input.style.height = 'auto';
-                input.style.height = Math.min(input.scrollHeight, 100) + 'px';
-            });
-        });
-
-        // 显示状态消息
-        function showStatus(message, type = 'info') {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message status-${type}`;
-            statusDiv.style.display = 'block';
+        function setServer(address) {
+            document.getElementById('server-address').value = address;
+            addDebugLog('设置服务器地址: ' + address);
         }
 
-        // 加入聊天
-        async function joinChat() {
-            const input = document.getElementById('usernameInput');
-            const name = input.value.trim();
+        function parseServerAddress(address) {
+            address = address.trim();
+            
+            // 如果已经是完整的 HTTP URL，直接返回
+            if (address.startsWith('http://') || address.startsWith('https://')) {
+                return address;
+            }
+            
+            // 移除可能的 ws:// 或 wss:// 前缀
+            address = address.replace(/^(ws:\/\/|wss:\/\/)/, '');
+            
+            // 解析主机和端口
+            const parts = address.split(':');
+            const host = parts[0] || 'localhost';
+            const port = parts[1] || '9999';
+            
+            // 构造 HTTP URL
+            return `http://${host}:${port}`;
+        }
 
-            if (!name) {
-                showStatus('请输入昵称', 'error');
+        function showStatus(message, type = 'info') {
+            const statusMsg = document.getElementById('status-msg');
+            statusMsg.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+            addDebugLog(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function addDebugLog(message) {
+            if (!debugMode) return;
+            
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.style.display = 'block';
+            
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                fractionalSecondDigits: 3
+            });
+            
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            debugInfo.appendChild(logEntry);
+            
+            // 自动滚动到底部
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+            
+            // 限制日志条数
+            while (debugInfo.children.length > 50) {
+                debugInfo.removeChild(debugInfo.firstChild);
+            }
+            
+            console.log(`[NeoChat] ${message}`);
+        }
+
+        function updateConnectionStatus(status) {
+            const statusDot = document.querySelector('.status-dot');
+            const statusText = document.getElementById('connection-status').querySelector('span');
+            
+            if (status === 'connected') {
+                statusDot.className = 'status-dot';
+                statusText.textContent = username + ' (已连接)';
+            } else if (status === 'connecting') {
+                statusDot.className = 'status-dot connecting';
+                statusText.textContent = '正在连接...';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = '已断开';
+            }
+        }
+
+        function connect() {
+            const serverAddress = document.getElementById('server-address').value.trim();
+            username = document.getElementById('username').value.trim();
+            const connectBtn = document.getElementById('connect-btn');
+
+            // 清空状态
+            document.getElementById('status-msg').innerHTML = '';
+            
+            // 验证输入
+            if (!serverAddress) {
+                showStatus('请输入服务器地址！', 'error');
                 return;
             }
 
-            if (name.length > 20) {
-                showStatus('昵称太长，请控制在20个字符以内', 'error');
+            if (!username) {
+                showStatus('请输入用户名！', 'error');
                 return;
             }
 
-            username = name;
-            localStorage.setItem('chatUsername', username);
+            // 保存配置
+            localStorage.setItem('neochat_username', username);
+            localStorage.setItem('neochat_server', serverAddress);
 
+            // 解析服务器地址
             try {
-                showStatus('正在连接服务器...', 'info');
+                connectionUrl = parseServerAddress(serverAddress);
+                addDebugLog('解析后的地址: ' + connectionUrl);
+            } catch (e) {
+                showStatus('地址格式错误: ' + e.message, 'error');
+                return;
+            }
 
-                const response = await fetch(`${serverUrl}/join?username=${encodeURIComponent(username)}`, {
+            // 禁用连接按钮
+            connectBtn.disabled = true;
+            connectBtn.textContent = '连接中...';
+            isManualDisconnect = false;
+
+            showStatus(`正在连接到 ${connectionUrl}...`, 'info');
+            addDebugLog('开始建立 WebSocket 连接');
+            addDebugLog('用户名: ' + username);
+
+            // 使用 HTTP API 连接
+            try {
+                joinChat();
+                
+                // HTTP API 连接逻辑在 joinChat 函数中
+
+            } catch (e) {
+                addDebugLog('创建 WebSocket 失败: ' + e.message);
+                showStatus('创建连接失败: ' + e.message, 'error');
+                connectBtn.disabled = false;
+                connectBtn.textContent = '连接';
+            }
+        }
+
+        async function joinChat() {
+            try {
+                const response = await fetch(`${connectionUrl}/join?username=${encodeURIComponent(username)}`, {
                     method: 'POST',
-                    mode: 'cors'
+                    headers: { 'Content-Type': 'application/json' }
                 });
-
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error('连接失败: ' + response.statusText);
                 }
-
+                
                 const data = await response.json();
-
+                
                 if (data.success) {
                     sessionId = data.session_id;
-                    isConnected = true;
-
-                    // 切换界面
-                    document.getElementById('loginCard').style.display = 'none';
-                    document.getElementById('chatWindow').classList.add('active');
-                    document.getElementById('chatInfo').textContent = `已连接 | 用户: ${username}`;
-
+                    username = data.username; // 使用服务器返回的用户名（可能被去重）
+                    addDebugLog('加入成功，会话ID: ' + sessionId);
+                    addDebugLog('用户名: ' + username);
+                    
+                    // 切换到聊天界面
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('chat-container').style.display = 'flex';
+                    document.getElementById('username-display').textContent = username;
+                    document.getElementById('message-input').focus();
+                    updateConnectionStatus('connected');
+                    
                     // 开始轮询消息
                     startPolling();
-
-                    // 显示欢迎消息
-                    addSystemMessage('已加入聊天室');
+                    
+                    showStatus('连接成功！', 'success');
+                    reconnectAttempts = 0;
                 } else {
-                    throw new Error(data.error || '连接失败');
+                    throw new Error(data.error || '加入聊天失败');
                 }
-            } catch (error) {
-                console.error('连接错误:', error);
-                showStatus(`连接失败: ${error.message}`, 'error');
+            } catch (e) {
+                addDebugLog('加入聊天失败: ' + e.message);
+                showStatus('连接失败: ' + e.message + '\n请检查服务器是否已启动', 'error');
+                document.getElementById('connect-btn').disabled = false;
+                document.getElementById('connect-btn').textContent = '连接';
             }
         }
-
-        // 离开聊天
-        async function leaveChat() {
-            if (!isConnected) return;
-
-            try {
-                await fetch(`${serverUrl}/leave`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId }),
-                    mode: 'cors'
-                });
-            } catch (error) {
-                console.error('离开出错:', error);
-            }
-
-            // 清理
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
-
-            isConnected = false;
-            sessionId = '';
-            messageIndex = 0;
-            recentMessages.clear(); // 清空消息记录
-
-            // 清空消息
-            document.getElementById('messagesArea').innerHTML = '';
-
-            // 切换界面
-            document.getElementById('chatWindow').classList.remove('active');
-            document.getElementById('loginCard').style.display = 'block';
-            document.getElementById('statusMessage').style.display = 'none';
-        }
-
-        // 开始轮询
+        
         function startPolling() {
+            // 清除旧的轮询
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            
+            // 立即获取一次消息
             pollMessages();
-            pollInterval = setInterval(pollMessages, 500); // 500ms轮询一次，更及时
+            
+            // 每秒轮询一次
+            pollingInterval = setInterval(pollMessages, 1000);
+            addDebugLog('开始轮询消息，间隔: 1秒');
         }
-
-        // 轮询消息
+        
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                addDebugLog('停止轮询消息');
+            }
+        }
+        
+        let isPolling = false; // 防止并发轮询
+        
         async function pollMessages() {
-            if (!isConnected) return;
-
+            if (!sessionId || isManualDisconnect || isPolling) return;
+            
+            isPolling = true;
+            
             try {
-                const response = await fetch(`${serverUrl}/messages?since=${messageIndex}`, {
-                    mode: 'cors'
-                });
-
-                if (!response.ok) return;
-
-                const data = await response.json();
-
-                if (data.success && data.messages && data.messages.length > 0) {
-                    data.messages.forEach(msg => {
-                        addMessage(msg);
-                        messageIndex++;
-                    });
+                const response = await fetch(
+                    `${connectionUrl}/messages?since=${lastMessageIndex}&session_id=${sessionId}`,
+                    { 
+                        method: 'GET',
+                        signal: AbortSignal.timeout(5000) // 5秒超时
+                    }
+                );
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        const data = await response.json();
+                        if (data.session_expired) {
+                            addSystemMessage('会话已过期，请重新登录', 'error');
+                            disconnect();
+                            return;
+                        }
+                    }
+                    throw new Error('获取消息失败: ' + response.statusText);
                 }
-            } catch (error) {
-                console.error('轮询错误:', error);
+                
+                const data = await response.json();
+                
+                if (data.success && data.messages.length > 0) {
+                    addDebugLog(`收到 ${data.messages.length} 条新消息`);
+                    data.messages.forEach(msg => {
+                        displayMessage(msg);
+                    });
+                    lastMessageIndex = data.total;
+                }
+                
+                // 重置重连计数
+                reconnectAttempts = 0;
+            } catch (e) {
+                if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+                    addDebugLog('轮询超时，将在下次继续');
+                } else {
+                    addDebugLog('轮询错误: ' + e.message);
+                    // 连接错误时尝试重连
+                    if (!isManualDisconnect) {
+                        reconnectAttempts++;
+                        if (reconnectAttempts >= maxReconnectAttempts) {
+                            addSystemMessage('与服务器失去连接', 'error');
+                            disconnect();
+                        }
+                    }
+                }
+            } finally {
+                isPolling = false;
             }
         }
 
-        // 发送消息
-        async function sendMessage() {
-            // 防止重复发送
-            if (isSending) return;
+        async function disconnect() {
+            isManualDisconnect = true;
+            addDebugLog('手动断开连接');
+            
+            stopPolling();
+            
+            // 通知服务器离开
+            if (sessionId) {
+                try {
+                    await fetch(`${connectionUrl}/leave`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sessionId })
+                    });
+                } catch (e) {
+                    addDebugLog('离开请求失败: ' + e.message);
+                }
+                sessionId = null;
+            }
+            
+            // 返回登录界面
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('connect-btn').disabled = false;
+            document.getElementById('connect-btn').textContent = '连接';
+            
+            // 清空消息
+            document.getElementById('messages-container').innerHTML = '';
+            
+            // 清空消息记录
+            displayedMessages.clear();
+            lastMessageIndex = 0;
+            
+            reconnectAttempts = 0;
+            showStatus('已断开连接', 'info');
+        }
 
-            const input = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
+        function displayMessage(msg) {
+            // msg 已经是解析后的 JSON 对象
+            // 生成消息唯一标识
+            const messageId = `${msg.type}_${msg.time}_${msg.username || 'system'}_${msg.message.substring(0, 50)}`;
+            
+            // 检查是否已显示过该消息
+            if (displayedMessages.has(messageId)) {
+                return; // 跳过重复消息
+            }
+            
+            // 标记为已显示
+            displayedMessages.add(messageId);
+            
+            // 限制 Set 大小，避免内存泄漏
+            if (displayedMessages.size > 1000) {
+                const firstKey = displayedMessages.values().next().value;
+                displayedMessages.delete(firstKey);
+            }
+            
+            if (msg.type === 'system') {
+                addSystemMessage(msg.message, 'info');
+            } else if (msg.type === 'message') {
+                addUserMessage(msg.username, msg.message, msg.time);
+            }
+            addDebugLog('显示消息: ' + msg.type);
+        }
+
+        function addSystemMessage(text, type = 'info') {
+            const container = document.getElementById('messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const typeClass = type === 'error' ? 'message-error' : type === 'success' ? 'message-info' : '';
+            messageDiv.innerHTML = `<div class="message-system ${typeClass}">${escapeHtml(text)}</div>`;
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addUserMessage(sender, text, time) {
+            const container = document.getElementById('messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-user';
+            
+            const isServer = sender === 'Server';
+            const avatarClass = isServer ? 'message-server' : '';
+            const initial = sender.charAt(0).toUpperCase();
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar ${avatarClass}">${initial}</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-username">${escapeHtml(sender)}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-text">${escapeHtml(text)}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
             const message = input.value.trim();
 
-            if (!message || !isConnected) return;
-
-            // 标记为发送中
-            isSending = true;
-            sendBtn.disabled = true;
-            sendBtn.textContent = '发送中...';
+            if (!message) return;
+            
+            if (!sessionId) {
+                addSystemMessage('未连接到服务器，无法发送消息', 'error');
+                addDebugLog('发送失败: 无会话ID');
+                return;
+            }
 
             try {
-                const response = await fetch(`${serverUrl}/message`, {
+                const response = await fetch(`${connectionUrl}/message`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         session_id: sessionId,
                         message: message
-                    }),
-                    mode: 'cors'
+                    })
                 });
-
+                
+                if (!response.ok) {
+                    throw new Error('发送失败: ' + response.statusText);
+                }
+                
                 const data = await response.json();
-
-                if (data.success) {
-                    // 立即在本地显示消息
-                    const currentTime = new Date().toLocaleTimeString('zh-CN', {
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                    
-                    addMessage({
-                        type: 'message',
-                        username: username,
-                        message: message,
-                        time: currentTime
-                    });
-
-                    // 清空输入框
-                    input.value = '';
-                    input.style.height = 'auto';
-                } else {
-                    addSystemMessage('发送失败: ' + (data.error || '未知错误'));
+                
+                if (data.error) {
+                    throw new Error(data.error);
                 }
-            } catch (error) {
-                console.error('发送错误:', error);
-                addSystemMessage('发送失败: 网络错误');
-            } finally {
-                // 恢复发送按钮
-                isSending = false;
-                sendBtn.disabled = false;
-                sendBtn.textContent = '发送';
+                
+                addDebugLog('已发送消息: ' + message.substring(0, 50));
+                
+                // 立即轮询一次以快速显示消息
+                pollMessages();
+                
+                input.value = '';
+                input.focus();
+                
+                // 自动调整输入框高度
+                input.style.height = 'auto';
+            } catch (e) {
+                addSystemMessage('发送消息失败: ' + e.message, 'error');
+                addDebugLog('发送异常: ' + e.message);
             }
         }
 
-        // 添加消息到界面
-        function addMessage(msg) {
-            // 只对自己的消息进行去重检查
-            if (msg.username === username) {
-                const messageKey = `${msg.username}:${msg.message}`;
-                const now = Date.now();
-                
-                // 检查是否在最近3秒内已经显示过相同的消息
-                if (recentMessages.has(messageKey)) {
-                    const lastTime = recentMessages.get(messageKey);
-                    if (now - lastTime < 3000) { // 3秒内的重复消息忽略
-                        return;
-                    }
-                }
-                
-                // 记录这条消息
-                recentMessages.set(messageKey, now);
-                
-                // 清理3秒前的旧记录
-                for (const [key, time] of recentMessages.entries()) {
-                    if (now - time > 3000) {
-                        recentMessages.delete(key);
-                    }
-                }
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
             }
-
-            const area = document.getElementById('messagesArea');
-
-            if (msg.type === 'system') {
-                addSystemMessage(msg.message);
-                return;
-            }
-
-            const isSelf = msg.username === username;
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message message-${isSelf ? 'self' : 'other'}`;
-
-            const bubble = document.createElement('div');
-            bubble.className = 'message-bubble';
-            bubble.textContent = msg.message;
-
-            if (!isSelf) {
-                const header = document.createElement('div');
-                header.className = 'message-header';
-                header.innerHTML = `
-                    <span class="message-username">${escapeHtml(msg.username)}</span>
-                    <span class="message-time">${msg.time || ''}</span>
-                `;
-                messageDiv.appendChild(header);
-            } else {
-                const timeDiv = document.createElement('div');
-                timeDiv.className = 'message-time';
-                timeDiv.textContent = msg.time || '';
-                messageDiv.appendChild(timeDiv);
-            }
-
-            messageDiv.appendChild(bubble);
-            area.appendChild(messageDiv);
-            area.scrollTop = area.scrollHeight;
         }
 
-        // 添加系统消息
-        function addSystemMessage(text) {
-            const area = document.getElementById('messagesArea');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message message-system';
-            msgDiv.textContent = text;
-            area.appendChild(msgDiv);
-            area.scrollTop = area.scrollHeight;
+        function scrollToBottom() {
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
         }
 
-        // HTML转义
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // 页面关闭时离开聊天
-        window.addEventListener('beforeunload', () => {
-            if (isConnected) {
-                navigator.sendBeacon(`${serverUrl}/leave`, JSON.stringify({
-                    session_id: sessionId
-                }));
+        // 监听窗口关闭事件
+        window.addEventListener('beforeunload', function() {
+            if (sessionId) {
+                isManualDisconnect = true;
+                stopPolling();
+                // 发送离开请求（使用 sendBeacon 确保发送）
+                navigator.sendBeacon(
+                    `${connectionUrl}/leave`,
+                    JSON.stringify({ session_id: sessionId })
+                );
+            }
+        });
+
+        // 监听输入框内容变化，自动调整高度
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('message-input');
+            if (input) {
+                input.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
             }
         });
     </script>
