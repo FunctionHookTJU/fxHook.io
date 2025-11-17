@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoChat - 现代化聊天应用</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/loadHeader.js" defer></script>
+    <style>
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            margin-bottom: 2rem;
+        }
+        
+        .back-button:hover {
+            background-color: #6f1fb8;
+            color: white;
+            transform: translateX(-3px);
+        }
+        
+        .product-detail {
+            margin-bottom: 3rem;
+        }
+        
+        .product-detail h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        
+        .product-description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            color: #555;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .screenshot-gallery {
+            margin-top: 3rem;
+        }
+        
+        .screenshot-item {
+            margin-bottom: 2rem;
+        }
+        
+        .screenshot-item h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .screenshot-item p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .screenshot-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .screenshot-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .screenshot-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .download-section {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        .download-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+        
+        .download-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .download-btn:hover {
+            background-color: #6f1fb8;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .download-btn.secondary {
+            background-color: #6c757d;
+        }
+        
+        .download-btn.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        /* 白色容器背景，提高文字可读性 */
+        .white-content-container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            margin: 2rem 0;
+        }
+        
+        .white-content-container h1,
+        .white-content-container h2 {
+            color: var(--primary-color);
+        }
+        
+        .white-content-container p,
+        .white-content-container li {
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header 通过 JavaScript 动态加载 -->
+    <div id="header-placeholder"></div>
+
+    <main>
+        <div class="container">
+            <a href="../pages/products.html" class="back-button">
+                <span>←</span>
+                <span>返回产品页面</span>
+            </a>
+            
+            <div class="white-content-container">
+                <div class="product-detail">
+                    <h1>NeoChat</h1>
+                    <div class="product-description">
+                        <p>NeoChat 是一个基础的聊天应用程序，100%AI设计，仅做学习参考使用。</p>
+                        
+                        <p>本应用采用最基础网络技术构建，支持文字传递和局域网通信，若有frp软件则可使用tcp隧道进行远程通信。</p>
+                    </div>
+                    
+                    <h2>主要特性</h2>
+                    <ul class="feature-list">
+                        <li>实时消息传递，仅支持文字消息类型</li>
+                        <li>现代化用户界面，简洁美观，操作直观</li>
+                        <li>群组聊天功能，支持多人协作交流</li>
+                        
+                        
+                    </ul>
+                </div>
+                
+                <div class="screenshot-gallery">
+                    <h2>产品截图</h2>
+                    
+                    <div class="screenshot-item">
+                        <h3>登录界面</h3>
+                        <p>简洁的登录界面，用户可以快速输入凭据并连接到服务器。界面采用现代化的设计风格，提供良好的视觉体验。</p>
+                        <div class="screenshot-container">
+                            <img src="../assets/images/product_Neochat/login.png" alt="NeoChat 登录界面" loading="lazy">
+                        </div>
+                    </div>
+                    
+                    <div class="screenshot-item">
+                        <h3>聊天界面</h3>
+                        <p>主聊天界面展示了 NeoChat 的核心功能。左侧是联系人列表，右侧是聊天窗口，底部是消息输入框。整体布局清晰，操作便捷。</p>
+                        <div class="screenshot-container">
+                            <img src="../assets/images/product_Neochat/chat_gui.png" alt="NeoChat 聊天界面" loading="lazy">
+                        </div>
+                    </div>
+                    
+                    <div class="screenshot-item">
+                        <h3>服务器控制台</h3>
+                        <p>服务器控制台提供了完整的服务器管理功能。管理员可以通过控制台监控服务器状态、管理用户连接、查看系统日志等。</p>
+                        <div class="screenshot-container">
+                            <img src="../assets/images/product_Neochat/server_console.png" alt="NeoChat 服务器控制台" loading="lazy">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="download-section">
+                    <h3>获取 NeoChat</h3>
+                    <p>想要体验 NeoChat吗？立即下载开始使用！</p>
+                    <div class="download-buttons">
+                        <a href="https://github.com/FunctionHookTJU/NeoChat/releases" class="download-btn" download>
+                            下载服务器端和客户端
+                        </a>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                        * 服务端和客户端正在激烈修改bug中，出现bug请在<a href="../pages/products.html">和我交流！</a>页面底部的comments进行反馈
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html#about">关于我</a>
+                    <a href="../index.html#bilibili">B站空间</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 图片懒加载优化
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.src; // 触发加载
+                            imageObserver.unobserve(img);
+                        }
+                    });
+                });
+                
+                images.forEach(img => imageObserver.observe(img));
+            }
+        });
+        
+        // 添加页面动画效果
+        window.addEventListener('scroll', function() {
+            const elements = document.querySelectorAll('.screenshot-item');
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }
+            });
+        });
+        
+        // 初始化动画
+        document.querySelectorAll('.screenshot-item').forEach((element, index) => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            element.style.transitionDelay = `${index * 0.1}s`;
+        });
+    </script>
+</body>
+</html>
