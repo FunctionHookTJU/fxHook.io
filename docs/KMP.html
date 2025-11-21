@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMP算法动画演示</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/loadHeader.js" defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 500px;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 500px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .animation-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .char-container {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .char-box {
+            width: 45px;
+            height: 45px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: 600;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .char-box.match {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+            transform: scale(1.1);
+        }
+
+        .char-box.mismatch {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            animation: shake 0.3s;
+        }
+
+        .char-box.current {
+            background: #ffc107;
+            color: #333;
+            border-color: #ffc107;
+            transform: scale(1.15);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .info-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .code-section {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-section h3 {
+            color: #61dafb;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        pre {
+            margin: 0;
+        }
+
+        .keyword {
+            color: #c678dd;
+        }
+
+        .function {
+            color: #61dafb;
+        }
+
+        .string {
+            color: #98c379;
+        }
+
+        .comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.searching {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .status.found {
+            background: #28a745;
+            color: white;
+        }
+
+        .status.not-found {
+            background: #dc3545;
+            color: white;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .left-panel, .right-panel {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header 通过 JavaScript 动态加载 -->
+    <div id="header-placeholder"></div>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>🔍 KMP算法动画演示</h1>
+            <p class="subtitle">Knuth-Morris-Pratt字符串匹配算法可视化</p>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label>文本串 (Text):</label>
+                        <input type="text" id="textInput" value="ABABCABABABCABAB">
+                    </div>
+                    <div class="input-group">
+                        <label>模式串 (Pattern):</label>
+                        <input type="text" id="patternInput" value="ABABCABAB">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="startDemo()">开始演示</button>
+                        <button class="btn-secondary" onclick="resetDemo()">重置</button>
+                    </div>
+                </div>
+
+                <div class="animation-section">
+                    <h3>文本串:</h3>
+                    <div class="char-container" id="textDisplay"></div>
+
+                    <h3 style="margin-top: 20px;">模式串:</h3>
+                    <div class="char-container" id="patternDisplay"></div>
+
+                    <div class="info-box">
+                        <h3>当前状态</h3>
+                        <p id="statusText">等待开始...</p>
+                        <div id="statusBadge"></div>
+                    </div>
+
+                    <div class="info-box" style="margin-top: 15px;">
+                        <h3>Next数组 (失败函数):</h3>
+                        <p id="nextArray">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="code-section">
+                    <h3>📝 C语言实现代码</h3>
+                    <pre><code><span class="comment">// KMP算法完整实现</span>
+<span class="keyword">#include</span> <span class="string">&lt;stdio.h&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;string.h&gt;</span>
+
+<span class="comment">// 构建Next数组（失败函数）</span>
+<span class="keyword">void</span> <span class="function">buildNext</span>(<span class="keyword">char</span>* pattern, <span class="keyword">int</span>* next, <span class="keyword">int</span> m) {
+    <span class="keyword">int</span> j = 0;
+    next[0] = 0;  <span class="comment">// 第一个字符的next值为0</span>
+    
+    <span class="keyword">for</span> (<span class="keyword">int</span> i = 1; i &lt; m; i++) {
+        <span class="comment">// 当不匹配时，回退到next[j-1]位置</span>
+        <span class="keyword">while</span> (j &gt; 0 && pattern[i] != pattern[j]) {
+            j = next[j - 1];
+        }
+        
+        <span class="comment">// 如果匹配，j前进一位</span>
+        <span class="keyword">if</span> (pattern[i] == pattern[j]) {
+            j++;
+        }
+        
+        next[i] = j;  <span class="comment">// 记录最长相同前后缀长度</span>
+    }
+}
+
+<span class="comment">// KMP搜索算法</span>
+<span class="keyword">int</span> <span class="function">kmpSearch</span>(<span class="keyword">char</span>* text, <span class="keyword">char</span>* pattern) {
+    <span class="keyword">int</span> n = strlen(text);
+    <span class="keyword">int</span> m = strlen(pattern);
+    
+    <span class="keyword">if</span> (m == 0) <span class="keyword">return</span> 0;
+    <span class="keyword">if</span> (m &gt; n) <span class="keyword">return</span> -1;
+    
+    <span class="comment">// 构建Next数组</span>
+    <span class="keyword">int</span> next[m];
+    buildNext(pattern, next, m);
+    
+    <span class="keyword">int</span> j = 0;  <span class="comment">// 模式串指针</span>
+    
+    <span class="comment">// 遍历文本串</span>
+    <span class="keyword">for</span> (<span class="keyword">int</span> i = 0; i &lt; n; i++) {
+        <span class="comment">// 不匹配时根据next数组回退</span>
+        <span class="keyword">while</span> (j &gt; 0 && text[i] != pattern[j]) {
+            j = next[j - 1];
+        }
+        
+        <span class="comment">// 匹配则前进</span>
+        <span class="keyword">if</span> (text[i] == pattern[j]) {
+            j++;
+        }
+        
+        <span class="comment">// 完全匹配</span>
+        <span class="keyword">if</span> (j == m) {
+            <span class="keyword">return</span> i - m + 1;  <span class="comment">// 返回匹配位置</span>
+        }
+    }
+    
+    <span class="keyword">return</span> -1;  <span class="comment">// 未找到</span>
+}
+
+<span class="comment">// 主函数示例</span>
+<span class="keyword">int</span> <span class="function">main</span>() {
+    <span class="keyword">char</span> text[] = <span class="string">"ABABCABABABCABAB"</span>;
+    <span class="keyword">char</span> pattern[] = <span class="string">"ABABCABAB"</span>;
+    
+    <span class="keyword">int</span> pos = kmpSearch(text, pattern);
+    
+    <span class="keyword">if</span> (pos != -1) {
+        printf(<span class="string">"模式串在位置 %d 找到\n"</span>, pos);
+    } <span class="keyword">else</span> {
+        printf(<span class="string">"未找到模式串\n"</span>);
+    }
+    
+    <span class="keyword">return</span> 0;
+}
+
+<span class="comment">/*
+ * 算法复杂度分析：
+ * 时间复杂度：O(n + m)
+ * 空间复杂度：O(m)
+ * 
+ * 其中 n 是文本串长度，m 是模式串长度
+ * 相比朴素匹配的 O(nm)，KMP算法更高效
+ */</span></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let animationSpeed = 800;
+        let isAnimating = false;
+
+        function buildNext(pattern) {
+            const m = pattern.length;
+            const next = new Array(m).fill(0);
+            let j = 0;
+
+            for (let i = 1; i < m; i++) {
+                while (j > 0 && pattern[i] !== pattern[j]) {
+                    j = next[j - 1];
+                }
+                if (pattern[i] === pattern[j]) {
+                    j++;
+                }
+                next[i] = j;
+            }
+            return next;
+        }
+
+        function displayString(str, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for (let char of str) {
+                const box = document.createElement('div');
+                box.className = 'char-box';
+                box.textContent = char;
+                container.appendChild(box);
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function startDemo() {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const text = document.getElementById('textInput').value;
+            const pattern = document.getElementById('patternInput').value;
+
+            if (!text || !pattern) {
+                alert('请输入文本串和模式串！');
+                isAnimating = false;
+                return;
+            }
+
+            displayString(text, 'textDisplay');
+            displayString(pattern, 'patternDisplay');
+
+            const next = buildNext(pattern);
+            document.getElementById('nextArray').textContent = 
+                'Next数组: [' + next.join(', ') + ']';
+
+            const n = text.length;
+            const m = pattern.length;
+            let j = 0;
+            let found = false;
+            let matchPos = -1;
+
+            const textBoxes = document.querySelectorAll('#textDisplay .char-box');
+            const patternBoxes = document.querySelectorAll('#patternDisplay .char-box');
+
+            for (let i = 0; i < n; i++) {
+                while (j > 0 && text[i] !== pattern[j]) {
+                    document.getElementById('statusText').textContent = 
+                        `不匹配！文本位置 ${i}，模式位置 ${j}，根据Next数组回退到位置 ${next[j-1]}`;
+                    
+                    textBoxes[i].classList.add('mismatch');
+                    patternBoxes[j].classList.add('mismatch');
+                    await sleep(animationSpeed);
+                    
+                    textBoxes[i].classList.remove('mismatch');
+                    patternBoxes[j].classList.remove('mismatch');
+                    
+                    j = next[j - 1];
+                }
+
+                document.getElementById('statusText').textContent = 
+                    `比较：文本位置 ${i} (${text[i]}) vs 模式位置 ${j} (${pattern[j]})`;
+                
+                textBoxes[i].classList.add('current');
+                patternBoxes[j].classList.add('current');
+                await sleep(animationSpeed);
+
+                if (text[i] === pattern[j]) {
+                    textBoxes[i].classList.remove('current');
+                    patternBoxes[j].classList.remove('current');
+                    textBoxes[i].classList.add('match');
+                    patternBoxes[j].classList.add('match');
+                    j++;
+
+                    if (j === m) {
+                        matchPos = i - m + 1;
+                        found = true;
+                        document.getElementById('statusText').textContent = 
+                            `✓ 匹配成功！在位置 ${matchPos} 找到模式串`;
+                        document.getElementById('statusBadge').innerHTML = 
+                            '<span class="status found">匹配成功</span>';
+                        break;
+                    }
+                } else {
+                    textBoxes[i].classList.remove('current');
+                    patternBoxes[j].classList.remove('current');
+                    textBoxes[i].classList.add('mismatch');
+                    patternBoxes[j].classList.add('mismatch');
+                    await sleep(animationSpeed / 2);
+                    textBoxes[i].classList.remove('mismatch');
+                    patternBoxes[j].classList.remove('mismatch');
+                }
+            }
+
+            if (!found) {
+                document.getElementById('statusText').textContent = 
+                    '✗ 搜索完成，未找到匹配的模式串';
+                document.getElementById('statusBadge').innerHTML = 
+                    '<span class="status not-found">未找到</span>';
+            }
+
+            isAnimating = false;
+        }
+
+        function resetDemo() {
+            isAnimating = false;
+            document.getElementById('textDisplay').innerHTML = '';
+            document.getElementById('patternDisplay').innerHTML = '';
+            document.getElementById('statusText').textContent = '等待开始...';
+            document.getElementById('statusBadge').innerHTML = '';
+            document.getElementById('nextArray').textContent = '-';
+        }
+
+        // 初始化显示
+        window.onload = function() {
+            displayString(document.getElementById('textInput').value, 'textDisplay');
+            displayString(document.getElementById('patternInput').value, 'patternDisplay');
+        };
+    </script>
+</body>
+</html>
