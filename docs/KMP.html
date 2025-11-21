@@ -294,6 +294,20 @@
             color: white;
         }
 
+        /* 视频容器样式 */
+        .video-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .video-container iframe {
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+        
         @media (max-width: 1200px) {
             .main-content {
                 flex-direction: column;
@@ -301,6 +315,12 @@
 
             .left-panel, .right-panel {
                 min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .video-container iframe {
+                height: 250px;
             }
         }
     </style>
@@ -440,6 +460,11 @@
  */</span></code></pre>
                 </div>
             </div>
+        </div>
+        
+        <div class="video-container">
+            <h3 style="color: var(--primary-color); margin-bottom: 15px;">📹 KMP算法视频讲解</h3>
+            <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=754073809&bvid=BV18k4y1m7Ar&cid=217150883&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
         </div>
     </div>
 
