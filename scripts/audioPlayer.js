@@ -46,7 +46,7 @@ class AudioPlayer {
         
         this.audio = new Audio(audioPath);
         this.audio.loop = true;
-        this.audio.volume = 0.3;
+        this.audio.volume = 0.06;
         
         this.audio.addEventListener('error', (e) => {
             console.error('音频加载失败');
