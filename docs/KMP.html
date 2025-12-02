@@ -323,6 +323,65 @@
                 height: 250px;
             }
         }
+        /* CSS样式用于结果展示区域 */
+        .result-display {
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .string-display {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .index-box, .char-box, .next-box, .nextval-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .index-box {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+        }
+
+        .char-box {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .next-box, .nextval-box {
+            background-color: var(--light-text);
+            color: var(--primary-color);
+            border: 1px dashed var(--primary-color);
+        }
+
+        .nextval-box {
+            background-color: #e0f7fa;
+            color: #0097a7;
+        }
+
+        .result-section {
+            margin-top: 15px;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -351,6 +410,19 @@
                         <button class="btn-secondary" onclick="resetDemo()">重置</button>
                     </div>
                 </div>
+
+                <div class="input-section">
+            <h3 style="color: var(--primary-color); margin-bottom: 15px;">📊 计算NEXT/NEXTVAL数组</h3>
+            <div class="input-group">
+                <label>字符串:</label>
+                <input type="text" id="stringForNext" value="ABABCABAB">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="calculateNext()">计算NEXT数组</button>
+                <button class="btn-secondary" onclick="calculateNextVal()">计算NEXTVAL数组</button>
+            </div>
+            <div id="nextResult" class="result-display" style="margin-top: 15px;">点击按钮计算NEXT或NEXTVAL数组</div>
+        </div>
 
                 <div class="animation-section">
                     <h3>文本串:</h3>
@@ -472,21 +544,243 @@
         let animationSpeed = 800;
         let isAnimating = false;
 
+        // 构建Next数组（失败函数）- KMP算法核心部分
         function buildNext(pattern) {
             const m = pattern.length;
             const next = new Array(m).fill(0);
-            let j = 0;
-
+            next[0] = 0;  // 第一个字符的next值固定为0，表示没有真前缀
+            
+            // 遍历模式串，计算每个位置的next值
             for (let i = 1; i < m; i++) {
+                let j = next[i - 1];  // j表示当前要比较的前缀长度
+                
+                // 当字符不匹配时，根据next数组回退到合适位置
                 while (j > 0 && pattern[i] !== pattern[j]) {
-                    j = next[j - 1];
+                    j = next[j - 1];  // 回退到前一个next值
                 }
+                
+                // 如果字符匹配，next值增加1
                 if (pattern[i] === pattern[j]) {
-                    j++;
+                    next[i] = j + 1;  // 最长相同前后缀长度加1
+                } else {
+                    next[i] = 0;  // 不匹配则为0，表示没有相同前后缀
                 }
-                next[i] = j;
             }
             return next;
+        }
+
+        // 计算NEXT数组
+        function calculateNext() {
+            console.log("calculateNext function called");
+            const str = document.getElementById('stringForNext').value;
+            console.log("Input string:", str);
+            
+            if (!str) {
+                const resultElement = document.getElementById('nextResult');
+                if (resultElement) {
+                    resultElement.innerHTML = '请输入字符串';
+                    console.log("Empty input message displayed");
+                } else {
+                    console.error("Result element not found!");
+                }
+                return;
+            }
+            
+            const n = str.length;
+            const next = new Array(n).fill(0);
+            next[0] = 0;  // 第一个字符的next值固定为0
+            
+            for (let i = 1; i < n; i++) {
+                let j = next[i - 1];  // 获取前一个位置的next值
+                
+                // 回退直到找到匹配或到达开头
+                while (j > 0 && str[i] !== str[j]) {
+                    j = next[j - 1];
+                }
+                
+                // 如果匹配，next值为前一个位置的next值加1
+                if (str[i] === str[j]) {
+                    next[i] = j + 1;
+                } else {
+                    next[i] = 0;  // 不匹配则为0
+                }
+            }
+            
+            console.log("NEXT array:", next);
+            
+            // 显示结果
+            let html = '<div class="result-section">';
+            html += '<h4 style="color: var(--primary-color); margin-bottom: 10px;">字符串: "' + str + '"</h4>';
+            html += '<div style="margin-bottom: 10px;">';
+            
+            // 显示字符串和索引
+            html += '<div class="string-display">';
+            for (let i = 0; i < n; i++) {
+                html += '<span class="index-box">' + i + '</span>';
+            }
+            html += '</div>';
+            
+            html += '<div class="string-display">';
+            for (let char of str) {
+                html += '<span class="char-box">' + char + '</span>';
+            }
+            html += '</div>';
+            
+            // 显示NEXT数组
+            html += '<div class="string-display">';
+            for (let i = 0; i < n; i++) {
+                html += '<span class="next-box">' + next[i] + '</span>';
+            }
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<p><strong>NEXT数组: </strong>[' + next.join(', ') + ']</p>';
+            
+            // 添加说明
+            html += '<div class="explanation">';
+            html += '<p><strong>说明：</strong></p>';
+            html += '<ul>';
+            html += '<li>NEXT[i]表示模式串前i+1个字符的最长真前缀长度</li>';
+            html += '<li>NEXT[0]固定为0，表示单个字符没有真前缀</li>';
+            html += '<li>真前缀是指不等于整个字符串的前缀</li>';
+            html += '<li>通过比较字符的相同前缀和后缀来计算值</li>';
+            html += '<li>这种计算方式使NEXT数组从0开始，便于理解真前缀概念</li>';
+            html += '<li>示例：对于字符串"abcaabbcabcaabdab"，NEXT数组为 [0,1,1,1,2,2,3,1,1,2,3,4,5,6,7,1,2]</li>';
+            html += '</ul>';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            console.log("Generated HTML:", html);
+            const resultElement = document.getElementById('nextResult');
+            console.log("Element to update:", resultElement);
+            
+            if (resultElement) {
+                resultElement.innerHTML = html;
+                console.log("Result updated successfully");
+            } else {
+                console.error("Result element not found!");
+            }
+        }
+
+        // 计算NEXTVAL数组
+        function calculateNextVal() {
+            console.log("calculateNextVal function called");
+            const str = document.getElementById('stringForNext').value;
+            console.log("Input string:", str);
+            
+            if (!str) {
+                const resultElement = document.getElementById('nextResult');
+                if (resultElement) {
+                    resultElement.innerHTML = '请输入字符串';
+                    console.log("Empty input message displayed");
+                } else {
+                    console.error("Result element not found!");
+                }
+                return;
+            }
+            
+            const n = str.length;
+            const next = new Array(n).fill(0);
+            const nextVal = new Array(n).fill(0);
+            
+            // 首先计算NEXT数组
+            next[0] = 0;  // 第一个字符的next值固定为0
+            for (let i = 1; i < n; i++) {
+                let j = next[i - 1];  // 获取前一个位置的next值
+                
+                // 回退直到找到匹配或到达开头
+                while (j > 0 && str[i] !== str[j]) {
+                    j = next[j - 1];
+                }
+                
+                // 如果匹配，next值为前一个位置的next值加1
+                if (str[i] === str[j]) {
+                    next[i] = j + 1;
+                } else {
+                    next[i] = 0;  // 不匹配则为0
+                }
+            }
+            
+            // 计算NEXTVAL数组
+            for (let i = 0; i < n; i++) {
+                if (i === 0) {
+                    nextVal[i] = 0;  // 第一个字符的NEXTVAL值固定为0
+                } else {
+                    if (str[i] === str[next[i]]) {
+                        nextVal[i] = nextVal[next[i]];
+                    } else {
+                        nextVal[i] = next[i];
+                    }
+                }
+            }
+            
+            console.log("NEXT array:", next);
+            console.log("NEXTVAL array:", nextVal);
+            
+            // 显示结果
+            let html = '<div class="result-section">';
+            html += '<h4 style="color: var(--primary-color); margin-bottom: 10px;">字符串: "' + str + '"</h4>';
+            html += '<div style="margin-bottom: 10px;">';
+            
+            // 显示字符串和索引
+            html += '<div class="string-display">';
+            for (let i = 0; i < n; i++) {
+                html += '<span class="index-box">' + i + '</span>';
+            }
+            html += '</div>';
+            
+            html += '<div class="string-display">';
+            for (let char of str) {
+                html += '<span class="char-box">' + char + '</span>';
+            }
+            html += '</div>';
+            
+            // 显示NEXT数组
+            html += '<div class="string-display">';
+            for (let i = 0; i < n; i++) {
+                html += '<span class="next-box">' + next[i] + '</span>';
+            }
+            html += '</div>';
+            
+            // 显示NEXTVAL数组
+            html += '<div class="string-display">';
+            for (let i = 0; i < n; i++) {
+                html += '<span class="nextval-box">' + nextVal[i] + '</span>';
+            }
+            html += '</div>';
+            
+            html += '</div>';
+            
+            html += '<p><strong>NEXT数组: </strong>[' + next.join(', ') + ']</p>';
+            html += '<p><strong>NEXTVAL数组: </strong>[' + nextVal.join(', ') + ']</p>';
+            
+            // 添加说明
+            html += '<div class="explanation">';
+            html += '<p><strong>说明：</strong></p>';
+            html += '<ul>';
+            html += '<li>NEXTVAL是对NEXT数组的优化，避免不必要的回退</li>';
+            html += '<li>如果str[i]等于str[NEXT[i]]，则NEXTVAL[i] = NEXTVAL[NEXT[i]]</li>';
+            html += '<li>否则NEXTVAL[i] = NEXT[i]</li>';
+            html += '<li>NEXTVAL[0]固定为0</li>';
+            html += '<li>NEXT数组表示模式串前i+1个字符的最长真前缀长度</li>';
+            html += '<li>真前缀是指不等于整个字符串的前缀</li>';
+            html += '<li>示例：对于字符串"abcaabbcabcaabdab"，NEXT数组为 [0,1,1,1,2,2,3,1,1,2,3,4,5,6,7,1,2]</li>';
+            html += '</ul>';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            console.log("Generated HTML:", html);
+            const resultElement = document.getElementById('nextResult');
+            console.log("Element to update:", resultElement);
+            
+            if (resultElement) {
+                resultElement.innerHTML = html;
+                console.log("Result updated successfully");
+            } else {
+                console.error("Result element not found!");
+            }
         }
 
         function displayString(str, containerId) {
@@ -606,6 +900,19 @@
             displayString(document.getElementById('textInput').value, 'textDisplay');
             displayString(document.getElementById('patternInput').value, 'patternDisplay');
         };
+    </script>
+    
+    <script>
+        // 页面加载完成后检查元素是否存在
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM fully loaded");
+            const nextResultElement = document.getElementById('nextResult');
+            if (nextResultElement) {
+                console.log("nextResult element found:", nextResultElement);
+            } else {
+                console.error("nextResult element not found!");
+            }
+        });
     </script>
 </body>
 </html>
