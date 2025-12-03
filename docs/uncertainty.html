@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不确定度计算器 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/loadHeader.js" defer></script>
+</head>
+<body>
+    <!-- Header 通过 JavaScript 动态加载 -->
+    
+    <main class="container">
+        <div class="glass-frame">
+            <h1>🔬 物理实验不确定度计算器</h1>
+            <p class="intro-text">本工具用于计算物理实验中的A类不确定度、B类不确定度、合成不确定度和扩展不确定度。</p>
+
+            <!-- A类不确定度计算 -->
+            <section class="calc-section">
+                <h2>📊 A类不确定度计算</h2>
+                <p class="section-desc">通过多次重复测量数据，利用统计学方法计算不确定度。</p>
+                
+                <div class="input-group">
+                    <label for="measurements">测量数据（用逗号、空格或换行分隔）：</label>
+                    <textarea id="measurements" rows="3" placeholder="例如：10.2, 10.3, 10.1, 10.4, 10.2"></textarea>
+                </div>
+                
+                <button class="calc-btn" onclick="calculateTypeA()">计算A类不确定度</button>
+                
+                <div id="typeA-result" class="result-box" style="display: none;">
+                    <h3>计算结果</h3>
+                    <div class="result-content"></div>
+                </div>
+            </section>
+
+            <!-- B类不确定度计算 -->
+            <section class="calc-section">
+                <h2>📏 B类不确定度计算</h2>
+                <p class="section-desc">基于仪器精度等非统计方法评定的不确定度。</p>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="instrument-error">仪器最大允许误差 Δ<sub>仪</sub>：</label>
+                        <input type="number" id="instrument-error" step="any" placeholder="例如：0.02">
+                    </div>
+                    <div class="input-group">
+                        <label for="distribution">误差分布类型：</label>
+                        <select id="distribution">
+                            <option value="uniform">均匀分布 (k=√3)</option>
+                            <option value="normal">正态分布 (k=3)</option>
+                            <option value="triangular">三角分布 (k=√6)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="calc-btn" onclick="calculateTypeB()">计算B类不确定度</button>
+                
+                <div id="typeB-result" class="result-box" style="display: none;">
+                    <h3>计算结果</h3>
+                    <div class="result-content"></div>
+                </div>
+            </section>
+
+            <!-- 合成不确定度计算 -->
+            <section class="calc-section">
+                <h2>🔗 合成不确定度计算</h2>
+                <p class="section-desc">使用方和根法合成多个不确定度分量。</p>
+                
+                <div class="input-group">
+                    <label for="ua-value">A类不确定度 u<sub>A</sub>：</label>
+                    <input type="number" id="ua-value" step="any" placeholder="可从上方计算获得">
+                </div>
+                
+                <div class="input-group">
+                    <label>B类不确定度分量（可添加多个）：</label>
+                    <div id="ub-inputs">
+                        <div class="ub-input-row">
+                            <input type="number" class="ub-value" step="any" placeholder="u_B1">
+                            <button class="remove-btn" onclick="removeUbInput(this)" title="删除">×</button>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addUbInput()">+ 添加B类分量</button>
+                </div>
+                
+                <div class="input-group correlation-group">
+                    <label>
+                        <input type="checkbox" id="consider-correlation" onchange="toggleCorrelation()">
+                        考虑分量间的相关性
+                    </label>
+                    <div id="correlation-inputs" style="display: none;">
+                        <label for="correlation-coef">相关系数 ρ（-1 到 1）：</label>
+                        <input type="number" id="correlation-coef" step="0.01" min="-1" max="1" value="0" placeholder="0">
+                        <p class="hint">注：仅适用于两个分量的情况</p>
+                    </div>
+                </div>
+                
+                <button class="calc-btn" onclick="calculateCombined()">计算合成不确定度</button>
+                
+                <div id="combined-result" class="result-box" style="display: none;">
+                    <h3>计算结果</h3>
+                    <div class="result-content"></div>
+                </div>
+            </section>
+
+            <!-- 扩展不确定度计算 -->
+            <section class="calc-section">
+                <h2>📐 扩展不确定度计算</h2>
+                <p class="section-desc">根据置信水平计算扩展不确定度，给出测量结果的置信区间。</p>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="uc-value">合成不确定度 u<sub>c</sub>：</label>
+                        <input type="number" id="uc-value" step="any" placeholder="可从上方计算获得">
+                    </div>
+                    <div class="input-group">
+                        <label for="k-factor">包含因子 k：</label>
+                        <select id="k-factor">
+                            <option value="1">k=1 (约68%置信水平)</option>
+                            <option value="2" selected>k=2 (约95%置信水平)</option>
+                            <option value="3">k=3 (约99%置信水平)</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group" id="custom-k-group" style="display: none;">
+                    <label for="custom-k">自定义包含因子：</label>
+                    <input type="number" id="custom-k" step="0.01" min="1" value="2">
+                </div>
+                
+                <div class="input-group">
+                    <label for="measured-value">测量结果（可选，用于显示完整结果表达式）：</label>
+                    <input type="number" id="measured-value" step="any" placeholder="例如：9.81">
+                    <input type="text" id="measured-unit" placeholder="单位（如 m/s²）" style="width: 120px; margin-left: 10px;">
+                </div>
+                
+                <button class="calc-btn" onclick="calculateExpanded()">计算扩展不确定度</button>
+                
+                <div id="expanded-result" class="result-box" style="display: none;">
+                    <h3>计算结果</h3>
+                    <div class="result-content"></div>
+                </div>
+            </section>
+
+            <!-- 公式说明 -->
+            <section class="calc-section formula-section">
+                <h2>📝 公式说明</h2>
+                
+                <div class="formula-card">
+                    <h4>A类不确定度</h4>
+                    <p class="formula">u<sub>A</sub> = √[Σ(x<sub>i</sub> - x̄)² / n(n-1)]</p>
+                    <p class="formula-desc">其中 x̄ 为测量平均值，n 为测量次数</p>
+                </div>
+                
+                <div class="formula-card">
+                    <h4>B类不确定度</h4>
+                    <p class="formula">u<sub>B</sub> = Δ<sub>仪</sub> / k</p>
+                    <p class="formula-desc">均匀分布 k=√3，正态分布 k=3，三角分布 k=√6</p>
+                </div>
+                
+                <div class="formula-card">
+                    <h4>合成不确定度</h4>
+                    <p class="formula">u<sub>c</sub> = √(u<sub>A</sub>² + u<sub>B1</sub>² + u<sub>B2</sub>² + ...)</p>
+                    <p class="formula-desc">考虑相关性时：u<sub>c</sub> = √(u₁² + u₂² + 2ρu₁u₂)</p>
+                </div>
+                
+                <div class="formula-card">
+                    <h4>扩展不确定度</h4>
+                    <p class="formula">U = k × u<sub>c</sub></p>
+                    <p class="formula-desc">k=2 对应约95%置信水平</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html#about">关于我</a>
+                    <a href="https://github.com/FunctionHookTJU" target="_blank">Github</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- 添加页面特定的样式 -->
+    <style>
+        .glass-frame {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #8527d2;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .intro-text {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .calc-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(133, 39, 210, 0.1);
+        }
+
+        h2 {
+            color: #8527d2;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(133, 39, 210, 0.2);
+        }
+
+        .section-desc {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .input-group input[type="number"],
+        .input-group input[type="text"],
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #8527d2;
+            box-shadow: 0 0 0 3px rgba(133, 39, 210, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .calc-btn {
+            background: linear-gradient(135deg, #8527d2 0%, #6b1fa6 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(133, 39, 210, 0.3);
+        }
+
+        .calc-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(133, 39, 210, 0.05) 0%, rgba(133, 39, 210, 0.1) 100%);
+            border-radius: 10px;
+            border-left: 4px solid #8527d2;
+        }
+
+        .result-box h3 {
+            color: #8527d2;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .result-content {
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .result-content .result-item {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+        }
+
+        .result-content .result-highlight {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #8527d2;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        /* B类不确定度多输入样式 */
+        #ub-inputs {
+            margin-bottom: 10px;
+        }
+
+        .ub-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .ub-input-row input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .remove-btn {
+            width: 40px;
+            height: 40px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .remove-btn:hover {
+            background: #ee5a5a;
+        }
+
+        .add-btn {
+            background: transparent;
+            color: #8527d2;
+            border: 2px dashed #8527d2;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background: rgba(133, 39, 210, 0.1);
+        }
+
+        .correlation-group {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .correlation-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        #correlation-inputs {
+            margin-top: 15px;
+            padding-left: 25px;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        #custom-k-group {
+            margin-top: 10px;
+        }
+
+        /* 公式说明样式 */
+        .formula-section {
+            background: rgba(133, 39, 210, 0.03);
+        }
+
+        .formula-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .formula-card h4 {
+            color: #8527d2;
+            margin-bottom: 10px;
+        }
+
+        .formula {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            color: #333;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .formula-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .glass-frame {
+                padding: 20px;
+            }
+
+            .calc-section {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+
+    <!-- JavaScript计算逻辑 -->
+    <script>
+        // A类不确定度计算
+        function calculateTypeA() {
+            const input = document.getElementById('measurements').value;
+            const resultBox = document.getElementById('typeA-result');
+            const resultContent = resultBox.querySelector('.result-content');
+            
+            // 解析输入数据
+            const values = input.split(/[,\s\n]+/)
+                .map(v => parseFloat(v.trim()))
+                .filter(v => !isNaN(v));
+            
+            if (values.length < 2) {
+                resultContent.innerHTML = '<p style="color: #e74c3c;">请输入至少2个有效的测量数据！</p>';
+                resultBox.style.display = 'block';
+                return;
+            }
+            
+            const n = values.length;
+            const mean = values.reduce((a, b) => a + b, 0) / n;
+            const sumSquaredDev = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0);
+            const variance = sumSquaredDev / (n - 1);
+            const stdDev = Math.sqrt(variance);
+            const uA = Math.sqrt(sumSquaredDev / (n * (n - 1)));
+            
+            resultContent.innerHTML = `
+                <div class="result-item">📌 测量次数 n = ${n}</div>
+                <div class="result-item">📌 平均值 x̄ = ${mean.toFixed(6)}</div>
+                <div class="result-item">📌 标准偏差 s = ${stdDev.toFixed(6)}</div>
+                <div class="result-item">📌 偏差平方和 Σ(xᵢ - x̄)² = ${sumSquaredDev.toFixed(6)}</div>
+                <div class="result-highlight">A类不确定度 u<sub>A</sub> = ${uA.toFixed(6)}</div>
+            `;
+            resultBox.style.display = 'block';
+            
+            // 自动填充到合成不确定度输入框
+            document.getElementById('ua-value').value = uA.toFixed(6);
+        }
+        
+        // B类不确定度计算
+        function calculateTypeB() {
+            const instrumentError = parseFloat(document.getElementById('instrument-error').value);
+            const distribution = document.getElementById('distribution').value;
+            const resultBox = document.getElementById('typeB-result');
+            const resultContent = resultBox.querySelector('.result-content');
+            
+            if (isNaN(instrumentError) || instrumentError <= 0) {
+                resultContent.innerHTML = '<p style="color: #e74c3c;">请输入有效的仪器误差！</p>';
+                resultBox.style.display = 'block';
+                return;
+            }
+            
+            let k, kName;
+            switch (distribution) {
+                case 'uniform':
+                    k = Math.sqrt(3);
+                    kName = '√3 ≈ 1.732（均匀分布）';
+                    break;
+                case 'normal':
+                    k = 3;
+                    kName = '3（正态分布）';
+                    break;
+                case 'triangular':
+                    k = Math.sqrt(6);
+                    kName = '√6 ≈ 2.449（三角分布）';
+                    break;
+            }
+            
+            const uB = instrumentError / k;
+            
+            resultContent.innerHTML = `
+                <div class="result-item">📌 仪器最大允许误差 Δ = ${instrumentError}</div>
+                <div class="result-item">📌 分布因子 k = ${kName}</div>
+                <div class="result-highlight">B类不确定度 u<sub>B</sub> = ${uB.toFixed(6)}</div>
+            `;
+            resultBox.style.display = 'block';
+            
+            // 自动填充到第一个B类分量输入框
+            const firstUbInput = document.querySelector('.ub-value');
+            if (firstUbInput && !firstUbInput.value) {
+                firstUbInput.value = uB.toFixed(6);
+            }
+        }
+        
+        // 添加B类不确定度输入框
+        function addUbInput() {
+            const container = document.getElementById('ub-inputs');
+            const count = container.querySelectorAll('.ub-input-row').length + 1;
+            const newRow = document.createElement('div');
+            newRow.className = 'ub-input-row';
+            newRow.innerHTML = `
+                <input type="number" class="ub-value" step="any" placeholder="u_B${count}">
+                <button class="remove-btn" onclick="removeUbInput(this)" title="删除">×</button>
+            `;
+            container.appendChild(newRow);
+        }
+        
+        // 删除B类不确定度输入框
+        function removeUbInput(btn) {
+            const container = document.getElementById('ub-inputs');
+            if (container.querySelectorAll('.ub-input-row').length > 1) {
+                btn.parentElement.remove();
+            }
+        }
+        
+        // 切换相关性输入显示
+        function toggleCorrelation() {
+            const checkbox = document.getElementById('consider-correlation');
+            const inputs = document.getElementById('correlation-inputs');
+            inputs.style.display = checkbox.checked ? 'block' : 'none';
+        }
+        
+        // 合成不确定度计算
+        function calculateCombined() {
+            const uA = parseFloat(document.getElementById('ua-value').value) || 0;
+            const ubInputs = document.querySelectorAll('.ub-value');
+            const ubValues = Array.from(ubInputs)
+                .map(input => parseFloat(input.value))
+                .filter(v => !isNaN(v) && v > 0);
+            
+            const resultBox = document.getElementById('combined-result');
+            const resultContent = resultBox.querySelector('.result-content');
+            
+            if (uA === 0 && ubValues.length === 0) {
+                resultContent.innerHTML = '<p style="color: #e74c3c;">请至少输入一个不确定度分量！</p>';
+                resultBox.style.display = 'block';
+                return;
+            }
+            
+            const considerCorrelation = document.getElementById('consider-correlation').checked;
+            let uc;
+            let formula;
+            
+            if (considerCorrelation && ubValues.length === 1) {
+                // 考虑相关性（仅两个分量）
+                const rho = parseFloat(document.getElementById('correlation-coef').value) || 0;
+                const u1 = uA;
+                const u2 = ubValues[0];
+                uc = Math.sqrt(u1 * u1 + u2 * u2 + 2 * rho * u1 * u2);
+                formula = `u<sub>c</sub> = √(${u1.toFixed(6)}² + ${u2.toFixed(6)}² + 2×${rho}×${u1.toFixed(6)}×${u2.toFixed(6)})`;
+            } else {
+                // 不考虑相关性，使用方和根法
+                let sumSquares = uA * uA;
+                ubValues.forEach(v => sumSquares += v * v);
+                uc = Math.sqrt(sumSquares);
+                
+                let terms = [];
+                if (uA > 0) terms.push(`u<sub>A</sub>²`);
+                ubValues.forEach((v, i) => terms.push(`u<sub>B${i + 1}</sub>²`));
+                formula = `u<sub>c</sub> = √(${terms.join(' + ')})`;
+            }
+            
+            let ubDisplay = ubValues.length > 0 
+                ? ubValues.map((v, i) => `u<sub>B${i + 1}</sub> = ${v.toFixed(6)}`).join('<br>')
+                : '无';
+            
+            resultContent.innerHTML = `
+                <div class="result-item">📌 A类不确定度 u<sub>A</sub> = ${uA.toFixed(6)}</div>
+                <div class="result-item">📌 B类不确定度分量：<br>${ubDisplay}</div>
+                <div class="result-item">📌 计算公式：${formula}</div>
+                <div class="result-highlight">合成不确定度 u<sub>c</sub> = ${uc.toFixed(6)}</div>
+            `;
+            resultBox.style.display = 'block';
+            
+            // 自动填充到扩展不确定度输入框
+            document.getElementById('uc-value').value = uc.toFixed(6);
+        }
+        
+        // 监听包含因子选择变化
+        document.getElementById('k-factor').addEventListener('change', function() {
+            const customGroup = document.getElementById('custom-k-group');
+            customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // 扩展不确定度计算
+        function calculateExpanded() {
+            const uc = parseFloat(document.getElementById('uc-value').value);
+            const kSelect = document.getElementById('k-factor').value;
+            const resultBox = document.getElementById('expanded-result');
+            const resultContent = resultBox.querySelector('.result-content');
+            
+            if (isNaN(uc) || uc <= 0) {
+                resultContent.innerHTML = '<p style="color: #e74c3c;">请输入有效的合成不确定度！</p>';
+                resultBox.style.display = 'block';
+                return;
+            }
+            
+            let k;
+            if (kSelect === 'custom') {
+                k = parseFloat(document.getElementById('custom-k').value) || 2;
+            } else {
+                k = parseFloat(kSelect);
+            }
+            
+            const U = k * uc;
+            
+            let confidenceLevel;
+            if (k === 1) confidenceLevel = '约68%';
+            else if (k === 2) confidenceLevel = '约95%';
+            else if (k === 3) confidenceLevel = '约99%';
+            else confidenceLevel = '自定义';
+            
+            const measuredValue = parseFloat(document.getElementById('measured-value').value);
+            const unit = document.getElementById('measured-unit').value || '';
+            
+            let resultExpression = '';
+            if (!isNaN(measuredValue)) {
+                resultExpression = `
+                    <div class="result-item" style="font-size: 1.1rem; text-align: center; margin-top: 15px;">
+                        <strong>测量结果表达式：</strong><br>
+                        <span style="font-size: 1.3rem; color: #8527d2;">
+                            x = (${measuredValue} ± ${U.toFixed(6)}) ${unit}
+                        </span><br>
+                        <span style="font-size: 0.9rem; color: #666;">（k = ${k}，置信水平${confidenceLevel}）</span>
+                    </div>
+                `;
+            }
+            
+            resultContent.innerHTML = `
+                <div class="result-item">📌 合成不确定度 u<sub>c</sub> = ${uc.toFixed(6)}</div>
+                <div class="result-item">📌 包含因子 k = ${k}（置信水平${confidenceLevel}）</div>
+                <div class="result-highlight">扩展不确定度 U = ${U.toFixed(6)}</div>
+                ${resultExpression}
+            `;
+            resultBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
