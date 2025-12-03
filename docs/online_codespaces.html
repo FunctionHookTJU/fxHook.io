@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线 VS Code 使用指南 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/loadHeader.js" defer></script>
+</head>
+<body>
+    <!-- Header 通过 JavaScript 动态加载 -->
+    
+    <main class="container">
+        <div class="glass-frame">
+            <h1>GitHub 在线 VS Code 使用指南</h1>
+        <p>GitHub上使用在线VS Code主要有两种方式，分别是GitHub Codespaces和vscode.dev，前者功能完整，后者更侧重轻量编辑，以下是详细使用攻略：</p>
+
+        <section class="codespaces-section">
+            <h2>1. GitHub Codespaces（完整云端VS Code环境）</h2>
+            <ol>
+                <li><strong>打开仓库：</strong>进入任意GitHub仓库，点击界面中的“Code”按钮，选择“Open with Codespaces”，再点击“+”创建新的云端环境。</li>
+                <li><strong>等待加载：</strong>首次创建需等待几秒到几分钟，加载完成后会呈现完整VS Code界面，包含编辑器、终端、插件市场等功能。</li>
+                <li><strong>开发操作：</strong>可像本地VS Code一样编辑文件、通过终端执行命令、调试代码；还能直接在左侧源代码管理面板提交、推送Git更改。</li>
+                <li><strong>环境管理：</strong>关闭浏览器后环境会自动暂停，再次打开可恢复工作；也可在GitHub仓库的Codespaces列表中手动删除或重启环境。</li>
+            </ol>
+        </section>
+
+        <section class="vscode-dev-section">
+            <h2>2. vscode.dev（轻量在线编辑GitHub仓库）</h2>
+            <ol>
+                <li><strong>快速打开仓库：</strong>直接通过URL访问，格式为 <code>https://vscode.dev/github/&lt;用户名&gt;/&lt;仓库名&gt;</code> ，比如 <code>https://vscode.dev/github/microsoft/vscode</code> 就能打开微软的VS Code仓库。</li>
+                <li><strong>浏览器插件快捷打开：</strong>安装Chrome或Edge的vscode.dev扩展，在浏览器搜索栏输入“code”，再输入仓库名（如 <code>microsoft/vscode</code> ），即可快速打开对应仓库。</li>
+                <li><strong>内部切换仓库：</strong>若已在vscode.dev页面，点击状态栏左下角的远程指示器，选择“打开远程存储库...”，就能切换到其他GitHub仓库。</li>
+                <li><strong>基础编辑：</strong>支持语法高亮、搜索文件、安装轻量扩展等，但无终端和代码运行环境，适合快速浏览和轻量修改代码。</li>
+            </ol>
+        </section>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#about">关于我</a>
+                    <a href="https://github.com/FunctionHookTJU" target="_blank">Github</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- 添加页面特定的样式 -->
+    <style>
+        .glass-frame {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #8527d2b2;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-top: 10px;
+        }
+        
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</body>
+</html>
