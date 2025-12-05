@@ -8,17 +8,21 @@ class AudioPlayer {
         
         // 音乐列表 - 在这里添加更多音乐
         this.audioSources = [
-            {
-                url: 'http://music.163.com/song/media/outer/url?id=426881960.mp3',
+            {//https://music.163.com/song?id=2736706230&uct2=U2FsdGVkX1/CAaNMQfe1tw36kyEv0JYFc0xshUXfZcQ=
+                url: 'http://music.163.com/song/media/outer/url?id=2736706230.mp3',
                 name: '音乐1'
             },
             {
-                url: 'http://music.163.com/song/media/outer/url?id=27580521.mp3',
+                url: 'http://music.163.com/song/media/outer/url?id=426881960.mp3',
                 name: '音乐2'
             },
             {
-                url: 'http://music.163.com/song/media/outer/url?id=2742468679.mp3',
+                url: 'http://music.163.com/song/media/outer/url?id=27580521.mp3',
                 name: '音乐3'
+            },
+            {
+                url: 'http://music.163.com/song/media/outer/url?id=2742468679.mp3',
+                name: '音乐4'
             },
             
             // 在这里添加更多音乐，格式如下：
