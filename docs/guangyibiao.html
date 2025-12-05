@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广义表存储结构图 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/header.js" defer></script>
+    <style>
+        :root {
+            --primary-color: #8527d2b2;
+            --secondary-color: #f5f5f5eb;
+            --text-color: #333;
+            --light-text: #fff;
+            --transition: all 0.3s ease;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --node-atom: #4CAF50;
+            --node-list: #2196F3;
+            --arrow-color: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            background-image: url('https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/background4k.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(245, 245, 245, 0.29);
+            z-index: -1;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            padding: 30px;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .right-panel {
+            flex: 1.5;
+            min-width: 500px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 1.3em;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            margin: 15px 0 10px;
+            font-size: 1.1em;
+        }
+
+        .section p, .section li {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .section ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+
+        .section li {
+            margin: 8px 0;
+        }
+
+        /* 节点结构示意图 */
+        .node-structure {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .node-demo {
+            text-align: center;
+        }
+
+        .node-demo-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .node-box {
+            display: flex;
+            border: 2px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .node-field {
+            padding: 10px 15px;
+            border-right: 1px solid #333;
+            min-width: 50px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .node-field:last-child {
+            border-right: none;
+        }
+
+        .node-field.tag {
+            background: #e3f2fd;
+        }
+
+        .node-field.atom {
+            background: #e8f5e9;
+        }
+
+        .node-field.hp {
+            background: #fff3e0;
+        }
+
+        .node-field.tp {
+            background: #fce4ec;
+        }
+
+        /* 输入区域 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Consolas', monospace;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .example-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .example-btn {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* 模式选择器 */
+        .mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .mode-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .mode-option input[type="radio"]:checked + .mode-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .mode-label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .mode-desc {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* SVG画布 */
+        .canvas-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: auto;
+            min-height: 400px;
+            position: relative;
+        }
+
+        #glCanvas {
+            display: block;
+            min-width: 100%;
+            min-height: 400px;
+        }
+
+        /* 解析结果 */
+        .parse-result {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* 图例 */
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .legend-color.atom {
+            background: var(--node-atom);
+        }
+
+        .legend-color.list {
+            background: var(--node-list);
+        }
+
+        /* 代码块 */
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .code-keyword {
+            color: #66d9ef;
+        }
+
+        .code-type {
+            color: #a6e22e;
+        }
+
+        .code-comment {
+            color: #75715e;
+        }
+
+        /* 表格样式 */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .info-table th, .info-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .info-table th {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* 错误提示 */
+        .error-msg {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        /* 选中的模式样式 */
+        .mode-option:has(input:checked) {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .left-panel, .right-panel {
+                min-width: 100%;
+            }
+
+            .page-header h1 {
+                font-size: 1.8em;
+            }
+
+            .mode-selector {
+                flex-direction: column;
+            }
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .footer-links {
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--light-text);
+            text-decoration: none;
+            margin: 0 1rem;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header will be injected by header.js -->
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1>📊 广义表存储结构图</h1>
+            <p class="subtitle">Generalized List Storage Structure Visualization</p>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- 左侧：理论讲解 -->
+            <div class="left-panel">
+                <div class="section">
+                    <h2>📚 什么是广义表？</h2>
+                    <p>广义表（Generalized List）是线性表的推广，是一种递归的数据结构。</p>
+                    <ul>
+                        <li><strong>原子（Atom）</strong>：不可再分的元素，如字母、数字</li>
+                        <li><strong>子表（Sublist）</strong>：作为元素的广义表，可以嵌套</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>例如：</strong></p>
+                    <ul>
+                        <li><code>A = ()</code> — 空表</li>
+                        <li><code>B = (a, b, c)</code> — 只含原子</li>
+                        <li><code>C = (a, (b, c), d)</code> — 含子表</li>
+                        <li><code>D = ((a, b), (c, (d, e)))</code> — 多层嵌套</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h2>🔧 方式一：头尾链表法</h2>
+                    <p>原子节点和表节点<strong>结构相同</strong>，都有 tp 指针：</p>
+                    
+                    <div class="node-structure">
+                        <div class="node-demo">
+                            <div class="node-demo-title">原子节点 (tag=0)</div>
+                            <div class="node-box">
+                                <div class="node-field tag">tag=0</div>
+                                <div class="node-field atom">atom</div>
+                                <div class="node-field tp">tp</div>
+                            </div>
+                        </div>
+                        <div class="node-demo">
+                            <div class="node-demo-title">表节点 (tag=1)</div>
+                            <div class="node-box">
+                                <div class="node-field tag">tag=1</div>
+                                <div class="node-field hp">hp</div>
+                                <div class="node-field tp">tp</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="info-table">
+                        <tr>
+                            <th>字段</th>
+                            <th>说明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>tag</strong></td>
+                            <td>标志位：0表示原子，1表示子表</td>
+                        </tr>
+                        <tr>
+                            <td><strong>atom</strong></td>
+                            <td>原子节点存放的数据值</td>
+                        </tr>
+                        <tr>
+                            <td><strong>hp</strong></td>
+                            <td>表头指针，指向子表的第一个元素</td>
+                        </tr>
+                        <tr>
+                            <td><strong>tp</strong></td>
+                            <td>表尾指针，指向同级的下一个元素</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2>🔧 方式二：扩展线性链表法</h2>
+                    <p>原子节点<strong>没有 tp 指针</strong>，结构更紧凑：</p>
+                    
+                    <div class="node-structure">
+                        <div class="node-demo">
+                            <div class="node-demo-title">原子节点 (tag=0)</div>
+                            <div class="node-box" style="border-color: #4CAF50;">
+                                <div class="node-field tag" style="background: #c8e6c9;">tag=0</div>
+                                <div class="node-field atom">atom</div>
+                            </div>
+                        </div>
+                        <div class="node-demo">
+                            <div class="node-demo-title">表节点 (tag=1)</div>
+                            <div class="node-box" style="border-color: #2196F3;">
+                                <div class="node-field tag" style="background: #bbdefb;">tag=1</div>
+                                <div class="node-field hp">hp</div>
+                                <div class="node-field tp">tp</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="info-table">
+                        <tr>
+                            <th>特点</th>
+                            <th>说明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>原子节点</strong></td>
+                            <td>只有 tag 和 atom 两个字段，没有 tp</td>
+                        </tr>
+                        <tr>
+                            <td><strong>表节点</strong></td>
+                            <td>有 tag、hp、tp 三个字段（与方式一相同）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>连接方式</strong></td>
+                            <td>原子直接挂在表节点的 hp 下，同级元素通过表节点的 tp 连接</td>
+                        </tr>
+                        <tr>
+                            <td><strong>优点</strong></td>
+                            <td>节省原子节点的空间，每个原子少存一个指针</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2>📝 画图规则</h2>
+                    <h3>Step 1: 识别结构</h3>
+                    <p>从左到右扫描广义表，遇到 <code>(</code> 创建表节点，遇到字母创建原子节点。</p>
+                    
+                    <h3>Step 2: 连接 hp（表头）</h3>
+                    <p>表节点的 <code>hp</code> 指向该括号内的<strong>第一个元素</strong>（向下指）。</p>
+                    
+                    <h3>Step 3: 连接 tp（表尾）</h3>
+                    <p>同级元素之间用 <code>tp</code> 串联（向右指）。最后一个元素的 <code>tp</code> 为 <code>∧</code>（空）。</p>
+                    
+                    <h3>Step 4: 递归处理子表</h3>
+                    <p>如果元素是子表，对其递归应用以上规则。</p>
+                </div>
+
+                <div class="section">
+                    <h2>💻 C语言结构定义</h2>
+                    <h3>方式一：头尾链表法</h3>
+                    <div class="code-block">
+<span class="code-keyword">typedef struct</span> GLNode {
+    <span class="code-type">int</span> tag;           <span class="code-comment">// 0: 原子, 1: 子表</span>
+    <span class="code-keyword">union</span> {
+        <span class="code-type">char</span> atom;      <span class="code-comment">// 原子值</span>
+        <span class="code-keyword">struct</span> GLNode *hp; <span class="code-comment">// 表头指针</span>
+    };
+    <span class="code-keyword">struct</span> GLNode *tp;  <span class="code-comment">// 表尾指针</span>
+} GLNode, *GList;
+                    </div>
+                    <h3>方式二：扩展线性链表法</h3>
+                    <div class="code-block">
+<span class="code-keyword">typedef struct</span> GLNode {
+    <span class="code-type">int</span> tag;           <span class="code-comment">// 0: 原子, 1: 子表</span>
+    <span class="code-keyword">union</span> {
+        <span class="code-type">char</span> atom;      <span class="code-comment">// tag=0: 原子值</span>
+        <span class="code-keyword">struct</span> {        <span class="code-comment">// tag=1: 表节点</span>
+            <span class="code-keyword">struct</span> GLNode *hp; <span class="code-comment">// 表头指针</span>
+            <span class="code-keyword">struct</span> GLNode *tp; <span class="code-comment">// 表尾指针</span>
+        } ptr;
+    };
+} GLNode, *GList;
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：交互区域 -->
+            <div class="right-panel">
+                <div class="section">
+                    <h2>🎨 在线生成存储结构图</h2>
+                    
+                    <div class="input-group">
+                        <label for="glInput">输入广义表（使用括号表示法）：</label>
+                        <input type="text" id="glInput" placeholder="例如: (a, (b, c), d)" value="(a, (b, c), d)">
+                    </div>
+
+                    <div class="input-group">
+                        <label>选择存储结构方式：</label>
+                        <div class="mode-selector">
+                            <label class="mode-option">
+                                <input type="radio" name="mode" value="mode1" checked onchange="generateGraph()">
+                                <span class="mode-label">方式一：头尾链表法</span>
+                                <span class="mode-desc">（原子节点有 tp）</span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="mode" value="mode2" onchange="generateGraph()">
+                                <span class="mode-label">方式二：扩展线性链表法</span>
+                                <span class="mode-desc">（原子节点无 tp）</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="generateGraph()">🚀 生成结构图</button>
+                        <button class="btn btn-secondary" onclick="clearCanvas()">🗑️ 清空</button>
+                    </div>
+
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">点击示例快速填充：</p>
+                    <div class="example-btns">
+                        <button class="example-btn" onclick="setExample('()')">空表 ()</button>
+                        <button class="example-btn" onclick="setExample('(a, b, c)')">简单 (a,b,c)</button>
+                        <button class="example-btn" onclick="setExample('(a, (b, c), d)')">嵌套 (a,(b,c),d)</button>
+                        <button class="example-btn" onclick="setExample('((a, b), c)')">头是表 ((a,b),c)</button>
+                        <button class="example-btn" onclick="setExample('(a, (b, (c, d)))')">深嵌套</button>
+                        <button class="example-btn" onclick="setExample('((a, b), (c, d))')">双子表</button>
+                    </div>
+
+                    <div id="errorMsg" class="error-msg"></div>
+                </div>
+
+                <div class="section">
+                    <h2>📐 存储结构图</h2>
+                    <div class="canvas-container">
+                        <svg id="glCanvas" width="800" height="400"></svg>
+                    </div>
+                    
+                    <div class="legend" id="legendInfo">
+                        <div class="legend-item">
+                            <div class="legend-color atom"></div>
+                            <span id="atomLegend">原子节点 (tag=0, 含tp)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color list"></div>
+                            <span>表节点 (tag=1)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span>→ tp指针（表尾/同级）</span>
+                        </div>
+                        <div class="legend-item">
+                            <span>↓ hp指针（表头/子表）</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>📋 解析结果</h2>
+                    <div id="parseResult" class="parse-result">等待输入广义表...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html">首页</a>
+                    <a href="https://github.com/FunctionHookTJU" target="_blank">Github</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== 广义表解析器 ====================
+        class GLParser {
+            constructor(input) {
+                this.input = input.replace(/\s/g, ''); // 去除空格
+                this.pos = 0;
+            }
+
+            parse() {
+                if (this.pos >= this.input.length) {
+                    throw new Error('输入为空');
+                }
+                return this.parseList();
+            }
+
+            parseList() {
+                if (this.input[this.pos] !== '(') {
+                    throw new Error(`期望 '(' 在位置 ${this.pos}，但得到 '${this.input[this.pos]}'`);
+                }
+                this.pos++; // 跳过 '('
+
+                const elements = [];
+
+                while (this.pos < this.input.length && this.input[this.pos] !== ')') {
+                    if (this.input[this.pos] === ',') {
+                        this.pos++; // 跳过逗号
+                        continue;
+                    }
+
+                    if (this.input[this.pos] === '(') {
+                        // 子表
+                        elements.push({ type: 'list', value: this.parseList() });
+                    } else {
+                        // 原子
+                        let atom = '';
+                        while (this.pos < this.input.length && 
+                               this.input[this.pos] !== ',' && 
+                               this.input[this.pos] !== ')' &&
+                               this.input[this.pos] !== '(') {
+                            atom += this.input[this.pos];
+                            this.pos++;
+                        }
+                        if (atom) {
+                            elements.push({ type: 'atom', value: atom });
+                        }
+                    }
+                }
+
+                if (this.input[this.pos] !== ')') {
+                    throw new Error(`期望 ')' 在位置 ${this.pos}`);
+                }
+                this.pos++; // 跳过 ')'
+
+                return elements;
+            }
+        }
+
+        // ==================== SVG 绘图器 ====================
+        class GLDrawer {
+            constructor(svgId) {
+                this.svg = document.getElementById(svgId);
+                this.nodeWidth = 120;
+                this.atomNodeWidth = 80;  // 方式二的原子节点宽度（无tp）
+                this.nodeHeight = 40;
+                this.hGap = 60;  // 水平间距
+                this.vGap = 80;  // 垂直间距
+                this.startX = 50;
+                this.startY = 50;
+                this.nodes = [];
+                this.arrows = [];
+                this.mode = 'mode1';  // 默认方式一
+            }
+
+            setMode(mode) {
+                this.mode = mode;
+            }
+
+            clear() {
+                this.svg.innerHTML = '';
+                this.nodes = [];
+                this.arrows = [];
+            }
+
+            // 递归计算布局
+            calculateLayout(elements, x, y, depth = 0) {
+                if (this.mode === 'mode2') {
+                    return this.calculateLayoutMode2(elements, x, y, depth);
+                }
+                return this.calculateLayoutMode1(elements, x, y, depth);
+            }
+
+            // 方式一布局（原子有tp）
+            calculateLayoutMode1(elements, x, y, depth = 0) {
+                let layoutNodes = [];
+                let currentX = x;
+                let maxY = y;
+
+                for (let i = 0; i < elements.length; i++) {
+                    const elem = elements[i];
+                    const node = {
+                        x: currentX,
+                        y: y,
+                        type: elem.type,
+                        value: elem.type === 'atom' ? elem.value : null,
+                        children: null,
+                        hasNext: i < elements.length - 1
+                    };
+
+                    if (elem.type === 'list') {
+                        const childLayout = this.calculateLayoutMode1(elem.value, currentX, y + this.vGap, depth + 1);
+                        node.children = childLayout.nodes;
+                        maxY = Math.max(maxY, childLayout.maxY);
+                        const childWidth = childLayout.maxX - currentX;
+                        currentX += Math.max(this.nodeWidth + this.hGap, childWidth);
+                    } else {
+                        currentX += this.nodeWidth + this.hGap;
+                    }
+
+                    layoutNodes.push(node);
+                }
+
+                return {
+                    nodes: layoutNodes,
+                    maxX: currentX,
+                    maxY: Math.max(maxY, y + this.nodeHeight)
+                };
+            }
+
+            // 方式二布局（原子无tp，每个元素都包装在表节点中）
+            calculateLayoutMode2(elements, x, y, depth = 0) {
+                let layoutNodes = [];
+                let currentX = x;
+                let maxY = y;
+
+                for (let i = 0; i < elements.length; i++) {
+                    const elem = elements[i];
+                    
+                    // 方式二：每个元素都用表节点包装
+                    const wrapperNode = {
+                        x: currentX,
+                        y: y,
+                        type: 'wrapper',  // 包装表节点
+                        hasNext: i < elements.length - 1,
+                        content: elem
+                    };
+
+                    if (elem.type === 'list') {
+                        // 子表：hp指向子表的内容
+                        const childLayout = this.calculateLayoutMode2(elem.value, currentX, y + this.vGap, depth + 1);
+                        wrapperNode.children = childLayout.nodes;
+                        maxY = Math.max(maxY, childLayout.maxY);
+                        const childWidth = childLayout.maxX - currentX;
+                        currentX += Math.max(this.nodeWidth + this.hGap, childWidth);
+                    } else {
+                        // 原子：hp指向原子节点
+                        wrapperNode.atomChild = {
+                            x: currentX + (this.nodeWidth - this.atomNodeWidth) / 2,
+                            y: y + this.vGap,
+                            value: elem.value
+                        };
+                        maxY = Math.max(maxY, y + this.vGap + this.nodeHeight);
+                        currentX += this.nodeWidth + this.hGap;
+                    }
+
+                    layoutNodes.push(wrapperNode);
+                }
+
+                return {
+                    nodes: layoutNodes,
+                    maxX: currentX,
+                    maxY: Math.max(maxY, y + this.nodeHeight)
+                };
+            }
+
+            // 绘制所有节点和箭头
+            draw(elements) {
+                this.clear();
+
+                if (elements.length === 0) {
+                    // 空表
+                    this.drawEmptyList(this.startX, this.startY);
+                    this.adjustSvgSize(this.startX + this.nodeWidth + 50, this.startY + this.nodeHeight + 50);
+                    return;
+                }
+
+                const layout = this.calculateLayout(elements, this.startX, this.startY);
+                this.drawNodes(layout.nodes);
+                this.adjustSvgSize(layout.maxX + 50, layout.maxY + 100);
+            }
+
+            drawNodes(nodes) {
+                if (this.mode === 'mode2') {
+                    this.drawNodesMode2(nodes);
+                } else {
+                    this.drawNodesMode1(nodes);
+                }
+            }
+
+            // 方式一绘制
+            drawNodesMode1(nodes) {
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    
+                    if (node.type === 'atom') {
+                        this.drawAtomNode(node.x, node.y, node.value);
+                    } else {
+                        this.drawListNode(node.x, node.y);
+                        if (node.children && node.children.length > 0) {
+                            const child = node.children[0];
+                            this.drawArrow(
+                                node.x + this.nodeWidth / 2,
+                                node.y + this.nodeHeight,
+                                child.x + this.nodeWidth / 2,
+                                child.y,
+                                'hp'
+                            );
+                            this.drawNodesMode1(node.children);
+                        } else {
+                            this.drawNullPointer(node.x + this.nodeWidth / 2, node.y + this.nodeHeight, 'down');
+                        }
+                    }
+
+                    if (node.hasNext && i < nodes.length - 1) {
+                        const nextNode = nodes[i + 1];
+                        this.drawArrow(
+                            node.x + this.nodeWidth,
+                            node.y + this.nodeHeight / 2,
+                            nextNode.x,
+                            nextNode.y + this.nodeHeight / 2,
+                            'tp'
+                        );
+                    } else {
+                        this.drawNullSymbol(node.x + this.nodeWidth - 15, node.y + this.nodeHeight / 2);
+                    }
+                }
+            }
+
+            // 方式二绘制
+            drawNodesMode2(nodes) {
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    
+                    // 绘制包装表节点
+                    this.drawListNode(node.x, node.y);
+
+                    if (node.content.type === 'atom') {
+                        // 原子：绘制无tp的原子节点
+                        this.drawAtomNodeNoTp(node.atomChild.x, node.atomChild.y, node.atomChild.value);
+                        // hp箭头指向原子
+                        this.drawArrow(
+                            node.x + this.nodeWidth / 2,
+                            node.y + this.nodeHeight,
+                            node.atomChild.x + this.atomNodeWidth / 2,
+                            node.atomChild.y,
+                            'hp'
+                        );
+                    } else {
+                        // 子表：hp箭头指向子表的第一个节点
+                        if (node.children && node.children.length > 0) {
+                            const child = node.children[0];
+                            this.drawArrow(
+                                node.x + this.nodeWidth / 2,
+                                node.y + this.nodeHeight,
+                                child.x + this.nodeWidth / 2,
+                                child.y,
+                                'hp'
+                            );
+                            this.drawNodesMode2(node.children);
+                        } else {
+                            this.drawNullPointer(node.x + this.nodeWidth / 2, node.y + this.nodeHeight, 'down');
+                        }
+                    }
+
+                    // tp箭头
+                    if (node.hasNext && i < nodes.length - 1) {
+                        const nextNode = nodes[i + 1];
+                        this.drawArrow(
+                            node.x + this.nodeWidth,
+                            node.y + this.nodeHeight / 2,
+                            nextNode.x,
+                            nextNode.y + this.nodeHeight / 2,
+                            'tp'
+                        );
+                    } else {
+                        this.drawNullSymbol(node.x + this.nodeWidth - 15, node.y + this.nodeHeight / 2);
+                    }
+                }
+            }
+
+            drawAtomNode(x, y, value) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // 节点背景
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', this.nodeWidth);
+                rect.setAttribute('height', this.nodeHeight);
+                rect.setAttribute('fill', '#e8f5e9');
+                rect.setAttribute('stroke', '#4CAF50');
+                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('rx', '4');
+                g.appendChild(rect);
+
+                // 分隔线
+                const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line1.setAttribute('x1', x + 30);
+                line1.setAttribute('y1', y);
+                line1.setAttribute('x2', x + 30);
+                line1.setAttribute('y2', y + this.nodeHeight);
+                line1.setAttribute('stroke', '#4CAF50');
+                line1.setAttribute('stroke-width', '1');
+                g.appendChild(line1);
+
+                const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line2.setAttribute('x1', x + this.nodeWidth - 30);
+                line2.setAttribute('y1', y);
+                line2.setAttribute('x2', x + this.nodeWidth - 30);
+                line2.setAttribute('y2', y + this.nodeHeight);
+                line2.setAttribute('stroke', '#4CAF50');
+                line2.setAttribute('stroke-width', '1');
+                g.appendChild(line2);
+
+                // tag = 0
+                const tagText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tagText.setAttribute('x', x + 15);
+                tagText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                tagText.setAttribute('text-anchor', 'middle');
+                tagText.setAttribute('font-size', '12');
+                tagText.setAttribute('font-family', 'monospace');
+                tagText.setAttribute('fill', '#333');
+                tagText.textContent = '0';
+                g.appendChild(tagText);
+
+                // atom value
+                const atomText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                atomText.setAttribute('x', x + this.nodeWidth / 2);
+                atomText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                atomText.setAttribute('text-anchor', 'middle');
+                atomText.setAttribute('font-size', '14');
+                atomText.setAttribute('font-weight', 'bold');
+                atomText.setAttribute('font-family', 'monospace');
+                atomText.setAttribute('fill', '#2e7d32');
+                atomText.textContent = value;
+                g.appendChild(atomText);
+
+                // tp 区域（右侧小格子，留空表示指针）
+                const tpText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tpText.setAttribute('x', x + this.nodeWidth - 15);
+                tpText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                tpText.setAttribute('text-anchor', 'middle');
+                tpText.setAttribute('font-size', '10');
+                tpText.setAttribute('fill', '#666');
+                tpText.textContent = 'tp';
+                g.appendChild(tpText);
+
+                this.svg.appendChild(g);
+            }
+
+            // 方式二：无tp的原子节点
+            drawAtomNodeNoTp(x, y, value) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // 节点背景（更窄，只有tag和atom）
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', this.atomNodeWidth);
+                rect.setAttribute('height', this.nodeHeight);
+                rect.setAttribute('fill', '#c8e6c9');
+                rect.setAttribute('stroke', '#2e7d32');
+                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('rx', '4');
+                g.appendChild(rect);
+
+                // 分隔线（只有一条）
+                const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line1.setAttribute('x1', x + 25);
+                line1.setAttribute('y1', y);
+                line1.setAttribute('x2', x + 25);
+                line1.setAttribute('y2', y + this.nodeHeight);
+                line1.setAttribute('stroke', '#2e7d32');
+                line1.setAttribute('stroke-width', '1');
+                g.appendChild(line1);
+
+                // tag = 0
+                const tagText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tagText.setAttribute('x', x + 12);
+                tagText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                tagText.setAttribute('text-anchor', 'middle');
+                tagText.setAttribute('font-size', '12');
+                tagText.setAttribute('font-family', 'monospace');
+                tagText.setAttribute('fill', '#1b5e20');
+                tagText.textContent = '0';
+                g.appendChild(tagText);
+
+                // atom value
+                const atomText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                atomText.setAttribute('x', x + 25 + (this.atomNodeWidth - 25) / 2);
+                atomText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                atomText.setAttribute('text-anchor', 'middle');
+                atomText.setAttribute('font-size', '14');
+                atomText.setAttribute('font-weight', 'bold');
+                atomText.setAttribute('font-family', 'monospace');
+                atomText.setAttribute('fill', '#1b5e20');
+                atomText.textContent = value;
+                g.appendChild(atomText);
+
+                this.svg.appendChild(g);
+            }
+
+            drawListNode(x, y) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // 节点背景
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', this.nodeWidth);
+                rect.setAttribute('height', this.nodeHeight);
+                rect.setAttribute('fill', '#e3f2fd');
+                rect.setAttribute('stroke', '#2196F3');
+                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('rx', '4');
+                g.appendChild(rect);
+
+                // 分隔线
+                const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line1.setAttribute('x1', x + 30);
+                line1.setAttribute('y1', y);
+                line1.setAttribute('x2', x + 30);
+                line1.setAttribute('y2', y + this.nodeHeight);
+                line1.setAttribute('stroke', '#2196F3');
+                line1.setAttribute('stroke-width', '1');
+                g.appendChild(line1);
+
+                const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line2.setAttribute('x1', x + this.nodeWidth - 30);
+                line2.setAttribute('y1', y);
+                line2.setAttribute('x2', x + this.nodeWidth - 30);
+                line2.setAttribute('y2', y + this.nodeHeight);
+                line2.setAttribute('stroke', '#2196F3');
+                line2.setAttribute('stroke-width', '1');
+                g.appendChild(line2);
+
+                // tag = 1
+                const tagText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tagText.setAttribute('x', x + 15);
+                tagText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                tagText.setAttribute('text-anchor', 'middle');
+                tagText.setAttribute('font-size', '12');
+                tagText.setAttribute('font-family', 'monospace');
+                tagText.setAttribute('fill', '#333');
+                tagText.textContent = '1';
+                g.appendChild(tagText);
+
+                // hp
+                const hpText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                hpText.setAttribute('x', x + this.nodeWidth / 2);
+                hpText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                hpText.setAttribute('text-anchor', 'middle');
+                hpText.setAttribute('font-size', '10');
+                hpText.setAttribute('fill', '#1565c0');
+                hpText.textContent = 'hp';
+                g.appendChild(hpText);
+
+                // tp
+                const tpText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tpText.setAttribute('x', x + this.nodeWidth - 15);
+                tpText.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                tpText.setAttribute('text-anchor', 'middle');
+                tpText.setAttribute('font-size', '10');
+                tpText.setAttribute('fill', '#666');
+                tpText.textContent = 'tp';
+                g.appendChild(tpText);
+
+                this.svg.appendChild(g);
+            }
+
+            drawArrow(x1, y1, x2, y2, type) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // 计算控制点实现平滑曲线
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                let d;
+                if (type === 'hp') {
+                    // 垂直向下的箭头
+                    d = `M ${x1} ${y1} L ${x1} ${y2 - 10}`;
+                } else {
+                    // 水平箭头
+                    const midY = (y1 + y2) / 2;
+                    d = `M ${x1} ${y1} L ${x2 - 10} ${y2}`;
+                }
+                
+                path.setAttribute('d', d);
+                path.setAttribute('stroke', '#666');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('marker-end', 'url(#arrowhead)');
+                g.appendChild(path);
+
+                this.svg.appendChild(g);
+                this.ensureArrowMarker();
+            }
+
+            drawNullSymbol(x, y) {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '14');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('fill', '#999');
+                text.textContent = '∧';
+                this.svg.appendChild(text);
+            }
+
+            drawNullPointer(x, y, direction) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // 短线
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', y + 20);
+                line.setAttribute('stroke', '#999');
+                line.setAttribute('stroke-width', '2');
+                g.appendChild(line);
+
+                // null 符号
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 35);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '12');
+                text.setAttribute('fill', '#999');
+                text.textContent = '∧';
+                g.appendChild(text);
+
+                this.svg.appendChild(g);
+            }
+
+            drawEmptyList(x, y) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', this.nodeWidth);
+                rect.setAttribute('height', this.nodeHeight);
+                rect.setAttribute('fill', '#f5f5f5');
+                rect.setAttribute('stroke', '#999');
+                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('stroke-dasharray', '5,5');
+                rect.setAttribute('rx', '4');
+                g.appendChild(rect);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + this.nodeWidth / 2);
+                text.setAttribute('y', y + this.nodeHeight / 2 + 5);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '14');
+                text.setAttribute('fill', '#999');
+                text.textContent = 'NULL (空表)';
+                g.appendChild(text);
+
+                this.svg.appendChild(g);
+            }
+
+            ensureArrowMarker() {
+                if (!document.getElementById('arrowhead')) {
+                    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                    marker.setAttribute('id', 'arrowhead');
+                    marker.setAttribute('markerWidth', '10');
+                    marker.setAttribute('markerHeight', '7');
+                    marker.setAttribute('refX', '9');
+                    marker.setAttribute('refY', '3.5');
+                    marker.setAttribute('orient', 'auto');
+                    
+                    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+                    polygon.setAttribute('fill', '#666');
+                    
+                    marker.appendChild(polygon);
+                    defs.appendChild(marker);
+                    this.svg.insertBefore(defs, this.svg.firstChild);
+                }
+            }
+
+            adjustSvgSize(width, height) {
+                this.svg.setAttribute('width', Math.max(width, 800));
+                this.svg.setAttribute('height', Math.max(height, 400));
+            }
+        }
+
+        // ==================== 全局函数 ====================
+        const drawer = new GLDrawer('glCanvas');
+
+        function generateGraph() {
+            const input = document.getElementById('glInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const parseResult = document.getElementById('parseResult');
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+
+            errorMsg.classList.remove('show');
+            errorMsg.textContent = '';
+
+            // 更新图例文字
+            const atomLegend = document.getElementById('atomLegend');
+            if (mode === 'mode1') {
+                atomLegend.textContent = '原子节点 (tag=0, 含tp)';
+            } else {
+                atomLegend.textContent = '原子节点 (tag=0, 无tp)';
+            }
+
+            if (!input) {
+                showError('请输入广义表！');
+                return;
+            }
+
+            try {
+                const parser = new GLParser(input);
+                const elements = parser.parse();
+
+                // 设置模式并绘制
+                drawer.setMode(mode);
+
+                // 显示解析结果
+                parseResult.textContent = formatParseResult(input, elements, mode);
+
+                // 绘制图形
+                drawer.draw(elements);
+
+            } catch (e) {
+                showError('解析错误: ' + e.message);
+                parseResult.textContent = '解析失败: ' + e.message;
+            }
+        }
+
+        function formatParseResult(input, elements, mode = 'mode1') {
+            let result = `输入: ${input}\n`;
+            result += `模式: ${mode === 'mode1' ? '方式一（头尾链表法）' : '方式二（扩展线性链表法）'}\n`;
+            result += `\n解析结构:\n`;
+            result += formatElements(elements, 0);
+            result += `\n节点统计:\n`;
+            const stats = countNodes(elements);
+            if (mode === 'mode1') {
+                result += `  原子节点: ${stats.atoms} 个（含tp指针）\n`;
+                result += `  表节点: ${stats.lists} 个\n`;
+                result += `  总节点: ${stats.atoms + stats.lists} 个\n`;
+            } else {
+                result += `  原子节点: ${stats.atoms} 个（无tp指针）\n`;
+                result += `  包装表节点: ${stats.atoms + stats.lists} 个\n`;
+                result += `  总节点: ${stats.atoms + stats.atoms + stats.lists} 个\n`;
+            }
+            result += `  嵌套深度: ${stats.depth} 层`;
+            return result;
+        }
+
+        function formatElements(elements, level) {
+            let result = '';
+            const prefix = '  '.repeat(level);
+            
+            for (let i = 0; i < elements.length; i++) {
+                const elem = elements[i];
+                if (elem.type === 'atom') {
+                    result += `${prefix}├─ [原子] ${elem.value}\n`;
+                } else {
+                    result += `${prefix}├─ [子表]\n`;
+                    result += formatElements(elem.value, level + 1);
+                }
+            }
+            return result;
+        }
+
+        function countNodes(elements, depth = 1) {
+            let atoms = 0;
+            let lists = 0;
+            let maxDepth = depth;
+
+            for (const elem of elements) {
+                if (elem.type === 'atom') {
+                    atoms++;
+                } else {
+                    lists++;
+                    const childStats = countNodes(elem.value, depth + 1);
+                    atoms += childStats.atoms;
+                    lists += childStats.lists;
+                    maxDepth = Math.max(maxDepth, childStats.depth);
+                }
+            }
+
+            return { atoms, lists, depth: maxDepth };
+        }
+
+        function showError(msg) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = msg;
+            errorMsg.classList.add('show');
+        }
+
+        function clearCanvas() {
+            drawer.clear();
+            document.getElementById('glInput').value = '';
+            document.getElementById('parseResult').textContent = '等待输入广义表...';
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        function setExample(example) {
+            document.getElementById('glInput').value = example;
+            generateGraph();
+        }
+
+        // 页面加载后自动生成示例
+        window.addEventListener('load', function() {
+            setTimeout(generateGraph, 500);
+        });
+    </script>
+</body>
+</html>
