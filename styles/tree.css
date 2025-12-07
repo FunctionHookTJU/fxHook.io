@@ -1,0 +1,107 @@
+/**
+ * 树与二叉树转换页面特有样式
+ */
+
+/* 主题色覆盖 */
+:root {
+    --theme-primary: #11998e;
+    --theme-secondary: #38ef7d;
+}
+
+/* 右侧面板宽度调整 */
+.right-panel {
+    min-width: 700px;
+}
+
+/* 模式切换特殊样式 */
+.mode-switch {
+    background: #e8f5e9;
+}
+
+.mode-option {
+    padding: 10px 15px;
+    background: white;
+    border: 2px solid transparent;
+}
+
+.mode-option:hover {
+    border-color: #11998e;
+    background: white;
+}
+
+.mode-option.active {
+    border-color: #11998e;
+    background: #e8f5e9;
+}
+
+/* 树可视化容器 */
+.trees-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.tree-panel {
+    flex: 1;
+    min-width: 350px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tree-panel-header {
+    padding: 15px 20px;
+    font-weight: 600;
+    text-align: center;
+    color: white;
+}
+
+.tree-panel-header.original {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.tree-panel-header.converted {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 转换箭头 */
+.convert-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+    color: #667eea;
+    padding: 20px;
+    animation: pulse 2s infinite;
+}
+
+/* 示例按钮使用绿色主题 */
+.example-btn {
+    border-color: #11998e;
+    color: #11998e;
+}
+
+.example-btn:hover {
+    background: #11998e;
+    color: white;
+}
+
+/* 响应式调整 */
+@media (max-width: 1000px) {
+    .trees-container {
+        flex-direction: column;
+    }
+
+    .tree-panel {
+        min-width: 100%;
+    }
+
+    .convert-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .right-panel {
+        min-width: 100%;
+    }
+}

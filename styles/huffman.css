@@ -1,0 +1,98 @@
+/**
+ * 霍夫曼编码页面特有样式
+ */
+
+/* 主题色覆盖 */
+:root {
+    --theme-primary: #667eea;
+    --theme-secondary: #764ba2;
+}
+
+/* 霍夫曼Canvas */
+#huffmanCanvas {
+    display: block;
+    margin: 0 auto;
+}
+
+.canvas-container {
+    min-height: 500px;
+}
+
+/* 步骤显示 */
+.step-info {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.step-info h3 {
+    color: #d84315;
+    margin-bottom: 10px;
+}
+
+.step-counter {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+/* 构建过程 */
+.build-process {
+    background: #fff3e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.build-process h4 {
+    color: #e65100;
+    margin-bottom: 10px;
+}
+
+.build-step {
+    padding: 8px 10px;
+    margin: 5px 0;
+    background: white;
+    border-left: 3px solid #ff9800;
+    border-radius: 0 5px 5px 0;
+    font-size: 14px;
+}
+
+.build-step.active {
+    background: #fff3e0;
+    border-left-color: #e91e63;
+}
+
+/* WPL结果样式 */
+.wpl-result {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.wpl-result h4 {
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.wpl-value {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.wpl-formula {
+    font-family: 'Courier New', monospace;
+    background: rgba(255,255,255,0.2);
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 14px;
+    word-break: break-all;
+}
