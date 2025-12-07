@@ -19,7 +19,6 @@
     const navItems = [
         { text: '首页', href: 'index.html' },
         { text: '首页(测试)', href: 'pages/index_dev.html' },
-        { text: '联系方式', href: 'index.html#contact' },
         { text: '学习笔记', href: 'pages/study.html' },
         { text: 'Github', href: 'https://github.com/FunctionHookTJU', external: true },
         { text: '交流', href: 'pages/communicate.html' },
