@@ -532,6 +532,97 @@
         .node-animated {
             animation: nodeAppear 0.3s ease-out;
         }
+
+        /* 模式切换样式 */
+        .mode-switch {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f0f4ff;
+            border-radius: 8px;
+        }
+
+        .mode-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .mode-option:hover {
+            background: #e0e8ff;
+        }
+
+        .mode-option input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+        }
+
+        .mode-option input[type="radio"]:checked + .mode-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .mode-label {
+            font-size: 14px;
+        }
+
+        /* WPL结果样式 */
+        .wpl-result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .wpl-result h4 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .wpl-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .wpl-formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .weight-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .weight-table th, .weight-table td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .weight-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .weight-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -612,10 +703,30 @@
             <!-- 右侧面板 - 交互区 -->
             <div class="right-panel">
                 <div class="section">
-                    <h2>✏️ 输入字符串</h2>
-                    <div class="input-group">
+                    <h2>✏️ 输入数据</h2>
+                    
+                    <!-- 模式切换 -->
+                    <div class="mode-switch">
+                        <label class="mode-option">
+                            <input type="radio" name="inputMode" value="string" checked onchange="switchMode('string')">
+                            <span class="mode-label">📝 字符串模式</span>
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="inputMode" value="weights" onchange="switchMode('weights')">
+                            <span class="mode-label">🔢 权值模式</span>
+                        </label>
+                    </div>
+
+                    <!-- 字符串输入 -->
+                    <div class="input-group" id="stringInputGroup">
                         <label>请输入只包含字母的字符串：</label>
                         <input type="text" id="inputString" placeholder="例如: ABRACADABRA" maxlength="50">
+                    </div>
+
+                    <!-- 权值输入 -->
+                    <div class="input-group" id="weightsInputGroup" style="display: none;">
+                        <label>请输入权值集合（用逗号分隔）：</label>
+                        <input type="text" id="inputWeights" placeholder="例如: 2,5,7,9,13">
                     </div>
 
                     <div class="btn-group">
@@ -624,13 +735,21 @@
                         <button class="btn btn-secondary" onclick="resetAll()">🗑️ 清空重置</button>
                     </div>
 
-                    <div class="examples">
+                    <div class="examples" id="stringExamples">
                         <span>示例：</span>
                         <button class="example-btn" onclick="setExample('ABRACADABRA')">ABRACADABRA</button>
                         <button class="example-btn" onclick="setExample('HELLO')">HELLO</button>
                         <button class="example-btn" onclick="setExample('MISSISSIPPI')">MISSISSIPPI</button>
                         <button class="example-btn" onclick="setExample('HUFFMAN')">HUFFMAN</button>
                         <button class="example-btn" onclick="setExample('AAAAABBBCD')">AAAAABBBCD</button>
+                    </div>
+
+                    <div class="examples" id="weightsExamples" style="display: none;">
+                        <span>示例：</span>
+                        <button class="example-btn" onclick="setWeightsExample('2,5,7,9,13')">{2,5,7,9,13}</button>
+                        <button class="example-btn" onclick="setWeightsExample('1,2,3,4,5')">{1,2,3,4,5}</button>
+                        <button class="example-btn" onclick="setWeightsExample('5,29,7,8,14,23,3,11')">{5,29,7,8,14,23,3,11}</button>
+                        <button class="example-btn" onclick="setWeightsExample('7,5,2,4')">{7,5,2,4}</button>
                     </div>
 
                     <div id="errorMsg" class="error-msg"></div>
@@ -732,12 +851,41 @@
         let currentStep = 0;
         let huffmanTree = null;
         let codeMap = new Map();
+        let currentMode = 'string';  // 'string' 或 'weights'
+        let weightsArray = [];       // 权值数组
 
         // ==================== 主要函数 ====================
         
+        // 模式切换
+        function switchMode(mode) {
+            currentMode = mode;
+            const stringGroup = document.getElementById('stringInputGroup');
+            const weightsGroup = document.getElementById('weightsInputGroup');
+            const stringExamples = document.getElementById('stringExamples');
+            const weightsExamples = document.getElementById('weightsExamples');
+            
+            if (mode === 'string') {
+                stringGroup.style.display = 'block';
+                weightsGroup.style.display = 'none';
+                stringExamples.style.display = 'block';
+                weightsExamples.style.display = 'none';
+            } else {
+                stringGroup.style.display = 'none';
+                weightsGroup.style.display = 'block';
+                stringExamples.style.display = 'none';
+                weightsExamples.style.display = 'block';
+            }
+            resetAll();
+        }
+
         // 设置示例
         function setExample(text) {
             document.getElementById('inputString').value = text;
+        }
+
+        // 设置权值示例
+        function setWeightsExample(text) {
+            document.getElementById('inputWeights').value = text;
         }
 
         // 显示错误
@@ -752,7 +900,7 @@
             document.getElementById('errorMsg').classList.remove('show');
         }
 
-        // 验证输入
+        // 验证字符串输入
         function validateInput(str) {
             if (!str) {
                 showError('请输入字符串！');
@@ -764,6 +912,31 @@
             }
             if (str.length < 2) {
                 showError('请至少输入2个字符！');
+                return false;
+            }
+            hideError();
+            return true;
+        }
+
+        // 验证权值输入
+        function validateWeights(str) {
+            if (!str) {
+                showError('请输入权值集合！');
+                return false;
+            }
+            // 解析权值
+            const parts = str.split(/[,，\s]+/).filter(s => s.trim() !== '');
+            weightsArray = [];
+            for (let part of parts) {
+                const num = parseInt(part.trim());
+                if (isNaN(num) || num <= 0) {
+                    showError('请输入有效的正整数权值！');
+                    return false;
+                }
+                weightsArray.push(num);
+            }
+            if (weightsArray.length < 2) {
+                showError('请至少输入2个权值！');
                 return false;
             }
             hideError();
@@ -882,6 +1055,15 @@
 
         // 一键生成
         function buildHuffman() {
+            if (currentMode === 'string') {
+                buildHuffmanFromString();
+            } else {
+                buildHuffmanFromWeights();
+            }
+        }
+
+        // 从字符串构建
+        function buildHuffmanFromString() {
             inputString = document.getElementById('inputString').value.trim();
             
             if (!validateInput(inputString)) return;
@@ -921,8 +1103,163 @@
             showEncodedResult();
         }
 
+        // 从权值构建
+        function buildHuffmanFromWeights() {
+            const weightsInput = document.getElementById('inputWeights').value.trim();
+            
+            if (!validateWeights(weightsInput)) return;
+            
+            // 用权值初始化freqMap（使用数字标签）
+            freqMap.clear();
+            for (let i = 0; i < weightsArray.length; i++) {
+                freqMap.set(`W${i+1}`, weightsArray[i]);
+            }
+            
+            // 显示权值表
+            showWeightsTable();
+            
+            // 初始化和准备
+            initNodeQueueFromWeights();
+            prepareBuildSteps();
+            
+            // 构建树
+            buildTreeFromWeights();
+            
+            // 生成编码
+            codeMap.clear();
+            generateCodes(huffmanTree);
+            
+            // 显示所有区域
+            document.getElementById('processSection').style.display = 'block';
+            document.getElementById('treeSection').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // 显示最终步骤
+            currentStep = buildSteps.length - 1;
+            updateStepDisplay();
+            showAllBuildLog();
+            
+            // 绘制树
+            drawHuffmanTree();
+            
+            // 显示WPL结果
+            showWPLResult();
+        }
+
+        // 显示权值表格
+        function showWeightsTable() {
+            const section = document.getElementById('freqSection');
+            section.style.display = 'block';
+            
+            let html = '<table class="weight-table">';
+            html += '<tr><th>节点</th><th>权值</th></tr>';
+            
+            for (let i = 0; i < weightsArray.length; i++) {
+                html += `<tr><td><strong>W${i+1}</strong></td><td>${weightsArray[i]}</td></tr>`;
+            }
+            html += '</table>';
+            
+            document.getElementById('freqTable').innerHTML = html;
+        }
+
+        // 从权值初始化节点队列
+        function initNodeQueueFromWeights() {
+            nodeQueue = [];
+            for (let i = 0; i < weightsArray.length; i++) {
+                const node = new HuffmanNode(`W${i+1}`, weightsArray[i]);
+                node.weight = weightsArray[i];  // 保存原始权值
+                nodeQueue.push(node);
+            }
+            nodeQueue.sort((a, b) => a.freq - b.freq);
+        }
+
+        // 从权值构建树
+        function buildTreeFromWeights() {
+            initNodeQueueFromWeights();
+            
+            while (nodeQueue.length > 1) {
+                nodeQueue.sort((a, b) => a.freq - b.freq);
+                const left = nodeQueue.shift();
+                const right = nodeQueue.shift();
+                
+                const newNode = new HuffmanNode(null, left.freq + right.freq);
+                newNode.left = left;
+                newNode.right = right;
+                
+                nodeQueue.push(newNode);
+            }
+            
+            huffmanTree = nodeQueue[0];
+            return huffmanTree;
+        }
+
+        // 计算并显示WPL
+        function showWPLResult() {
+            // 计算WPL
+            let wpl = 0;
+            let formulaParts = [];
+            
+            function calculateWPL(node, depth) {
+                if (!node) return;
+                if (node.isLeaf()) {
+                    wpl += node.freq * depth;
+                    formulaParts.push(`${node.freq}×${depth}`);
+                } else {
+                    calculateWPL(node.left, depth + 1);
+                    calculateWPL(node.right, depth + 1);
+                }
+            }
+            
+            calculateWPL(huffmanTree, 0);
+            
+            // 显示结果
+            let html = '<h2>📋 带权路径长度 (WPL)</h2>';
+            
+            // 编码表
+            html += '<table class="code-table">';
+            html += '<tr><th>节点</th><th>权值</th><th>路径长度</th><th>编码</th><th>权值×路径长度</th></tr>';
+            
+            const sorted = [...codeMap.entries()].sort((a, b) => a[1].length - b[1].length);
+            for (let [label, code] of sorted) {
+                const weight = freqMap.get(label);
+                const pathLen = code.length;
+                html += `<tr>
+                    <td><strong>${label}</strong></td>
+                    <td>${weight}</td>
+                    <td>${pathLen}</td>
+                    <td class="code">${code}</td>
+                    <td>${weight} × ${pathLen} = ${weight * pathLen}</td>
+                </tr>`;
+            }
+            html += '</table>';
+            
+            // WPL结果卡片
+            html += `
+                <div class="wpl-result">
+                    <h4>🎯 带权路径长度 WPL</h4>
+                    <div class="wpl-value">${wpl}</div>
+                    <div class="wpl-formula">
+                        WPL = ${formulaParts.join(' + ')} = ${wpl}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('codeTable').innerHTML = html;
+            
+            // 隐藏字符串编码结果区
+            document.querySelector('.encoded-result').style.display = 'none';
+        }
+
         // 单步构建
         function buildStep() {
+            if (currentMode === 'string') {
+                buildStepString();
+            } else {
+                buildStepWeights();
+            }
+        }
+
+        function buildStepString() {
             inputString = document.getElementById('inputString').value.trim();
             
             if (!validateInput(inputString)) return;
@@ -951,7 +1288,6 @@
                 
                 // 如果完成了
                 if (currentStep >= buildSteps.length) {
-                    // 构建完整的树并生成编码
                     buildTree();
                     codeMap.clear();
                     generateCodes(huffmanTree);
@@ -959,6 +1295,47 @@
                     document.getElementById('resultSection').style.display = 'block';
                     showCodeTable();
                     showEncodedResult();
+                    drawHuffmanTree();
+                }
+            }
+        }
+
+        function buildStepWeights() {
+            const weightsInput = document.getElementById('inputWeights').value.trim();
+            
+            if (!validateWeights(weightsInput)) return;
+            
+            // 首次点击，初始化
+            if (currentStep === 0 || !buildSteps.length) {
+                freqMap.clear();
+                for (let i = 0; i < weightsArray.length; i++) {
+                    freqMap.set(`W${i+1}`, weightsArray[i]);
+                }
+                showWeightsTable();
+                initNodeQueueFromWeights();
+                prepareBuildSteps();
+                
+                document.getElementById('processSection').style.display = 'block';
+                document.getElementById('treeSection').style.display = 'block';
+                
+                currentStep = 0;
+            }
+            
+            // 执行下一步
+            if (currentStep < buildSteps.length) {
+                updateStepDisplay();
+                addBuildLogEntry(buildSteps[currentStep]);
+                drawStepTree(currentStep);
+                currentStep++;
+                
+                // 如果完成了
+                if (currentStep >= buildSteps.length) {
+                    buildTreeFromWeights();
+                    codeMap.clear();
+                    generateCodes(huffmanTree);
+                    
+                    document.getElementById('resultSection').style.display = 'block';
+                    showWPLResult();
                     drawHuffmanTree();
                 }
             }
@@ -1285,12 +1662,17 @@
         // 重置
         function resetAll() {
             document.getElementById('inputString').value = '';
+            document.getElementById('inputWeights').value = '';
             document.getElementById('freqSection').style.display = 'none';
             document.getElementById('processSection').style.display = 'none';
             document.getElementById('treeSection').style.display = 'none';
             document.getElementById('resultSection').style.display = 'none';
             document.getElementById('buildLog').innerHTML = '<h4>📝 构建日志</h4>';
             document.getElementById('huffmanCanvas').innerHTML = '';
+            
+            // 恢复编码结果区显示
+            const encodedResult = document.querySelector('.encoded-result');
+            if (encodedResult) encodedResult.style.display = 'block';
             
             hideError();
             
@@ -1301,10 +1683,17 @@
             currentStep = 0;
             huffmanTree = null;
             codeMap.clear();
+            weightsArray = [];
         }
 
         // 回车键触发
         document.getElementById('inputString').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buildHuffman();
+            }
+        });
+
+        document.getElementById('inputWeights').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 buildHuffman();
             }
