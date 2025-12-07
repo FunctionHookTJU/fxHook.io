@@ -897,9 +897,41 @@
 
         // 初始化显示
         window.onload = function() {
+            loadFromLocalStorage();
             displayString(document.getElementById('textInput').value, 'textDisplay');
             displayString(document.getElementById('patternInput').value, 'patternDisplay');
         };
+
+        // ==================== 本地存储 ====================
+        const STORAGE_KEY = 'kmp_inputs';
+
+        function saveToLocalStorage() {
+            const data = {
+                textInput: document.getElementById('textInput').value,
+                patternInput: document.getElementById('patternInput').value,
+                stringForNext: document.getElementById('stringForNext').value
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.textInput) document.getElementById('textInput').value = data.textInput;
+                    if (data.patternInput) document.getElementById('patternInput').value = data.patternInput;
+                    if (data.stringForNext) document.getElementById('stringForNext').value = data.stringForNext;
+                } catch (e) {
+                    console.error('加载保存数据失败:', e);
+                }
+            }
+        }
+
+        // 输入时自动保存
+        ['textInput', 'patternInput', 'stringForNext'].forEach(id => {
+            document.getElementById(id).addEventListener('input', saveToLocalStorage);
+        });
     </script>
     
     <script>

@@ -1465,11 +1465,40 @@
 
         function setExample(example) {
             document.getElementById('glInput').value = example;
+            saveToLocalStorage();
             generateGraph();
         }
 
-        // 页面加载后自动生成示例
+        // ==================== 本地存储 ====================
+        const STORAGE_KEY = 'guangyibiao_inputs';
+
+        function saveToLocalStorage() {
+            const data = {
+                glInput: document.getElementById('glInput').value
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.glInput) {
+                        document.getElementById('glInput').value = data.glInput;
+                    }
+                } catch (e) {
+                    console.error('加载保存数据失败:', e);
+                }
+            }
+        }
+
+        // 输入时自动保存
+        document.getElementById('glInput').addEventListener('input', saveToLocalStorage);
+
+        // 页面加载后恢复数据并生成图形
         window.addEventListener('load', function() {
+            loadFromLocalStorage();
             setTimeout(generateGraph, 500);
         });
     </script>

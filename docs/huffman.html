@@ -875,6 +875,7 @@
                 stringExamples.style.display = 'none';
                 weightsExamples.style.display = 'block';
             }
+            saveToLocalStorage();
             resetAll();
         }
 
@@ -1697,7 +1698,42 @@
             if (e.key === 'Enter') {
                 buildHuffman();
             }
-        }) ;
+        });
+
+        // ==================== 本地存储 ====================
+        const STORAGE_KEY = 'huffman_inputs';
+
+        function saveToLocalStorage() {
+            const data = {
+                mode: currentMode,
+                inputString: document.getElementById('inputString').value,
+                inputWeights: document.getElementById('inputWeights').value
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.inputString) document.getElementById('inputString').value = data.inputString;
+                    if (data.inputWeights) document.getElementById('inputWeights').value = data.inputWeights;
+                    if (data.mode) {
+                        switchMode(data.mode);
+                    }
+                } catch (e) {
+                    console.error('加载保存数据失败:', e);
+                }
+            }
+        }
+
+        // 输入时自动保存
+        document.getElementById('inputString').addEventListener('input', saveToLocalStorage);
+        document.getElementById('inputWeights').addEventListener('input', saveToLocalStorage);
+
+        // 页面加载时恢复数据
+        window.addEventListener('load', loadFromLocalStorage);
     </script>
 </body>
 </html>
