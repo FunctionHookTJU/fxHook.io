@@ -15,6 +15,84 @@
         body {
             display: block;
         }
+
+        /* 弹窗样式 */
+        .ad-popup {
+            display: none; /* 默认隐藏，JS控制显示 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .ad-content {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: popup-scale 0.3s ease-out;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes popup-scale {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 0px;
+            right: 10px;
+            font-size: 30px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .close-btn:hover {
+            color: #f00;
+        }
+
+        .rgb-text {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-top: 15px;
+            background: linear-gradient(
+                45deg,
+                #ff0000,
+                #ff7f00,
+                #ffff00,
+                #00ff00,
+                #0000ff,
+                #4b0082,
+                #9400d3,
+                #ff0000
+            );
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: rgb-flow 3s linear infinite;
+            text-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+        }
+
+        @keyframes rgb-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
     </style>
 </head>
 <body>
@@ -373,6 +451,40 @@
             </div>
         </div>
     </footer>
+
+    <!-- 广告弹窗 -->
+    <div id="ad-popup" class="ad-popup">
+        <div class="ad-content">
+            <span class="close-btn">&times;</span>
+            <!-- 请将下方的 src 替换为你想要展示的图片路径 -->
+            <img src="https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/zimin.jpg" alt="这么强？！" style="max-width: 100%; max-height: 60vh; border-radius: 8px; object-fit: contain;">
+            <div class="rgb-text">这么强？！</div>
+        </div>
+    </div>
+
+    <script>
+        // 弹窗逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const popup = document.getElementById('ad-popup');
+            const closeBtn = document.querySelector('.close-btn');
+
+            // 页面加载后显示弹窗 (延迟1秒)
+            setTimeout(() => {
+                popup.style.display = 'flex';
+            }, 1000);
+
+            closeBtn.addEventListener('click', function() {
+                popup.style.display = 'none';
+            });
+
+            // 点击背景也可以关闭
+            popup.addEventListener('click', function(e) {
+                if (e.target === popup) {
+                    popup.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 
