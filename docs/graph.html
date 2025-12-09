@@ -334,6 +334,17 @@
                     </ul>
                 </div>
 
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>Prim 算法是一种贪心算法，用于寻找加权无向图的最小生成树。其核心逻辑如下：</p>
+                    <ul>
+                        <li><strong>初始化：</strong>从图中任意选择一个节点作为起始节点，将其加入"已访问集合"。</li>
+                        <li><strong>寻找最小边：</strong>在所有连接"已访问集合"和"未访问集合"的边中，找到权重最小的一条边。</li>
+                        <li><strong>扩展树：</strong>将这条边连接的未访问节点加入"已访问集合"，并将该边加入最小生成树。</li>
+                        <li><strong>重复：</strong>重复步骤 2 和 3，直到所有节点都被访问。</li>
+                    </ul>
+                </div>
+
                 <div class="control-panel">
                     <div class="control-buttons">
                         <button class="control-btn prim-btn" id="prim-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
@@ -379,6 +390,18 @@
                         <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
                         <li><strong>运行算法：</strong>点击"运行 Kruskal"按钮，按边权重从小到大构建最小生成树</li>
                         <li><strong>清空：</strong>点击"清空画布"重新开始</li>
+                    </ul>
+                </div>
+
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>Kruskal 算法也是一种贪心算法，它通过按权重顺序选择边来构建最小生成树。其核心逻辑如下：</p>
+                    <ul>
+                        <li><strong>排序：</strong>将图中所有的边按照权重从小到大进行排序。</li>
+                        <li><strong>遍历边：</strong>依次遍历排序后的每一条边。</li>
+                        <li><strong>判断环路：</strong>对于当前选中的边，检查它连接的两个节点是否已经属于同一个连通分量（即是否会形成环路）。</li>
+                        <li><strong>合并：</strong>如果不会形成环路，则将这条边加入最小生成树，并将两个节点所在的连通分量合并。否则，忽略这条边。</li>
+                        <li><strong>结束：</strong>当选中的边数达到 V-1（V为节点数）时，算法结束。</li>
                     </ul>
                 </div>
 
