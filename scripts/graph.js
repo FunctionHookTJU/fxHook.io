@@ -1,7 +1,7 @@
-// 图算法可视化 - Prim、Kruskal、拓扑排序和 AOE 关键路径算法实现
+// 图算法可视化 - Prim、Kruskal、拓扑排序算法实现
 
 // 全局状态
-let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'topo' 或 'aoe'
+let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'topo'
 let currentMode = 'addNode'; // 当前模式: 'addNode', 'addEdge', 'delete'
 let nodes = []; // 节点数组
 let edges = []; // 边数组
@@ -14,7 +14,6 @@ let algorithmState = null; // 算法执行状态
 let canvas, ctx;
 let canvas2, ctx2; // Kruskal 的画布
 let canvas3, ctx3; // 拓扑排序的画布
-let canvas4, ctx4; // AOE 的画布
 
 // 节点和边的样式配置
 const NODE_RADIUS = 25;
@@ -22,11 +21,9 @@ const NODE_COLOR = '#667eea';
 const NODE_SELECTED_COLOR = '#764ba2';
 const NODE_IN_MST_COLOR = '#11998e';
 const NODE_TOPO_PROCESSED_COLOR = '#ff6b6b';
-const NODE_AOE_CRITICAL_COLOR = '#764ba2';
 const EDGE_COLOR = '#999';
 const EDGE_IN_MST_COLOR = '#11998e';
 const EDGE_TOPO_PROCESSED_COLOR = '#ff6b6b';
-const EDGE_AOE_CRITICAL_COLOR = '#764ba2';
 const EDGE_WIDTH = 2;
 const EDGE_IN_MST_WIDTH = 4;
 
@@ -73,9 +70,6 @@ window.addEventListener('load', function() {
     canvas3 = document.getElementById('topoCanvas');
     ctx3 = canvas3.getContext('2d');
     
-    canvas4 = document.getElementById('aoeCanvas');
-    ctx4 = canvas4.getContext('2d');
-    
     // 绑定事件
     canvas.addEventListener('click', handleCanvasClick);
     canvas.addEventListener('mousemove', handleCanvasMouseMove);
@@ -83,8 +77,6 @@ window.addEventListener('load', function() {
     canvas2.addEventListener('mousemove', handleCanvasMouseMove);
     canvas3.addEventListener('click', handleCanvasClick);
     canvas3.addEventListener('mousemove', handleCanvasMouseMove);
-    canvas4.addEventListener('click', handleCanvasClick);
-    canvas4.addEventListener('mousemove', handleCanvasMouseMove);
     
     // 权重输入框回车确认
     document.getElementById('weightInput').addEventListener('keypress', function(e) {
@@ -113,9 +105,6 @@ function switchAlgorithm(algorithm) {
     } else if (algorithm === 'topo') {
         document.querySelector('.topo-tab').classList.add('active');
         document.getElementById('topoTool').classList.add('active');
-    } else if (algorithm === 'aoe') {
-        document.querySelector('.aoe-tab').classList.add('active');
-        document.getElementById('aoeTool').classList.add('active');
     }
     
     // 重置状态
@@ -131,7 +120,7 @@ function setMode(mode) {
     
     // 更新按钮状态
     const prefix = currentAlgorithm;
-    const toolId = (prefix === 'topo' || prefix === 'aoe') ? `${prefix}Tool` : `${prefix}Tool`;
+    const toolId = `${prefix}Tool`;
     document.querySelectorAll(`#${toolId} .control-btn`).forEach(btn => {
         btn.classList.remove('active');
     });
@@ -194,6 +183,8 @@ function addNode(x, y) {
     
     updateInfo();
     draw();
+    // 部分浏览器在 canvas 元素从隐藏切到可见时需要下一帧才能正确刷新
+    requestAnimationFrame(draw);
 }
 
 // 处理边的点击
@@ -214,8 +205,8 @@ function handleEdgeClick(x, y) {
             selectedNode = null;
             tempEdgeEnd = null;
         } else {
-            // 对于拓扑排序和 AOE，边是有向的，不需要检查反向边
-            if (currentAlgorithm === 'topo' || currentAlgorithm === 'aoe') {
+            // 对于拓扑排序，边是有向的，不需要检查反向边
+            if (currentAlgorithm === 'topo') {
                 // 检查是否已存在相同方向的边
                 const existingEdge = edges.find(e => 
                     e.from === selectedNode.id && e.to === clickedNode.id
@@ -228,24 +219,19 @@ function handleEdgeClick(x, y) {
                     return;
                 }
                 
-                // AOE 需要权重，拓扑排序不需要
-                if (currentAlgorithm === 'aoe') {
-                    showWeightModal(selectedNode, clickedNode);
-                } else {
-                    // 拓扑排序不需要权重，直接添加边
-                    edges.push({
-                        from: selectedNode.id,
-                        to: clickedNode.id,
-                        weight: 1,
-                        inMST: false,
-                        directed: true
-                    });
-                    
-                    selectedNode = null;
-                    tempEdgeEnd = null;
-                    updateInfo();
-                    draw();
-                }
+                // 拓扑排序不需要权重，直接添加边
+                edges.push({
+                    from: selectedNode.id,
+                    to: clickedNode.id,
+                    weight: 1,
+                    inMST: false,
+                    directed: true
+                });
+                
+                selectedNode = null;
+                tempEdgeEnd = null;
+                updateInfo();
+                draw();
                 return;
             }
             
@@ -312,6 +298,7 @@ function confirmWeight() {
     closeWeightModal();
     updateInfo();
     draw();
+    requestAnimationFrame(draw);
 }
 
 // 处理删除
@@ -456,14 +443,8 @@ function resetAllButtons() {
     if (topoStep) topoStep.disabled = true;
     if (topoRun) topoRun.disabled = false;
     
-    // AOE
-    const aoeStep = document.getElementById('aoe-step');
-    const aoeRun = document.getElementById('aoe-run');
-    if (aoeStep) aoeStep.disabled = true;
-    if (aoeRun) aoeRun.disabled = false;
-    
     // 隐藏所有步骤信息
-    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info', 'aoe-step-info'];
+    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info'];
     stepInfos.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -499,6 +480,7 @@ function loadExample() {
     algorithmState = null;
     updateInfo();
     draw();
+    requestAnimationFrame(draw);
 }
 
 // 加载拓扑排序示例图
@@ -630,245 +612,7 @@ function stepTopo() {
     draw();
 }
 
-// 加载 AOE 示例图
-function loadAOEExample() {
-    if (isRunning) return;
-    
-    nodes = [
-        { id: 0, x: 100, y: 300, label: 'V0' },
-        { id: 1, x: 250, y: 150, label: 'V1' },
-        { id: 2, x: 250, y: 450, label: 'V2' },
-        { id: 3, x: 450, y: 150, label: 'V3' },
-        { id: 4, x: 450, y: 300, label: 'V4' },
-        { id: 5, x: 450, y: 450, label: 'V5' },
-        { id: 6, x: 650, y: 300, label: 'V6' },
-        { id: 7, x: 800, y: 300, label: 'V7' }
-    ];
-    
-    edges = [
-        { from: 0, to: 1, weight: 3, inMST: false, directed: true },
-        { from: 0, to: 2, weight: 4, inMST: false, directed: true },
-        { from: 1, to: 3, weight: 5, inMST: false, directed: true },
-        { from: 1, to: 4, weight: 6, inMST: false, directed: true },
-        { from: 2, to: 4, weight: 7, inMST: false, directed: true },
-        { from: 2, to: 5, weight: 8, inMST: false, directed: true },
-        { from: 3, to: 6, weight: 3, inMST: false, directed: true },
-        { from: 4, to: 6, weight: 2, inMST: false, directed: true },
-        { from: 5, to: 6, weight: 4, inMST: false, directed: true },
-        { from: 6, to: 7, weight: 5, inMST: false, directed: true }
-    ];
-    
-    selectedNode = null;
-    tempEdgeEnd = null;
-    algorithmState = null;
-    
-    // 重置AOE按钮状态
-    const aoeRun = document.getElementById('aoe-run');
-    const aoeStep = document.getElementById('aoe-step');
-    if (aoeRun) aoeRun.disabled = false;
-    if (aoeStep) aoeStep.disabled = true;
-    const aoeStepInfo = document.getElementById('aoe-step-info');
-    if (aoeStepInfo) aoeStepInfo.style.display = 'none';
-    
-    updateInfo();
-    draw();
-}
-
-// 运行 AOE 关键路径算法（初始化）
-function runAOE() {
-    if (nodes.length === 0) {
-        alert('请先添加节点！');
-        return;
-    }
-    
-    if (edges.length === 0) {
-        alert('请先添加边！');
-        return;
-    }
-    
-    isRunning = true;
-    
-    // 重置所有边的状态
-    edges.forEach(e => e.inMST = false);
-    
-    // 计算入度
-    const inDegree = new Array(nodes.length).fill(0);
-    for (let edge of edges) {
-        inDegree[edge.to]++;
-    }
-    
-    // 拓扑排序
-    const ve = new Array(nodes.length).fill(0);
-    const queue = [];
-    const topoOrder = [];
-    const tempInDegree = [...inDegree];
-    
-    for (let i = 0; i < nodes.length; i++) {
-        if (tempInDegree[i] === 0) {
-            queue.push(i);
-        }
-    }
-    
-    while (queue.length > 0) {
-        const u = queue.shift();
-        topoOrder.push(u);
-        
-        for (let edge of edges) {
-            if (edge.from === u) {
-                ve[edge.to] = Math.max(ve[edge.to], ve[u] + edge.weight);
-                tempInDegree[edge.to]--;
-                if (tempInDegree[edge.to] === 0) {
-                    queue.push(edge.to);
-                }
-            }
-        }
-    }
-    
-    // 检查是否有环
-    if (topoOrder.length !== nodes.length) {
-        alert('图中存在环路，无法计算关键路径！');
-        isRunning = false;
-        return;
-    }
-    
-    // 计算 vl（最晚发生时间）
-    const criticalLength = ve[topoOrder[topoOrder.length - 1]];
-    const vl = new Array(nodes.length).fill(criticalLength);
-    
-    for (let i = topoOrder.length - 1; i >= 0; i--) {
-        const u = topoOrder[i];
-        for (let edge of edges) {
-            if (edge.from === u) {
-                vl[u] = Math.min(vl[u], vl[edge.to] - edge.weight);
-            }
-        }
-    }
-    
-    // 预计算所有边的 e 和 l 值
-    const edgeAnalysis = edges.map((edge, index) => {
-        const e = ve[edge.from];  // 最早开始时间
-        const l = vl[edge.to] - edge.weight;  // 最晚开始时间
-        const slack = l - e;  // 松弛时间
-        const isCritical = (slack === 0);
-        return { index, edge, e, l, slack, isCritical };
-    });
-    
-    // 保存算法状态
-    algorithmState = {
-        type: 'aoe',
-        ve: ve,
-        vl: vl,
-        topoOrder: topoOrder,
-        edgeAnalysis: edgeAnalysis,
-        currentEdgeIndex: 0,
-        criticalLength: criticalLength,
-        criticalCount: 0
-    };
-    
-    // 更新按钮状态
-    const runBtn = document.getElementById('aoe-run');
-    const stepBtn = document.getElementById('aoe-step');
-    if (runBtn) runBtn.disabled = true;
-    if (stepBtn) stepBtn.disabled = false;
-    
-    // 显示初始化信息
-    const stepInfoDiv = document.getElementById('aoe-step-info');
-    if (stepInfoDiv) {
-        stepInfoDiv.style.display = 'block';
-        stepInfoDiv.innerHTML = 
-            'AOE网络初始化完成！<br>' +
-            've[] = [' + ve.join(', ') + ']<br>' +
-            'vl[] = [' + vl.join(', ') + ']<br>' +
-            '关键路径长度: ' + criticalLength + '<br>' +
-            '点击"单步执行"逐条分析活动';
-    }
-    
-    updateInfo();
-    draw();
-}
-
-// AOE 单步执行
-function stepAOE() {
-    if (!algorithmState || algorithmState.type !== 'aoe') {
-        console.error('AOE 状态无效');
-        return;
-    }
-    
-    const edgeAnalysis = algorithmState.edgeAnalysis;
-    const currentIdx = algorithmState.currentEdgeIndex;
-    const vl = algorithmState.vl;
-    
-    if (currentIdx >= edgeAnalysis.length) {
-        finishAOE();
-        return;
-    }
-    
-    const analysis = edgeAnalysis[currentIdx];
-    const edge = analysis.edge;
-    const fromLabel = nodes[edge.from].label;
-    const toLabel = nodes[edge.to].label;
-    
-    // 构建信息
-    let info = '活动 ' + fromLabel + '→' + toLabel + ' (持续时间: ' + edge.weight + ')<br>';
-    info += 'e(最早开始) = ve[' + fromLabel + '] = ' + analysis.e + '<br>';
-    info += 'l(最晚开始) = vl[' + toLabel + '] - ' + edge.weight + ' = ' + vl[edge.to] + ' - ' + edge.weight + ' = ' + analysis.l + '<br>';
-    info += '松弛时间 = l - e = ' + analysis.slack + '<br>';
-    
-    if (analysis.isCritical) {
-        edge.inMST = true;
-        algorithmState.criticalCount++;
-        info += '<strong style="color: #764ba2;">★ 这是关键活动！</strong>';
-    } else {
-        info += '非关键活动，有 ' + analysis.slack + ' 个时间单位的余量';
-    }
-    
-    // 显示信息
-    const stepInfoDiv = document.getElementById('aoe-step-info');
-    if (stepInfoDiv) {
-        stepInfoDiv.style.display = 'block';
-        stepInfoDiv.innerHTML = info;
-    }
-    
-    algorithmState.currentEdgeIndex++;
-    
-    updateInfo();
-    draw();
-    
-    // 检查是否完成
-    if (algorithmState.currentEdgeIndex >= edgeAnalysis.length) {
-        finishAOE();
-    }
-}
-
-// AOE 算法完成
-function finishAOE() {
-    isRunning = false;
-    
-    const stepBtn = document.getElementById('aoe-step');
-    const runBtn = document.getElementById('aoe-run');
-    if (stepBtn) stepBtn.disabled = true;
-    if (runBtn) runBtn.disabled = false;
-    
-    // 找出所有关键活动
-    const criticalList = algorithmState.edgeAnalysis
-        .filter(a => a.isCritical)
-        .map(a => nodes[a.edge.from].label + '→' + nodes[a.edge.to].label + '(' + a.edge.weight + ')')
-        .join(' → ');
-    
-    const info = 
-        '<strong>算法完成！</strong><br>' +
-        '关键路径长度: ' + algorithmState.criticalLength + '<br>' +
-        '关键活动数: ' + algorithmState.criticalCount + '<br>' +
-        '关键路径: ' + criticalList;
-    
-    const stepInfoDiv = document.getElementById('aoe-step-info');
-    if (stepInfoDiv) {
-        stepInfoDiv.style.display = 'block';
-        stepInfoDiv.innerHTML = info;
-    }
-    
-    updateInfo();
-}
+// ==================== Prim 算法 ====================
 
 // 运行 Prim 算法
 function runPrim() {
@@ -1115,14 +859,6 @@ function updateInfo() {
         } else {
             document.getElementById('topo-result').textContent = '-';
         }
-    } else if (prefix === 'aoe') {
-        if (algorithmState) {
-            document.getElementById('aoe-critical-length').textContent = algorithmState.criticalLength;
-            document.getElementById('aoe-critical-count').textContent = algorithmState.criticalEdges.length;
-        } else {
-            document.getElementById('aoe-critical-length').textContent = '-';
-            document.getElementById('aoe-critical-count').textContent = '-';
-        }
     } else {
         if (algorithmState) {
             document.getElementById(`${prefix}-total-weight`).textContent = algorithmState.totalWeight;
@@ -1147,6 +883,7 @@ function updateStepInfo(message) {
 // 绘制图形
 function draw() {
     let activeCanvas, activeCtx;
+
     if (currentAlgorithm === 'prim') {
         activeCanvas = canvas;
         activeCtx = ctx;
@@ -1156,9 +893,6 @@ function draw() {
     } else if (currentAlgorithm === 'topo') {
         activeCanvas = canvas3;
         activeCtx = ctx3;
-    } else {
-        activeCanvas = canvas4;
-        activeCtx = ctx4;
     }
     
     // 清空画布
@@ -1169,8 +903,8 @@ function draw() {
         const fromNode = nodes[edge.from];
         const toNode = nodes[edge.to];
         
-        if (currentAlgorithm === 'topo' || currentAlgorithm === 'aoe') {
-            drawDirectedEdge(activeCtx, fromNode, toNode, edge.inMST, edge.weight, currentAlgorithm === 'aoe');
+        if (currentAlgorithm === 'topo') {
+            drawDirectedEdge(activeCtx, fromNode, toNode, edge.inMST, edge.weight);
         } else {
             drawEdge(activeCtx, fromNode, toNode, edge.weight, edge.inMST);
         }
@@ -1281,7 +1015,7 @@ function drawEdge(context, fromNode, toNode, weight, inMST) {
 }
 
 // 绘制有向边（用于拓扑排序）
-function drawDirectedEdge(context, fromNode, toNode, isProcessed, weight = 0, isAOE = false) {
+function drawDirectedEdge(context, fromNode, toNode, isCritical, weight) {
     // 计算边的起点和终点（在节点圆的边缘）
     const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x);
     const startX = fromNode.x + NODE_RADIUS * Math.cos(angle);
@@ -1289,24 +1023,21 @@ function drawDirectedEdge(context, fromNode, toNode, isProcessed, weight = 0, is
     const endX = toNode.x - NODE_RADIUS * Math.cos(angle);
     const endY = toNode.y - NODE_RADIUS * Math.sin(angle);
     
+    // 确定线条样式
+    let lineColor = EDGE_COLOR;
+    let lineWidth = EDGE_WIDTH;
+    
+    if (isCritical) {
+        lineColor = EDGE_TOPO_PROCESSED_COLOR;
+        lineWidth = EDGE_IN_MST_WIDTH;
+    }
+    
     // 绘制线
     context.beginPath();
     context.moveTo(startX, startY);
     context.lineTo(endX, endY);
-    
-    if (isAOE && isProcessed) {
-        // AOE关键路径
-        context.strokeStyle = EDGE_AOE_CRITICAL_COLOR;
-        context.lineWidth = EDGE_IN_MST_WIDTH;
-    } else if (!isAOE && isProcessed) {
-        // 拓扑排序已处理
-        context.strokeStyle = EDGE_TOPO_PROCESSED_COLOR;
-        context.lineWidth = EDGE_IN_MST_WIDTH;
-    } else {
-        context.strokeStyle = EDGE_COLOR;
-        context.lineWidth = EDGE_WIDTH;
-    }
-    
+    context.strokeStyle = lineColor;
+    context.lineWidth = lineWidth;
     context.stroke();
     
     // 绘制箭头
@@ -1323,32 +1054,20 @@ function drawDirectedEdge(context, fromNode, toNode, isProcessed, weight = 0, is
     context.lineTo(arrow1X, arrow1Y);
     context.moveTo(endX, endY);
     context.lineTo(arrow2X, arrow2Y);
-    
-    if (isAOE && isProcessed) {
-        context.strokeStyle = EDGE_AOE_CRITICAL_COLOR;
-        context.lineWidth = 3;
-    } else if (!isAOE && isProcessed) {
-        context.strokeStyle = EDGE_TOPO_PROCESSED_COLOR;
-        context.lineWidth = 3;
-    } else {
-        context.strokeStyle = EDGE_COLOR;
-        context.lineWidth = 2;
-    }
-    
+    context.strokeStyle = lineColor;
+    context.lineWidth = isCritical ? 3 : 2;
     context.stroke();
     
-    // AOE显示权重（活动持续时间）
-    if (isAOE && weight > 0) {
+    // 显示权重
+    if (weight > 0) {
         const midX = (startX + endX) / 2;
         const midY = (startY + endY) / 2;
         
-        // 计算权重文本的偏移位置（垂直于边的方向）
         const offsetDistance = 15;
         const perpAngle = angle + Math.PI / 2;
         const textX = midX + offsetDistance * Math.cos(perpAngle);
         const textY = midY + offsetDistance * Math.sin(perpAngle);
         
-        // 绘制权重背景
         context.font = '14px Arial';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
@@ -1358,12 +1077,7 @@ function drawDirectedEdge(context, fromNode, toNode, isProcessed, weight = 0, is
         context.fillStyle = 'white';
         context.fillRect(textX - textWidth / 2 - 3, textY - 8, textWidth + 6, 16);
         
-        // 绘制权重文本
-        if (isProcessed) {
-            context.fillStyle = EDGE_AOE_CRITICAL_COLOR;
-        } else {
-            context.fillStyle = '#666';
-        }
+        context.fillStyle = isCritical ? EDGE_TOPO_PROCESSED_COLOR : '#666';
         context.fillText(weightText, textX, textY);
     }
 }

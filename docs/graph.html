@@ -19,7 +19,6 @@
             --prim-color: #11998e;
             --kruskal-color: #f093fb;
             --topo-color: #ff6b6b;
-            --aoe-color: #764ba2;
         }
 
         /* 工具选择标签页 */
@@ -62,10 +61,6 @@
 
         .tool-tab.active.topo-tab {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        }
-
-        .tool-tab.active.aoe-tab {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
 
         /* 工具内容区 */
@@ -150,17 +145,6 @@
         .control-btn.topo-btn:hover,
         .control-btn.topo-btn.active {
             background: var(--topo-color);
-            color: white;
-        }
-
-        .control-btn.aoe-btn {
-            border-color: var(--aoe-color);
-            color: var(--aoe-color);
-        }
-
-        .control-btn.aoe-btn:hover,
-        .control-btn.aoe-btn.active {
-            background: var(--aoe-color);
             color: white;
         }
 
@@ -406,9 +390,6 @@
             </button>
             <button class="tool-tab topo-tab" onclick="switchAlgorithm('topo')">
                 拓扑排序
-            </button>
-            <button class="tool-tab aoe-tab" onclick="switchAlgorithm('aoe')">
-                AOE 关键路径
             </button>
         </div>
 
@@ -745,143 +726,6 @@ vector&lt;<span class="type">int</span>&gt; topoOrder;
     }
     cout &lt;&lt; endl;
     <span class="keyword">return true</span>;
-}</pre>
-                </div>
-            </div>
-        </div>
-
-        <!-- AOE 关键路径内容 -->
-        <div id="aoeTool" class="tool-content">
-            <div class="section">
-                <div class="instructions">
-                    <h4>📖 使用说明</h4>
-                    <ul>
-                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建事件节点</li>
-                        <li><strong>添加有向边（活动）：</strong>点击"添加边"按钮后，依次点击两个节点创建有向边，输入活动持续时间</li>
-                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
-                        <li><strong>运行算法：</strong>点击"运行 AOE"按钮，计算关键路径和各活动的时间参数</li>
-                        <li><strong>清空：</strong>点击"清空画布"重新开始</li>
-                    </ul>
-                </div>
-
-                <div class="instructions">
-                    <h4>🧠 算法逻辑规则</h4>
-                    <p>AOE 网关键路径算法用于项目调度和时间分析，核心概念包括：</p>
-                    <ul>
-                        <li><strong>事件最早发生时间 ve[i]：</strong>从源点到顶点 i 的最长路径长度。</li>
-                        <li><strong>事件最晚发生时间 vl[i]：</strong>在不延误整个工期的前提下，事件 i 最晚必须发生的时间。</li>
-                        <li><strong>活动最早开始时间 e[i]：</strong>等于活动起点的最早发生时间 ve[u]。</li>
-                        <li><strong>活动最晚开始时间 l[i]：</strong>等于活动终点的最晚发生时间减去活动持续时间 vl[v] - weight。</li>
-                        <li><strong>松弛时间：</strong>l[i] - e[i]，为 0 的活动是关键活动。</li>
-                        <li><strong>关键路径：</strong>由所有关键活动组成的从源点到汇点的路径，决定了整个工程的最短完成时间。</li>
-                    </ul>
-                </div>
-
-                <div class="control-panel">
-                    <div class="control-buttons">
-                        <button class="control-btn aoe-btn" id="aoe-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
-                        <button class="control-btn aoe-btn" id="aoe-add-edge" onclick="setMode('addEdge')">🔗 添加活动</button>
-                        <button class="control-btn aoe-btn" id="aoe-delete" onclick="setMode('delete')">🗑️ 删除</button>
-                        <button class="control-btn aoe-btn" id="aoe-run" onclick="runAOE()">▶️ 运行 AOE</button>
-                        <button class="control-btn aoe-btn" id="aoe-step" onclick="stepAOE()" disabled>⏭️ 单步执行</button>
-                        <button class="control-btn aoe-btn" id="aoe-reset" onclick="resetAlgorithm()">🔄 重置</button>
-                        <button class="control-btn aoe-btn" id="aoe-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
-                        <button class="control-btn aoe-btn" onclick="loadAOEExample()">📝 加载示例</button>
-                    </div>
-                </div>
-
-                <div class="canvas-container">
-                    <canvas id="aoeCanvas" width="900" height="600"></canvas>
-                    <div class="info-panel">
-                        <h3>算法信息</h3>
-                        <div class="info-item">
-                            <strong>节点数：</strong><span id="aoe-node-count">0</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>活动数：</strong><span id="aoe-edge-count">0</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>关键路径长度：</strong><span id="aoe-critical-length">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>关键活动数：</strong><span id="aoe-critical-count">-</span>
-                        </div>
-                        <div id="aoe-step-info" class="step-info" style="display:none;">
-                            当前步骤信息将在这里显示
-                        </div>
-                    </div>
-                </div>
-
-                <div class="code-block">
-                    <h5>💻 C++ 实现示例</h5>
-                    <pre><span class="comment">// AOE 网关键路径算法</span>
-<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
-<span class="keyword">using namespace</span> std;
-
-<span class="keyword">const int</span> MAXN = <span class="number">1005</span>;
-<span class="keyword">const int</span> INF = <span class="number">1e9</span>;
-
-<span class="type">int</span> n, m;
-<span class="keyword">struct</span> <span class="type">Edge</span> {
-    <span class="type">int</span> v, w;
-};
-vector&lt;<span class="type">Edge</span>&gt; adj[MAXN];
-vector&lt;<span class="type">Edge</span>&gt; radj[MAXN];  <span class="comment">// 反向图</span>
-<span class="type">int</span> inDegree[MAXN];
-<span class="type">int</span> ve[MAXN], vl[MAXN];  <span class="comment">// 事件最早/最晚时间</span>
-vector&lt;<span class="type">int</span>&gt; topoOrder;
-
-<span class="type">bool</span> <span class="function">topologicalSort</span>() {
-    queue&lt;<span class="type">int</span>&gt; q;
-    fill(ve, ve + n, <span class="number">0</span>);
-    
-    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) {
-        <span class="keyword">if</span> (inDegree[i] == <span class="number">0</span>) q.push(i);
-    }
-    
-    <span class="keyword">while</span> (<span class="operator">!</span>q.empty()) {
-        <span class="type">int</span> u = q.front(); q.pop();
-        topoOrder.push_back(u);
-        
-        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
-            ve[v] = max(ve[v], ve[u] + w);
-            <span class="keyword">if</span> (<span class="operator">--</span>inDegree[v] == <span class="number">0</span>) q.push(v);
-        }
-    }
-    
-    <span class="keyword">return</span> topoOrder.size() == n;
-}
-
-<span class="type">void</span> <span class="function">criticalPath</span>() {
-    <span class="keyword">if</span> (<span class="operator">!</span>topologicalSort()) {
-        cout &lt;&lt; <span class="string">"存在环路，无法计算!"</span> &lt;&lt; endl;
-        <span class="keyword">return</span>;
-    }
-    
-    <span class="comment">// 计算最晚发生时间</span>
-    fill(vl, vl + n, ve[topoOrder.back()]);
-    
-    <span class="keyword">for</span> (<span class="type">int</span> i = topoOrder.size() <span class="operator">-</span> <span class="number">1</span>; i &gt;= <span class="number">0</span>; i<span class="operator">--</span>) {
-        <span class="type">int</span> u = topoOrder[i];
-        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
-            vl[u] = min(vl[u], vl[v] <span class="operator">-</span> w);
-        }
-    }
-    
-    <span class="comment">// 找关键活动</span>
-    cout &lt;&lt; <span class="string">"关键路径长度: "</span> &lt;&lt; ve[topoOrder.back()] &lt;&lt; endl;
-    cout &lt;&lt; <span class="string">"关键活动: "</span>;
-    
-    <span class="keyword">for</span> (<span class="type">int</span> u = <span class="number">0</span>; u &lt; n; u<span class="operator">++</span>) {
-        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
-            <span class="type">int</span> e = ve[u];          <span class="comment">// 最早开始</span>
-            <span class="type">int</span> l = vl[v] <span class="operator">-</span> w;      <span class="comment">// 最晚开始</span>
-            <span class="keyword">if</span> (e == l) {
-                cout &lt;&lt; u &lt;&lt; <span class="string">"-&gt;"</span> &lt;&lt; v &lt;&lt; <span class="string">" "</span>;
-            }
-        }
-    }
-    cout &lt;&lt; endl;
 }</pre>
                 </div>
             </div>
