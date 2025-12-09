@@ -18,6 +18,8 @@
             --theme-secondary: #764ba2;
             --prim-color: #11998e;
             --kruskal-color: #f093fb;
+            --topo-color: #ff6b6b;
+            --aoe-color: #764ba2;
         }
 
         /* 工具选择标签页 */
@@ -56,6 +58,14 @@
 
         .tool-tab.active.kruskal-tab {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .tool-tab.active.topo-tab {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .tool-tab.active.aoe-tab {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
 
         /* 工具内容区 */
@@ -129,6 +139,28 @@
         .control-btn.kruskal-btn:hover,
         .control-btn.kruskal-btn.active {
             background: var(--kruskal-color);
+            color: white;
+        }
+
+        .control-btn.topo-btn {
+            border-color: var(--topo-color);
+            color: var(--topo-color);
+        }
+
+        .control-btn.topo-btn:hover,
+        .control-btn.topo-btn.active {
+            background: var(--topo-color);
+            color: white;
+        }
+
+        .control-btn.aoe-btn {
+            border-color: var(--aoe-color);
+            color: var(--aoe-color);
+        }
+
+        .control-btn.aoe-btn:hover,
+        .control-btn.aoe-btn.active {
+            background: var(--aoe-color);
             color: white;
         }
 
@@ -285,6 +317,60 @@
             margin: 5px 0;
         }
 
+        /* 代码块样式 */
+        .code-block {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        .code-block h5 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #4ec9b0;
+            font-size: 14px;
+        }
+
+        /* 语法高亮样式 */
+        .keyword {
+            color: #569cd6;
+        }
+
+        .type {
+            color: #4ec9b0;
+        }
+
+        .function {
+            color: #dcdcaa;
+        }
+
+        .comment {
+            color: #6a9955;
+        }
+
+        .string {
+            color: #ce9178;
+        }
+
+        .number {
+            color: #b5cea8;
+        }
+
+        .operator {
+            color: #d4d4d4;
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             .control-buttons {
@@ -317,6 +403,12 @@
             </button>
             <button class="tool-tab kruskal-tab" onclick="switchAlgorithm('kruskal')">
                 Kruskal 算法
+            </button>
+            <button class="tool-tab topo-tab" onclick="switchAlgorithm('topo')">
+                拓扑排序
+            </button>
+            <button class="tool-tab aoe-tab" onclick="switchAlgorithm('aoe')">
+                AOE 关键路径
             </button>
         </div>
 
@@ -375,6 +467,57 @@
                             当前步骤信息将在这里显示
                         </div>
                     </div>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例</h5>
+                    <pre><span class="comment">// Prim 算法 - 最小生成树</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">const int</span> INF = <span class="number">1e9</span>;
+<span class="keyword">const int</span> MAXN = <span class="number">1005</span>;
+
+<span class="type">int</span> n, m;
+vector&lt;<span class="type">pair</span>&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt; adj[MAXN];
+<span class="type">bool</span> visited[MAXN];
+<span class="type">int</span> key[MAXN];
+<span class="type">int</span> parent[MAXN];
+
+<span class="type">void</span> <span class="function">prim</span>(<span class="type">int</span> start) {
+    fill(key, key + n, INF);
+    fill(visited, visited + n, <span class="keyword">false</span>);
+    
+    key[start] = <span class="number">0</span>;
+    parent[start] = <span class="number">-1</span>;
+    
+    <span class="keyword">for</span> (<span class="type">int</span> count = <span class="number">0</span>; count &lt; n; count<span class="operator">++</span>) {
+        <span class="comment">// 找一个未访问且key最小的节点</span>
+        <span class="type">int</span> u = <span class="number">-1</span>;
+        <span class="keyword">for</span> (<span class="type">int</span> v = <span class="number">0</span>; v &lt; n; v<span class="operator">++</span>) {
+            <span class="keyword">if</span> (<span class="operator">!</span>visited[v] <span class="operator">&amp;&amp;</span> (u == <span class="number">-1</span> <span class="operator">||</span> key[v] &lt; key[u])) {
+                u = v;
+            }
+        }
+        
+        <span class="keyword">if</span> (key[u] == INF) <span class="keyword">break</span>;
+        
+        visited[u] = <span class="keyword">true</span>;
+        
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
+            <span class="keyword">if</span> (<span class="operator">!</span>visited[v] <span class="operator">&amp;&amp;</span> w &lt; key[v]) {
+                key[v] = w;
+                parent[v] = u;
+            }
+        }
+    }
+    
+    <span class="type">int</span> totalWeight = <span class="number">0</span>;
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) {
+        <span class="keyword">if</span> (i != start) totalWeight <span class="operator">+=</span> key[i];
+    }
+    cout &lt;&lt; <span class="string">"MST权重和: "</span> &lt;&lt; totalWeight &lt;&lt; endl;
+}</pre>
                 </div>
             </div>
         </div>
@@ -435,6 +578,311 @@
                             当前步骤信息将在这里显示
                         </div>
                     </div>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例</h5>
+                    <pre><span class="comment">// Kruskal 算法 - 使用并查集</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">struct</span> <span class="type">Edge</span> {
+    <span class="type">int</span> u, v, w;
+    <span class="type">bool</span> <span class="keyword">operator</span>&lt;(<span class="keyword">const</span> <span class="type">Edge</span><span class="operator">&amp;</span> other) <span class="keyword">const</span> {
+        <span class="keyword">return</span> w &lt; other.w;
+    }
+};
+
+<span class="keyword">class</span> <span class="type">UnionFind</span> {
+<span class="keyword">public</span>:
+    vector&lt;<span class="type">int</span>&gt; parent, rank;
+    
+    <span class="function">UnionFind</span>(<span class="type">int</span> n) {
+        parent.resize(n);
+        rank.resize(n, <span class="number">0</span>);
+        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) parent[i] = i;
+    }
+    
+    <span class="type">int</span> <span class="function">find</span>(<span class="type">int</span> x) {
+        <span class="keyword">if</span> (parent[x] <span class="operator">!=</span> x) parent[x] = find(parent[x]);
+        <span class="keyword">return</span> parent[x];
+    }
+    
+    <span class="type">bool</span> <span class="function">unite</span>(<span class="type">int</span> x, <span class="type">int</span> y) {
+        <span class="type">int</span> px = find(x), py = find(y);
+        <span class="keyword">if</span> (px == py) <span class="keyword">return false</span>;
+        
+        <span class="keyword">if</span> (rank[px] &lt; rank[py]) swap(px, py);
+        parent[py] = px;
+        <span class="keyword">if</span> (rank[px] == rank[py]) rank[px]<span class="operator">++</span>;
+        <span class="keyword">return true</span>;
+    }
+};
+
+<span class="type">void</span> <span class="function">kruskal</span>(<span class="type">int</span> n, vector&lt;<span class="type">Edge</span>&gt;<span class="operator">&amp;</span> edges) {
+    sort(edges.begin(), edges.end());
+    <span class="type">UnionFind</span> uf(n);
+    
+    <span class="type">int</span> totalWeight = <span class="number">0</span>, edgeCount = <span class="number">0</span>;
+    <span class="keyword">for</span> (<span class="keyword">auto</span><span class="operator">&amp;</span> e : edges) {
+        <span class="keyword">if</span> (uf.unite(e.u, e.v)) {
+            totalWeight <span class="operator">+=</span> e.w;
+            edgeCount<span class="operator">++</span>;
+            <span class="keyword">if</span> (edgeCount == n <span class="operator">-</span> <span class="number">1</span>) <span class="keyword">break</span>;
+        }
+    }
+    
+    cout &lt;&lt; <span class="string">"MST权重和: "</span> &lt;&lt; totalWeight &lt;&lt; endl;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 拓扑排序内容 -->
+        <div id="topoTool" class="tool-content">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建节点</li>
+                        <li><strong>添加有向边：</strong>点击"添加边"按钮后，依次点击两个节点创建有向边（从第一个节点指向第二个节点）</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>运行算法：</strong>点击"运行拓扑排序"按钮，执行拓扑排序算法</li>
+                        <li><strong>清空：</strong>点击"清空画布"重新开始</li>
+                    </ul>
+                </div>
+
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>拓扑排序是一种对有向无环图（DAG）的顶点进行线性排序的算法。其核心逻辑如下：</p>
+                    <ul>
+                        <li><strong>入度计算：</strong>首先计算每个节点的入度（指向该节点的边的数量）。</li>
+                        <li><strong>初始化队列：</strong>将所有入度为 0 的节点加入队列。</li>
+                        <li><strong>处理节点：</strong>从队列中取出一个节点，将其加入结果序列，并将该节点指向的所有邻接节点的入度减 1。</li>
+                        <li><strong>更新队列：</strong>如果某个邻接节点的入度变为 0，则将其加入队列。</li>
+                        <li><strong>检测环路：</strong>重复步骤 3 和 4，直到队列为空。如果结果序列中的节点数少于图中的总节点数，则说明图中存在环路，无法进行拓扑排序。</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn topo-btn" id="topo-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn topo-btn" id="topo-add-edge" onclick="setMode('addEdge')">🔗 添加有向边</button>
+                        <button class="control-btn topo-btn" id="topo-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn topo-btn" id="topo-run" onclick="runTopo()">▶️ 运行拓扑排序</button>
+                        <button class="control-btn topo-btn" id="topo-step" onclick="stepTopo()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn topo-btn" id="topo-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn topo-btn" id="topo-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn topo-btn" onclick="loadTopoExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="topoCanvas" width="900" height="600"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="topo-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>边数：</strong><span id="topo-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>拓扑序列：</strong><span id="topo-result">-</span>
+                        </div>
+                        <div id="topo-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例</h5>
+                    <pre><span class="comment">// 拓扑排序 - Kahn 算法</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">const int</span> MAXN = <span class="number">1005</span>;
+
+<span class="type">int</span> n, m;
+vector&lt;<span class="type">int</span>&gt; adj[MAXN];
+<span class="type">int</span> inDegree[MAXN];
+vector&lt;<span class="type">int</span>&gt; topoOrder;
+
+<span class="type">bool</span> <span class="function">topologicalSort</span>() {
+    queue&lt;<span class="type">int</span>&gt; q;
+    
+    <span class="comment">// 找所有入度为0的节点</span>
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) {
+        <span class="keyword">if</span> (inDegree[i] == <span class="number">0</span>) {
+            q.push(i);
+        }
+    }
+    
+    <span class="keyword">while</span> (<span class="operator">!</span>q.empty()) {
+        <span class="type">int</span> u = q.front();
+        q.pop();
+        topoOrder.push_back(u);
+        
+        <span class="comment">// 更新u的所有邻接节点</span>
+        <span class="keyword">for</span> (<span class="type">int</span> v : adj[u]) {
+            inDegree[v]<span class="operator">--</span>;
+            <span class="keyword">if</span> (inDegree[v] == <span class="number">0</span>) {
+                q.push(v);
+            }
+        }
+    }
+    
+    <span class="comment">// 检查是否存在环路</span>
+    <span class="keyword">if</span> (topoOrder.size() <span class="operator">!=</span> n) {
+        cout &lt;&lt; <span class="string">"图中存在环路!"</span> &lt;&lt; endl;
+        <span class="keyword">return false</span>;
+    }
+    
+    <span class="comment">// 输出拓扑序列</span>
+    <span class="keyword">for</span> (<span class="type">int</span> node : topoOrder) {
+        cout &lt;&lt; node &lt;&lt; <span class="string">" "</span>;
+    }
+    cout &lt;&lt; endl;
+    <span class="keyword">return true</span>;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- AOE 关键路径内容 -->
+        <div id="aoeTool" class="tool-content">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建事件节点</li>
+                        <li><strong>添加有向边（活动）：</strong>点击"添加边"按钮后，依次点击两个节点创建有向边，输入活动持续时间</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>运行算法：</strong>点击"运行 AOE"按钮，计算关键路径和各活动的时间参数</li>
+                        <li><strong>清空：</strong>点击"清空画布"重新开始</li>
+                    </ul>
+                </div>
+
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>AOE 网关键路径算法用于项目调度和时间分析，核心概念包括：</p>
+                    <ul>
+                        <li><strong>事件最早发生时间 ve[i]：</strong>从源点到顶点 i 的最长路径长度。</li>
+                        <li><strong>事件最晚发生时间 vl[i]：</strong>在不延误整个工期的前提下，事件 i 最晚必须发生的时间。</li>
+                        <li><strong>活动最早开始时间 e[i]：</strong>等于活动起点的最早发生时间 ve[u]。</li>
+                        <li><strong>活动最晚开始时间 l[i]：</strong>等于活动终点的最晚发生时间减去活动持续时间 vl[v] - weight。</li>
+                        <li><strong>松弛时间：</strong>l[i] - e[i]，为 0 的活动是关键活动。</li>
+                        <li><strong>关键路径：</strong>由所有关键活动组成的从源点到汇点的路径，决定了整个工程的最短完成时间。</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn aoe-btn" id="aoe-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn aoe-btn" id="aoe-add-edge" onclick="setMode('addEdge')">🔗 添加活动</button>
+                        <button class="control-btn aoe-btn" id="aoe-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn aoe-btn" id="aoe-run" onclick="runAOE()">▶️ 运行 AOE</button>
+                        <button class="control-btn aoe-btn" id="aoe-step" onclick="stepAOE()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn aoe-btn" id="aoe-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn aoe-btn" id="aoe-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn aoe-btn" onclick="loadAOEExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="aoeCanvas" width="900" height="600"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="aoe-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>活动数：</strong><span id="aoe-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>关键路径长度：</strong><span id="aoe-critical-length">-</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>关键活动数：</strong><span id="aoe-critical-count">-</span>
+                        </div>
+                        <div id="aoe-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例</h5>
+                    <pre><span class="comment">// AOE 网关键路径算法</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">const int</span> MAXN = <span class="number">1005</span>;
+<span class="keyword">const int</span> INF = <span class="number">1e9</span>;
+
+<span class="type">int</span> n, m;
+<span class="keyword">struct</span> <span class="type">Edge</span> {
+    <span class="type">int</span> v, w;
+};
+vector&lt;<span class="type">Edge</span>&gt; adj[MAXN];
+vector&lt;<span class="type">Edge</span>&gt; radj[MAXN];  <span class="comment">// 反向图</span>
+<span class="type">int</span> inDegree[MAXN];
+<span class="type">int</span> ve[MAXN], vl[MAXN];  <span class="comment">// 事件最早/最晚时间</span>
+vector&lt;<span class="type">int</span>&gt; topoOrder;
+
+<span class="type">bool</span> <span class="function">topologicalSort</span>() {
+    queue&lt;<span class="type">int</span>&gt; q;
+    fill(ve, ve + n, <span class="number">0</span>);
+    
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) {
+        <span class="keyword">if</span> (inDegree[i] == <span class="number">0</span>) q.push(i);
+    }
+    
+    <span class="keyword">while</span> (<span class="operator">!</span>q.empty()) {
+        <span class="type">int</span> u = q.front(); q.pop();
+        topoOrder.push_back(u);
+        
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
+            ve[v] = max(ve[v], ve[u] + w);
+            <span class="keyword">if</span> (<span class="operator">--</span>inDegree[v] == <span class="number">0</span>) q.push(v);
+        }
+    }
+    
+    <span class="keyword">return</span> topoOrder.size() == n;
+}
+
+<span class="type">void</span> <span class="function">criticalPath</span>() {
+    <span class="keyword">if</span> (<span class="operator">!</span>topologicalSort()) {
+        cout &lt;&lt; <span class="string">"存在环路，无法计算!"</span> &lt;&lt; endl;
+        <span class="keyword">return</span>;
+    }
+    
+    <span class="comment">// 计算最晚发生时间</span>
+    fill(vl, vl + n, ve[topoOrder.back()]);
+    
+    <span class="keyword">for</span> (<span class="type">int</span> i = topoOrder.size() <span class="operator">-</span> <span class="number">1</span>; i &gt;= <span class="number">0</span>; i<span class="operator">--</span>) {
+        <span class="type">int</span> u = topoOrder[i];
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
+            vl[u] = min(vl[u], vl[v] <span class="operator">-</span> w);
+        }
+    }
+    
+    <span class="comment">// 找关键活动</span>
+    cout &lt;&lt; <span class="string">"关键路径长度: "</span> &lt;&lt; ve[topoOrder.back()] &lt;&lt; endl;
+    cout &lt;&lt; <span class="string">"关键活动: "</span>;
+    
+    <span class="keyword">for</span> (<span class="type">int</span> u = <span class="number">0</span>; u &lt; n; u<span class="operator">++</span>) {
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
+            <span class="type">int</span> e = ve[u];          <span class="comment">// 最早开始</span>
+            <span class="type">int</span> l = vl[v] <span class="operator">-</span> w;      <span class="comment">// 最晚开始</span>
+            <span class="keyword">if</span> (e == l) {
+                cout &lt;&lt; u &lt;&lt; <span class="string">"-&gt;"</span> &lt;&lt; v &lt;&lt; <span class="string">" "</span>;
+            }
+        }
+    }
+    cout &lt;&lt; endl;
+}</pre>
                 </div>
             </div>
         </div>
