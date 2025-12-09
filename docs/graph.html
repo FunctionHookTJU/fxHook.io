@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图算法可视化 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/demo-common.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/header.js" defer></script>
+    <style>
+        /* 页面主题色 */
+        :root {
+            --theme-primary: #667eea;
+            --theme-secondary: #764ba2;
+            --prim-color: #11998e;
+            --kruskal-color: #f093fb;
+        }
+
+        /* 工具选择标签页 */
+        .tool-tabs {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+
+        .tool-tab {
+            flex: 1;
+            padding: 18px 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: #666;
+        }
+
+        .tool-tab:hover {
+            background: #e8e8e8;
+        }
+
+        .tool-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tool-tab.active.prim-tab {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .tool-tab.active.kruskal-tab {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* 工具内容区 */
+        .tool-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tool-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--theme-primary);
+            background: white;
+            color: var(--theme-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: var(--theme-primary);
+            color: white;
+        }
+
+        .control-btn.active {
+            background: var(--theme-primary);
+            color: white;
+        }
+
+        .control-btn.prim-btn {
+            border-color: var(--prim-color);
+            color: var(--prim-color);
+        }
+
+        .control-btn.prim-btn:hover,
+        .control-btn.prim-btn.active {
+            background: var(--prim-color);
+            color: white;
+        }
+
+        .control-btn.kruskal-btn {
+            border-color: var(--kruskal-color);
+            color: var(--kruskal-color);
+        }
+
+        .control-btn.kruskal-btn:hover,
+        .control-btn.kruskal-btn.active {
+            background: var(--kruskal-color);
+            color: white;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 画布容器 */
+        .canvas-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 600px;
+            position: relative;
+        }
+
+        #graphCanvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* 信息面板 */
+        .info-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95em;
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--theme-primary);
+        }
+
+        .info-item {
+            margin: 5px 0;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .step-info {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 4px solid #4caf50;
+        }
+
+        /* 权重输入框 */
+        .weight-input-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .weight-input-modal.show {
+            display: block;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .modal-overlay.show {
+            display: block;
+        }
+
+        .weight-input-modal h3 {
+            margin-top: 0;
+            color: var(--theme-primary);
+        }
+
+        .weight-input-modal input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .weight-input-modal .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .weight-input-modal button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .weight-input-modal .confirm-btn {
+            background: var(--theme-primary);
+            color: white;
+        }
+
+        .weight-input-modal .cancel-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .weight-input-modal button:hover {
+            opacity: 0.8;
+        }
+
+        /* 说明文本 */
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .instructions h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .control-buttons {
+                flex-direction: column;
+            }
+
+            .control-btn {
+                width: 100%;
+            }
+
+            #graphCanvas {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1>🌐 图算法可视化</h1>
+            <p>交互式学习 Prim 和 Kruskal 最小生成树算法</p>
+        </div>
+
+        <!-- 算法选择标签 -->
+        <div class="tool-tabs">
+            <button class="tool-tab active prim-tab" onclick="switchAlgorithm('prim')">
+                Prim 算法
+            </button>
+            <button class="tool-tab kruskal-tab" onclick="switchAlgorithm('kruskal')">
+                Kruskal 算法
+            </button>
+        </div>
+
+        <!-- Prim 算法内容 -->
+        <div id="primTool" class="tool-content active">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建节点</li>
+                        <li><strong>添加边：</strong>点击"添加边"按钮后，依次点击两个节点创建带权重的边</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>运行算法：</strong>点击"运行 Prim"按钮，从第一个节点开始构建最小生成树</li>
+                        <li><strong>清空：</strong>点击"清空画布"重新开始</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn prim-btn" id="prim-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn prim-btn" id="prim-add-edge" onclick="setMode('addEdge')">🔗 添加边</button>
+                        <button class="control-btn prim-btn" id="prim-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn prim-btn" id="prim-run" onclick="runPrim()">▶️ 运行 Prim</button>
+                        <button class="control-btn prim-btn" id="prim-step" onclick="stepPrim()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn prim-btn" id="prim-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn prim-btn" id="prim-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn prim-btn" onclick="loadExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="graphCanvas" width="900" height="600"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="prim-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>边数：</strong><span id="prim-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>最小生成树权重和：</strong><span id="prim-total-weight">-</span>
+                        </div>
+                        <div id="prim-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kruskal 算法内容 -->
+        <div id="kruskalTool" class="tool-content">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建节点</li>
+                        <li><strong>添加边：</strong>点击"添加边"按钮后，依次点击两个节点创建带权重的边</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>运行算法：</strong>点击"运行 Kruskal"按钮，按边权重从小到大构建最小生成树</li>
+                        <li><strong>清空：</strong>点击"清空画布"重新开始</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn kruskal-btn" id="kruskal-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn kruskal-btn" id="kruskal-add-edge" onclick="setMode('addEdge')">🔗 添加边</button>
+                        <button class="control-btn kruskal-btn" id="kruskal-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn kruskal-btn" id="kruskal-run" onclick="runKruskal()">▶️ 运行 Kruskal</button>
+                        <button class="control-btn kruskal-btn" id="kruskal-step" onclick="stepKruskal()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn kruskal-btn" id="kruskal-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn kruskal-btn" id="kruskal-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn kruskal-btn" onclick="loadExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="kruskalCanvas" width="900" height="600"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="kruskal-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>边数：</strong><span id="kruskal-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>最小生成树权重和：</strong><span id="kruskal-total-weight">-</span>
+                        </div>
+                        <div id="kruskal-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 权重输入模态框 -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeWeightModal()"></div>
+    <div class="weight-input-modal" id="weightModal">
+        <h3>输入边的权重</h3>
+        <input type="number" id="weightInput" placeholder="请输入权重（正整数）" min="1" max="100">
+        <div class="modal-buttons">
+            <button class="confirm-btn" onclick="confirmWeight()">确认</button>
+            <button class="cancel-btn" onclick="closeWeightModal()">取消</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html">首页</a>
+                    <a href="https://github.com/FunctionHookTJU" target="_blank">Github</a>
+                    <a href="../pages/products.html">更多产品</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../scripts/graph.js"></script>
+</body>
+</html>
