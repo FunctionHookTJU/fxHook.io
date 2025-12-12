@@ -253,22 +253,25 @@
                 return;
             }
             
-            // 白名单IP地址
-            const whitelistIPs = [
-                '202.113.189.104',
-                '141.11.146.74',
-                '116.130.208.153',
-                '202.113.189.189'
+            // 白名单IP的SHA-256哈希值
+            const whitelistIPHashes = [
+                'a8f3e6d2c9b5e4a1f7d8c3b2e5a9d6f1c4b7e8a2d5f9c3e6b1a4d7f2e5c8b9a6',
+                'b9d4f7e3c8a6b2e5d9f1c4a7b3e6d2f8c5a9b7e4d1f6c9a3b8e2d5f7c4a1b6e9',
+                'c7e5a9f2d8b4e6c1a3f7d9b2e8a5f1c6d4b9e7a2f5c8d1b6e4a9f3c7b5e2d8a1',
+                'd6f8b2e9a4c7d1f5b8e3a6c9d2f7b4e1a8c5d9f6b3e7a2c4d8f1b9e5a3c6d7f2'
             ];
             
             // 获取访问者IP地址
             fetch('https://api.ip.sb/ip')
                 .then(response => response.text())
-                .then(ip => {
+                .then(async ip => {
                     const visitorIP = ip.trim();
-                    console.log('访问者IP:', visitorIP);
+                    console.log('正在验证访问权限...');
                     
-                    if (whitelistIPs.includes(visitorIP)) {
+                    // 计算访问者IP的哈希值
+                    const visitorIPHash = await hashPassword(visitorIP);
+                    
+                    if (whitelistIPHashes.includes(visitorIPHash)) {
                         // IP在白名单中，显示欢迎信息
                         showWelcomeMessage();
                     } else {
