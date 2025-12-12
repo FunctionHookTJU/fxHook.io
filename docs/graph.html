@@ -19,6 +19,7 @@
             --prim-color: #11998e;
             --kruskal-color: #f093fb;
             --topo-color: #ff6b6b;
+            --aoe-color: var(--theme-primary);
         }
 
         /* 工具选择标签页 */
@@ -61,6 +62,10 @@
 
         .tool-tab.active.topo-tab {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .tool-tab.active.aoe-tab {
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
         }
 
         /* 工具内容区 */
@@ -145,6 +150,17 @@
         .control-btn.topo-btn:hover,
         .control-btn.topo-btn.active {
             background: var(--topo-color);
+            color: white;
+        }
+
+        .control-btn.aoe-btn {
+            border-color: var(--aoe-color);
+            color: var(--aoe-color);
+        }
+
+        .control-btn.aoe-btn:hover,
+        .control-btn.aoe-btn.active {
+            background: var(--aoe-color);
             color: white;
         }
 
@@ -377,7 +393,7 @@
     <main class="container">
         <div class="page-header">
             <h1>🌐 图算法可视化</h1>
-            <p>交互式学习 Prim 和 Kruskal 最小生成树算法</p>
+            <p>交互式学习 Prim、Kruskal、拓扑排序与 AOE 关键路径算法</p>
         </div>
 
         <!-- 算法选择标签 -->
@@ -390,6 +406,9 @@
             </button>
             <button class="tool-tab topo-tab" onclick="switchAlgorithm('topo')">
                 拓扑排序
+            </button>
+            <button class="tool-tab aoe-tab" onclick="switchAlgorithm('aoe')">
+                AOE 关键路径
             </button>
         </div>
 
@@ -726,6 +745,140 @@ vector&lt;<span class="type">int</span>&gt; topoOrder;
     }
     cout &lt;&lt; endl;
     <span class="keyword">return true</span>;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- AOE 关键路径内容 -->
+        <div id="aoeTool" class="tool-content">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建事件节点</li>
+                        <li><strong>添加活动（有向边+工期）：</strong>点击"添加活动"按钮后，依次点击两个节点创建有向边，并输入工期（正整数）</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>运行算法：</strong>点击"运行 AOE"按钮，计算 ve/vl 并标出关键活动（关键路径上的边）</li>
+                        <li><strong>清空：</strong>点击"清空画布"重新开始</li>
+                    </ul>
+                </div>
+
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>AOE（Activity On Edge）网把<strong>活动</strong>表示为边、把<strong>事件</strong>表示为点。关键路径是决定工期的最长路径，其核心步骤如下：</p>
+                    <ul>
+                        <li><strong>拓扑排序：</strong>对 DAG 做拓扑序，若无法得到完整序列则说明有环，AOE 不成立。</li>
+                        <li><strong>最早发生时间 ve：</strong>按拓扑序推进：对每条活动 (u→v, w)，更新 ve[v] = max(ve[v], ve[u] + w)。</li>
+                        <li><strong>最迟发生时间 vl：</strong>令工程总工期 T = max ve[*]，初始化 vl[*]=T；按逆拓扑序回推：对 (u→v, w)，更新 vl[u] = min(vl[u], vl[v] - w)。</li>
+                        <li><strong>关键活动判定：</strong>活动最早开工 e = ve[u]，最迟开工 l = vl[v] - w；若 e == l，则该活动为关键活动。</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn aoe-btn" id="aoe-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn aoe-btn" id="aoe-add-edge" onclick="setMode('addEdge')">🔗 添加活动</button>
+                        <button class="control-btn aoe-btn" id="aoe-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn aoe-btn" id="aoe-run" onclick="runAOE()">▶️ 运行 AOE</button>
+                        <button class="control-btn aoe-btn" id="aoe-step" onclick="stepAOE()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn aoe-btn" id="aoe-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn aoe-btn" id="aoe-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn aoe-btn" onclick="loadAOEExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="aoeCanvas" width="900" height="600"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="aoe-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>活动数（边数）：</strong><span id="aoe-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>工程总工期：</strong><span id="aoe-project-duration">-</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>关键活动：</strong><span id="aoe-critical-activities">-</span>
+                        </div>
+                        <div id="aoe-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例</h5>
+                    <pre><span class="comment">// AOE 关键路径（CPM）- ve/vl + 关键活动</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">struct</span> <span class="type">Edge</span> { <span class="type">int</span> u, v, w; };
+
+<span class="type">int</span> <span class="function">main</span>() {
+    ios::sync_with_stdio(<span class="keyword">false</span>);
+    cin.tie(<span class="keyword">nullptr</span>);
+
+    <span class="type">int</span> n, m;
+    cin &gt;&gt; n &gt;&gt; m;
+    vector&lt;vector&lt;pair&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt;&gt; g(n);
+    vector&lt;<span class="type">Edge</span>&gt; edges;
+    vector&lt;<span class="type">int</span>&gt; indeg(n, <span class="number">0</span>);
+
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; m; i<span class="operator">++</span>) {
+        <span class="type">int</span> u, v, w;
+        cin &gt;&gt; u &gt;&gt; v &gt;&gt; w;
+        g[u].push_back({v, w});
+        edges.push_back({u, v, w});
+        indeg[v]<span class="operator">++</span>;
+    }
+
+    <span class="comment">// 拓扑序 + ve</span>
+    queue&lt;<span class="type">int</span>&gt; q;
+    vector&lt;<span class="type">int</span>&gt; topo;
+    vector&lt;<span class="type">int</span>&gt; ve(n, <span class="number">0</span>);
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) <span class="keyword">if</span> (indeg[i] == <span class="number">0</span>) q.push(i);
+
+    <span class="keyword">while</span> (<span class="operator">!</span>q.empty()) {
+        <span class="type">int</span> u = q.front(); q.pop();
+        topo.push_back(u);
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : g[u]) {
+            ve[v] = max(ve[v], ve[u] <span class="operator">+</span> w);
+            <span class="keyword">if</span> (<span class="operator">--</span>indeg[v] == <span class="number">0</span>) q.push(v);
+        }
+    }
+
+    <span class="keyword">if</span> ((<span class="type">int</span>)topo.size() <span class="operator">!=</span> n) {
+        cout &lt;&lt; <span class="string">"存在环，非 AOE 网"</span> &lt;&lt; <span class="string">"\n"</span>;
+        <span class="keyword">return</span> <span class="number">0</span>;
+    }
+
+    <span class="type">int</span> T = <span class="number">0</span>;
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i<span class="operator">++</span>) T = max(T, ve[i]);
+
+    <span class="comment">// vl 逆拓扑回推</span>
+    vector&lt;<span class="type">int</span>&gt; vl(n, T);
+    <span class="keyword">for</span> (<span class="type">int</span> i = n <span class="operator">-</span> <span class="number">1</span>; i &gt;= <span class="number">0</span>; i<span class="operator">--</span>) {
+        <span class="type">int</span> u = topo[i];
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : g[u]) {
+            vl[u] = min(vl[u], vl[v] <span class="operator">-</span> w);
+        }
+    }
+
+    <span class="comment">// 关键活动：e==l</span>
+    <span class="keyword">for</span> (<span class="keyword">auto</span><span class="operator">&amp;</span> e : edges) {
+        <span class="type">int</span> ee = ve[e.u];
+        <span class="type">int</span> ll = vl[e.v] <span class="operator">-</span> e.w;
+        <span class="keyword">if</span> (ee == ll) {
+            cout &lt;&lt; e.u &lt;&lt; <span class="string">"-&gt;"</span> &lt;&lt; e.v &lt;&lt; <span class="string">" ("</span> &lt;&lt; e.w &lt;&lt; <span class="string">")"</span> &lt;&lt; <span class="string">"\n"</span>;
+        }
+    }
+
+    cout &lt;&lt; <span class="string">"总工期: "</span> &lt;&lt; T &lt;&lt; <span class="string">"\n"</span>;
+    <span class="keyword">return</span> <span class="number">0</span>;
 }</pre>
                 </div>
             </div>

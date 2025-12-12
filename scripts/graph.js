@@ -1,7 +1,7 @@
-// 图算法可视化 - Prim、Kruskal、拓扑排序算法实现
+// 图算法可视化 - Prim、Kruskal、拓扑排序、AOE 关键路径算法实现
 
 // 全局状态
-let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'topo'
+let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'topo', 'aoe'
 let currentMode = 'addNode'; // 当前模式: 'addNode', 'addEdge', 'delete'
 let nodes = []; // 节点数组
 let edges = []; // 边数组
@@ -14,6 +14,7 @@ let algorithmState = null; // 算法执行状态
 let canvas, ctx;
 let canvas2, ctx2; // Kruskal 的画布
 let canvas3, ctx3; // 拓扑排序的画布
+let canvas4, ctx4; // AOE 的画布
 
 // 节点和边的样式配置
 const NODE_RADIUS = 25;
@@ -69,6 +70,9 @@ window.addEventListener('load', function() {
     
     canvas3 = document.getElementById('topoCanvas');
     ctx3 = canvas3.getContext('2d');
+
+    canvas4 = document.getElementById('aoeCanvas');
+    ctx4 = canvas4.getContext('2d');
     
     // 绑定事件
     canvas.addEventListener('click', handleCanvasClick);
@@ -77,6 +81,9 @@ window.addEventListener('load', function() {
     canvas2.addEventListener('mousemove', handleCanvasMouseMove);
     canvas3.addEventListener('click', handleCanvasClick);
     canvas3.addEventListener('mousemove', handleCanvasMouseMove);
+
+    canvas4.addEventListener('click', handleCanvasClick);
+    canvas4.addEventListener('mousemove', handleCanvasMouseMove);
     
     // 权重输入框回车确认
     document.getElementById('weightInput').addEventListener('keypress', function(e) {
@@ -105,6 +112,9 @@ function switchAlgorithm(algorithm) {
     } else if (algorithm === 'topo') {
         document.querySelector('.topo-tab').classList.add('active');
         document.getElementById('topoTool').classList.add('active');
+    } else if (algorithm === 'aoe') {
+        document.querySelector('.aoe-tab').classList.add('active');
+        document.getElementById('aoeTool').classList.add('active');
     }
     
     // 重置状态
@@ -234,6 +244,25 @@ function handleEdgeClick(x, y) {
                 draw();
                 return;
             }
+
+            // AOE：有向 + 需要工期（权重）
+            if (currentAlgorithm === 'aoe') {
+                // 检查是否已存在相同方向的边
+                const existingEdge = edges.find(e =>
+                    e.from === selectedNode.id && e.to === clickedNode.id
+                );
+
+                if (existingEdge) {
+                    selectedNode = null;
+                    tempEdgeEnd = null;
+                    draw();
+                    return;
+                }
+
+                // 打开权重输入模态框（工期）
+                showWeightModal(selectedNode, clickedNode, { directed: true });
+                return;
+            }
             
             // 检查是否已存在边（无向图）
             const existingEdge = edges.find(e => 
@@ -257,14 +286,14 @@ function handleEdgeClick(x, y) {
 }
 
 // 显示权重输入模态框
-function showWeightModal(fromNode, toNode) {
+function showWeightModal(fromNode, toNode, options = {}) {
     document.getElementById('modalOverlay').classList.add('show');
     document.getElementById('weightModal').classList.add('show');
     document.getElementById('weightInput').value = '';
     document.getElementById('weightInput').focus();
     
     // 保存临时数据
-    window.tempEdgeData = { from: fromNode, to: toNode };
+    window.tempEdgeData = { from: fromNode, to: toNode, ...options };
 }
 
 // 关闭权重输入模态框
@@ -286,14 +315,17 @@ function confirmWeight() {
         return;
     }
     
-    const { from, to } = window.tempEdgeData;
-    
-    edges.push({
+    const { from, to, directed } = window.tempEdgeData;
+
+    const edge = {
         from: from.id,
         to: to.id,
         weight: weight,
         inMST: false
-    });
+    };
+    if (directed) edge.directed = true;
+
+    edges.push(edge);
     
     closeWeightModal();
     updateInfo();
@@ -442,13 +474,49 @@ function resetAllButtons() {
     const topoRun = document.getElementById('topo-run');
     if (topoStep) topoStep.disabled = true;
     if (topoRun) topoRun.disabled = false;
+
+    // AOE
+    const aoeStep = document.getElementById('aoe-step');
+    const aoeRun = document.getElementById('aoe-run');
+    if (aoeStep) aoeStep.disabled = true;
+    if (aoeRun) aoeRun.disabled = false;
     
     // 隐藏所有步骤信息
-    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info'];
+    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info', 'aoe-step-info'];
     stepInfos.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
+}
+
+// 加载 AOE 示例图
+function loadAOEExample() {
+    if (isRunning) return;
+
+    nodes = [
+        { id: 0, x: 120, y: 250, label: 'A' },
+        { id: 1, x: 280, y: 140, label: 'B' },
+        { id: 2, x: 280, y: 360, label: 'C' },
+        { id: 3, x: 480, y: 140, label: 'D' },
+        { id: 4, x: 480, y: 360, label: 'E' },
+        { id: 5, x: 700, y: 250, label: 'F' }
+    ];
+
+    edges = [
+        { from: 0, to: 1, weight: 3, inMST: false, directed: true },
+        { from: 0, to: 2, weight: 2, inMST: false, directed: true },
+        { from: 1, to: 3, weight: 2, inMST: false, directed: true },
+        { from: 2, to: 3, weight: 1, inMST: false, directed: true },
+        { from: 2, to: 4, weight: 4, inMST: false, directed: true },
+        { from: 3, to: 5, weight: 3, inMST: false, directed: true },
+        { from: 4, to: 5, weight: 2, inMST: false, directed: true }
+    ];
+
+    selectedNode = null;
+    tempEdgeEnd = null;
+    algorithmState = null;
+    updateInfo();
+    draw();
 }
 
 // 加载示例图
@@ -564,6 +632,180 @@ function runTopo() {
     updateStepInfo(`拓扑排序开始，入度为0的节点：${zeroNodes || '无'}`);
     
     draw();
+}
+
+// ==================== AOE 关键路径（CPM） ====================
+
+function runAOE() {
+    if (nodes.length === 0) {
+        alert('请先添加节点！');
+        return;
+    }
+
+    if (edges.length === 0) {
+        alert('请先添加活动（边）！');
+        return;
+    }
+
+    isRunning = true;
+
+    // 重置高亮
+    edges.forEach(e => e.inMST = false);
+
+    // 入度
+    const inDegree = new Array(nodes.length).fill(0);
+    for (let edge of edges) {
+        inDegree[edge.to]++;
+    }
+
+    const queue = [];
+    for (let i = 0; i < nodes.length; i++) {
+        if (inDegree[i] === 0) queue.push(i);
+    }
+
+    algorithmState = {
+        type: 'aoe',
+        stage: 'forward', // forward(ve) -> backward(vl) -> critical
+        inDegree,
+        queue,
+        topo: [],
+        ve: new Array(nodes.length).fill(0),
+        vl: null,
+        projectDuration: null,
+        criticalEdges: [],
+        processed: new Set(),
+        currentStep: 0,
+        reverseIndex: null
+    };
+
+    document.getElementById('aoe-step').disabled = false;
+    document.getElementById('aoe-run').disabled = true;
+
+    const zeroNodes = queue.map(i => nodes[i].label).join(', ');
+    updateStepInfo(`AOE 开始：先拓扑推进计算 ve。<br>入度为 0 的事件：${zeroNodes || '无'}`);
+    updateInfo();
+    draw();
+}
+
+function stepAOE() {
+    if (!algorithmState || algorithmState.type !== 'aoe') return;
+
+    const state = algorithmState;
+
+    if (state.stage === 'forward') {
+        if (state.queue.length === 0) {
+            if (state.topo.length < nodes.length) {
+                updateStepInfo('图中存在环路（无法完成拓扑序），AOE 网不成立。');
+                finishAlgorithm();
+                return;
+            }
+
+            const T = Math.max(...state.ve);
+            state.projectDuration = T;
+            state.vl = new Array(nodes.length).fill(T);
+            state.stage = 'backward';
+            state.reverseIndex = state.topo.length - 1;
+
+            updateStepInfo(`ve 计算完成，工程总工期 T = ${T}。<br>开始逆拓扑回推计算 vl。`);
+            updateInfo();
+            draw();
+            return;
+        }
+
+        const u = state.queue.shift();
+        state.topo.push(u);
+        state.processed.add(u);
+
+        const changes = [];
+        const pushed = [];
+
+        for (let edge of edges) {
+            if (edge.from !== u) continue;
+            const v = edge.to;
+            const candidate = state.ve[u] + edge.weight;
+            if (candidate > state.ve[v]) {
+                const old = state.ve[v];
+                state.ve[v] = candidate;
+                changes.push(`${nodes[edge.from].label}→${nodes[edge.to].label}：ve[${nodes[v].label}] ${old} → ${candidate}`);
+            }
+
+            state.inDegree[v]--;
+            if (state.inDegree[v] === 0) {
+                state.queue.push(v);
+                pushed.push(nodes[v].label);
+            }
+        }
+
+        state.currentStep++;
+        const topoLabels = state.topo.map(i => nodes[i].label).join(' → ');
+        const queueLabels = state.queue.map(i => nodes[i].label).join(', ');
+        const lines = [
+            `步骤 ${state.currentStep}（ve 推进）：处理事件 ${nodes[u].label}`,
+            `当前拓扑序：${topoLabels || '-'}`,
+            `队列：${queueLabels || '空'}`
+        ];
+        if (changes.length) lines.push(`更新 ve：<br>${changes.join('<br>')}`);
+        if (pushed.length) lines.push(`入队（入度变 0）：${pushed.join(', ')}`);
+        updateStepInfo(lines.join('<br>'));
+
+        updateInfo();
+        draw();
+        return;
+    }
+
+    if (state.stage === 'backward') {
+        if (state.reverseIndex === null || state.reverseIndex < 0) {
+            // 计算关键活动
+            state.criticalEdges = [];
+            edges.forEach(edge => {
+                const ee = state.ve[edge.from];
+                const ll = state.vl[edge.to] - edge.weight;
+                if (ee === ll) {
+                    edge.inMST = true; // 复用高亮标记
+                    state.criticalEdges.push(`${nodes[edge.from].label}→${nodes[edge.to].label}(${edge.weight})`);
+                } else {
+                    edge.inMST = false;
+                }
+            });
+
+            state.stage = 'critical';
+            const list = state.criticalEdges.length ? state.criticalEdges.join(', ') : '无';
+            updateStepInfo(`关键活动判定完成。<br>关键活动：${list}<br>工程总工期：${state.projectDuration}`);
+            updateInfo();
+            draw();
+            finishAlgorithm();
+            return;
+        }
+
+        const u = state.topo[state.reverseIndex];
+        const changes = [];
+
+        for (let edge of edges) {
+            if (edge.from !== u) continue;
+            const v = edge.to;
+            const candidate = state.vl[v] - edge.weight;
+            if (candidate < state.vl[u]) {
+                const old = state.vl[u];
+                state.vl[u] = candidate;
+                changes.push(`${nodes[edge.from].label}→${nodes[edge.to].label}：vl[${nodes[u].label}] ${old} → ${candidate}`);
+            }
+        }
+
+        state.currentStep++;
+        const lines = [
+            `步骤 ${state.currentStep}（vl 回推）：处理事件 ${nodes[u].label}`,
+            `当前 vl[${nodes[u].label}] = ${state.vl[u]}`
+        ];
+        if (changes.length) lines.push(`更新 vl：<br>${changes.join('<br>')}`);
+        else lines.push('本步无 vl 更新');
+
+        state.reverseIndex--;
+
+        updateStepInfo(lines.join('<br>'));
+        updateInfo();
+        draw();
+        return;
+    }
 }
 
 // 拓扑排序单步执行
@@ -816,6 +1058,16 @@ function finishAlgorithm() {
     if (stepBtn) stepBtn.disabled = true;
     if (runBtn) runBtn.disabled = false;
     
+    if (algorithmState && algorithmState.type === 'aoe') {
+        if (algorithmState.projectDuration !== null) {
+            const list = algorithmState.criticalEdges && algorithmState.criticalEdges.length
+                ? algorithmState.criticalEdges.join(', ')
+                : '无';
+            updateStepInfo(`算法完成！工程总工期：${algorithmState.projectDuration}<br>关键活动：${list}`);
+        }
+        return;
+    }
+
     if (algorithmState && algorithmState.mstEdges && algorithmState.mstEdges.length === nodes.length - 1) {
         updateStepInfo(`算法完成！最小生成树权重和：${algorithmState.totalWeight}`);
     }
@@ -859,6 +1111,21 @@ function updateInfo() {
         } else {
             document.getElementById('topo-result').textContent = '-';
         }
+    } else if (prefix === 'aoe') {
+        const durationEl = document.getElementById('aoe-project-duration');
+        const criticalEl = document.getElementById('aoe-critical-activities');
+
+        if (algorithmState && algorithmState.type === 'aoe') {
+            durationEl.textContent = algorithmState.projectDuration ?? '-';
+            if (algorithmState.criticalEdges && algorithmState.criticalEdges.length) {
+                criticalEl.textContent = algorithmState.criticalEdges.join(', ');
+            } else {
+                criticalEl.textContent = '-';
+            }
+        } else {
+            durationEl.textContent = '-';
+            criticalEl.textContent = '-';
+        }
     } else {
         if (algorithmState) {
             document.getElementById(`${prefix}-total-weight`).textContent = algorithmState.totalWeight;
@@ -893,6 +1160,9 @@ function draw() {
     } else if (currentAlgorithm === 'topo') {
         activeCanvas = canvas3;
         activeCtx = ctx3;
+    } else if (currentAlgorithm === 'aoe') {
+        activeCanvas = canvas4;
+        activeCtx = ctx4;
     }
     
     // 清空画布
@@ -903,7 +1173,7 @@ function draw() {
         const fromNode = nodes[edge.from];
         const toNode = nodes[edge.to];
         
-        if (currentAlgorithm === 'topo') {
+        if (currentAlgorithm === 'topo' || currentAlgorithm === 'aoe') {
             drawDirectedEdge(activeCtx, fromNode, toNode, edge.inMST, edge.weight);
         } else {
             drawEdge(activeCtx, fromNode, toNode, edge.weight, edge.inMST);
@@ -929,6 +1199,8 @@ function draw() {
             if (algorithmState.type === 'prim') {
                 isProcessed = algorithmState.visited.has(node.id);
             } else if (algorithmState.type === 'topo') {
+                isProcessed = algorithmState.processed.has(node.id);
+            } else if (algorithmState.type === 'aoe') {
                 isProcessed = algorithmState.processed.has(node.id);
             }
         }
