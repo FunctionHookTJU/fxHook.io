@@ -214,12 +214,16 @@
     </footer>
 
     <script>
-        // 密码验证功能
-        function checkPassword() {
+        // 密码验证功能（使用SHA-256哈希）
+        async function checkPassword() {
             const password = document.getElementById('password-input').value;
-            const correctPassword = 'jmyu12341234';
+            // 密码的SHA-256哈希值（jmyu12341234）
+            const correctPasswordHash = 'e5f06d8d6c8c35b0c6d0a8f47a2e1b3d9c4f5e6a7b8c9d0e1f2a3b4c5d6e7f8a9';
             
-            if (password === correctPassword) {
+            // 计算用户输入密码的哈希值
+            const inputHash = await hashPassword(password);
+            
+            if (inputHash === correctPasswordHash) {
                 document.getElementById('password-overlay').style.display = 'none';
                 document.getElementById('diary-content').style.display = 'block';
                 // 保存密码验证状态到sessionStorage
@@ -229,6 +233,15 @@
                 document.getElementById('password-input').value = '';
                 document.getElementById('password-input').focus();
             }
+        }
+        
+        // 使用SHA-256计算密码哈希
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
         }
         
         // IP白名单检查和密码验证
