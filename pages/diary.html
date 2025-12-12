@@ -12,8 +12,22 @@
     <script src="../scripts/header.js" defer></script>
 </head>
 <body>
+    <!-- 密码保护遮罩层 -->
+    <div id="password-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <!-- 欢迎文字 -->
+        <div id="welcome-message" style="display: none; color: white; font-size: 32px; font-weight: bold; text-align: center; opacity: 0; transition: opacity 1s ease-in-out;">
+            主人，欢迎回家！
+        </div>
+        <!-- 密码输入框 -->
+        <div id="password-box" style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; max-width: 400px; display: none;">
+            <h2 style="margin-bottom: 20px; color: #333;">🔒 此页面需要密码访问</h2>
+            <input type="password" id="password-input" placeholder="请输入密码" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
+            <button onclick="checkPassword()" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background 0.3s;">确认</button>
+            <p id="error-message" style="color: red; margin-top: 15px; display: none;">❌ 密码错误，请重试</p>
+        </div>
+    </div>
     
-    <div class="container diary-container">
+    <div class="container diary-container" id="diary-content" style="display: none;">
         <main class="diary-main">
             <section class="content-section">
                 <h2>我的日记</h2>
@@ -200,6 +214,99 @@
     </footer>
 
     <script>
+        // 密码验证功能
+        function checkPassword() {
+            const password = document.getElementById('password-input').value;
+            const correctPassword = 'jmyu12341234';
+            
+            if (password === correctPassword) {
+                document.getElementById('password-overlay').style.display = 'none';
+                document.getElementById('diary-content').style.display = 'block';
+                // 保存密码验证状态到sessionStorage
+                sessionStorage.setItem('diaryAccess', 'granted');
+            } else {
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+        
+        // IP白名单检查和密码验证
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已经验证过密码
+            if (sessionStorage.getItem('diaryAccess') === 'granted') {
+                document.getElementById('password-overlay').style.display = 'none';
+                document.getElementById('diary-content').style.display = 'block';
+                return;
+            }
+            
+            // 白名单IP地址
+            const whitelistIPs = [
+                '202.113.189.104',
+                '141.11.146.74',
+                '116.130.208.153',
+                '202.113.189.189'
+            ];
+            
+            // 获取访问者IP地址
+            fetch('https://api.ip.sb/ip')
+                .then(response => response.text())
+                .then(ip => {
+                    const visitorIP = ip.trim();
+                    console.log('访问者IP:', visitorIP);
+                    
+                    if (whitelistIPs.includes(visitorIP)) {
+                        // IP在白名单中，显示欢迎信息
+                        showWelcomeMessage();
+                    } else {
+                        // IP不在白名单中，显示密码输入框
+                        showPasswordBox();
+                    }
+                })
+                .catch(error => {
+                    console.error('IP查询失败:', error);
+                    // 如果IP查询失败，显示密码输入框
+                    showPasswordBox();
+                });
+            
+            // 显示欢迎信息并淡入淡出
+            function showWelcomeMessage() {
+                const welcomeMsg = document.getElementById('welcome-message');
+                welcomeMsg.style.display = 'block';
+                
+                // 淡入
+                setTimeout(() => {
+                    welcomeMsg.style.opacity = '1';
+                }, 100);
+                
+                // 2秒后淡出
+                setTimeout(() => {
+                    welcomeMsg.style.opacity = '0';
+                }, 2000);
+                
+                // 淡出完成后显示日记内容
+                setTimeout(() => {
+                    document.getElementById('password-overlay').style.display = 'none';
+                    document.getElementById('diary-content').style.display = 'block';
+                    sessionStorage.setItem('diaryAccess', 'granted');
+                }, 3000);
+            }
+            
+            // 显示密码输入框
+            function showPasswordBox() {
+                document.getElementById('password-box').style.display = 'block';
+                const passwordInput = document.getElementById('password-input');
+                if (passwordInput) {
+                    passwordInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            checkPassword();
+                        }
+                    });
+                    passwordInput.focus();
+                }
+            }
+        });
+        
         // 日记分页功能
         document.addEventListener('DOMContentLoaded', function() {
             const entriesPerPage = 6;
