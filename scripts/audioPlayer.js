@@ -6,30 +6,20 @@ class AudioPlayer {
         this.previousVolume = 0.3;
         this.isFirstLoad = true;
         
-        // 音乐列表 - 在这里添加更多音乐
+        // 音乐列表 - 使用CDN加速的本地音频文件
         this.audioSources = [
-            {//https://music.163.com/song?id=2736706230&uct2=U2FsdGVkX1/CAaNMQfe1tw36kyEv0JYFc0xshUXfZcQ=
-                url: 'http://music.163.com/song/media/outer/url?id=2736706230.mp3',
-                name: '音乐1'
+            {
+                url: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/audio/BATTLEPLAN_ARCLIGHT_opus_36k.opus',
+                name: 'BATTLEPLAN_ARCLIGHT'
             },
             {
-                url: 'http://music.163.com/song/media/outer/url?id=426881960.mp3',
-                name: '音乐2'
+                url: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/audio/Chen-U-Libertus_opus_36k.opus',
+                name: 'Chen-U-Libertus'
             },
             {
-                url: 'http://music.163.com/song/media/outer/url?id=27580521.mp3',
-                name: '音乐3'
-            },
-            {
-                url: 'http://music.163.com/song/media/outer/url?id=2742468679.mp3',
-                name: '音乐4'
-            },
-            
-            // 在这里添加更多音乐，格式如下：
-            // {
-            //     url: 'http://music.163.com/song/media/outer/url?id=XXXXXX.mp3',
-            //     name: '音乐名称'
-            // }
+                url: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/audio/in_your_blue_eyes_opus_36k.opus',
+                name: 'in_your_blue_eyes'
+            }
         ];
         
         this.audioSourceIndex = 0;
