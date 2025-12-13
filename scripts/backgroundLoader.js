@@ -16,7 +16,7 @@ class BackgroundLoader {
         
         this.path = options.path || 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/';
         this.container = options.container || document.body;
-        this.blurAmount = options.blurAmount || 20;
+        this.blurAmount = options.blurAmount || 0;
         this.transitionDuration = options.transitionDuration || 300;
         
         this.currentIndex = -1;
@@ -61,8 +61,7 @@ class BackgroundLoader {
                 background-position: center;
                 background-repeat: no-repeat;
                 opacity: 0;
-                transition: opacity ${this.transitionDuration}ms ease-in-out, filter ${this.transitionDuration}ms ease-in-out;
-                filter: blur(${this.blurAmount}px);
+                transition: opacity ${this.transitionDuration}ms ease-in-out;
             `;
             
             this.backgroundContainer.appendChild(layer);
@@ -107,7 +106,6 @@ class BackgroundLoader {
         if (layer) {
             layer.style.backgroundImage = `url(${img.src})`;
             layer.style.opacity = '1';
-            layer.style.filter = 'blur(0px)';
             
             console.log(`已加载 ${imageInfo.name} (${imageInfo.size})`);
             
