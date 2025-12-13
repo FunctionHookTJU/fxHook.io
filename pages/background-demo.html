@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景图片分段式加载演示</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .demo-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 20px;
+        }
+        
+        .progress-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+        
+        .status-text {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .image-info {
+            margin: 20px 0;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .loading-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🎨 背景图片分段式加载演示</h1>
+        <p>演示从低分辨率到高分辨率的渐进式加载效果</p>
+        
+        <div class="progress-container">
+            <div class="status-text">
+                加载进度: <span id="progressText">准备中...</span>
+                <span id="loadingIndicator" class="loading-indicator" style="display: none;"></span>
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <div class="image-info">
+                当前图片: <span id="currentImage">无</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="reloadBackground()">🔄 重新加载</button>
+            <button class="btn" onclick="showProgress()">📊 查看进度</button>
+            <button class="btn" onclick="toggleAnimation()">🎬 切换动画</button>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #ccc;">
+            <h3>功能特性:</h3>
+            <ul style="text-align: left; display: inline-block;">
+                <li>✨ 优先加载最小尺寸图片 (144p)</li>
+                <li>🎯 逐步加载更高分辨率图片</li>
+                <li>💫 虚化到清晰的过渡效果</li>
+                <li>📊 实时进度显示</li>
+                <li>⚡ 性能优化和错误处理</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="../scripts/backgroundLoader.js"></script>
+    <script>
+        let backgroundLoader;
+        let animationEnabled = true;
+        
+        // 初始化背景加载器
+        function initBackground() {
+            console.log('初始化背景加载器...');
+            
+            backgroundLoader = window.initBackgroundLoader({
+                path: '../assets/images/bg/',
+                blurAmount: 20,
+                transitionDuration: 500
+            });
+            
+            // 监听加载进度
+            setInterval(updateProgress, 100);
+        }
+        
+        // 更新进度显示
+        function updateProgress() {
+            if (!backgroundLoader) return;
+            
+            const progress = window.getBackgroundLoadProgress();
+            if (!progress) return;
+            
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+            const currentImage = document.getElementById('currentImage');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // 更新进度文本
+            progressText.textContent = `${progress.current}/${progress.total} (${progress.percentage}%)`;
+            progressFill.style.width = `${progress.percentage}%`;
+            
+            // 显示当前加载的图片
+            if (progress.current > 0 && progress.current <= backgroundLoader.images.length) {
+                const imageInfo = backgroundLoader.images[progress.current - 1];
+                currentImage.textContent = `${imageInfo.name} (${imageInfo.size})`;
+            }
+            
+            // 显示/隐藏加载指示器
+            loadingIndicator.style.display = progress.current < progress.total ? 'inline-block' : 'none';
+        }
+        
+        // 重新加载背景
+        function reloadBackground() {
+            console.log('重新加载背景图片...');
+            if (backgroundLoader) {
+                backgroundLoader.preloadAll();
+            }
+        }
+        
+        // 显示详细进度
+        function showProgress() {
+            const progress = window.getBackgroundLoadProgress();
+            if (progress) {
+                alert(`加载进度: ${progress.current}/${progress.total} (${progress.percentage}%)\n当前图片: ${progress.current > 0 ? backgroundLoader.images[progress.current - 1].name : '无'}`);
+            }
+        }
+        
+        // 切换动画效果
+        function toggleAnimation() {
+            animationEnabled = !animationEnabled;
+            
+            const layers = document.querySelectorAll('.background-layer');
+            layers.forEach(layer => {
+                if (animationEnabled) {
+                    layer.style.transition = `opacity ${backgroundLoader.transitionDuration}ms ease-in-out, filter ${backgroundLoader.transitionDuration}ms ease-in-out`;
+                } else {
+                    layer.style.transition = 'none';
+                }
+            });
+            
+            console.log(`动画效果: ${animationEnabled ? '开启' : '关闭'}`);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始初始化背景加载器...');
+            initBackground();
+        });
+        
+        // 控制台信息
+        console.log('%c🎨 背景加载器演示', 'color: #4CAF50; font-size: 20px; font-weight: bold;');
+        console.log('使用以下方法调试:');
+        console.log('- window.backgroundLoader: 获取加载器实例');
+        console.log('- window.getBackgroundLoadProgress(): 获取加载进度');
+        console.log('- reloadBackground(): 重新加载');
+    </script>
+</body>
+</html>

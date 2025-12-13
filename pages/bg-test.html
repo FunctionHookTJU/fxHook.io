@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景加载测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .status {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎨 背景加载测试页面</h1>
+        <div class="status" id="status">
+            正在初始化背景加载器...
+        </div>
+        <p>如果您能看到背景图片从模糊到清晰逐步加载，说明功能正常！</p>
+        <p>检查浏览器控制台查看详细日志。</p>
+    </div>
+
+    <script src="../scripts/backgroundLoader.js"></script>
+    <script>
+        // 初始化背景加载器并显示状态
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                console.log('开始初始化背景加载器...');
+                
+                window.initBackgroundLoader({
+                    path: '../assets/images/bg/',
+                    blurAmount: 20,
+                    transitionDuration: 500
+                });
+                
+                statusEl.textContent = '背景加载器已初始化，请观察背景变化...';
+                statusEl.style.background = 'rgba(0, 255, 0, 0.1)';
+                statusEl.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+                
+                // 监听加载进度
+                setInterval(function() {
+                    const progress = window.getBackgroundLoadProgress();
+                    if (progress) {
+                        console.log(`加载进度: ${progress.current}/${progress.total} (${progress.percentage}%)`);
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('初始化背景加载器失败:', error);
+                statusEl.textContent = '背景加载器初始化失败: ' + error.message;
+                statusEl.style.background = 'rgba(255, 0, 0, 0.1)';
+                statusEl.style.borderColor = 'rgba(255, 0, 0, 0.3)';
+            }
+        });
+    </script>
+</body>
+</html>
