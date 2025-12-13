@@ -18,7 +18,8 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--secondary-color);
-    background-image: url('https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/background4k.png');/*此处添加背景图片*/
+    /* background-image已被backgroundLoader替代，注释掉避免冲突 */
+    /* background-image: url('https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/background4k.png'); */
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -63,7 +64,9 @@ body::before {
 /* 日记页面特殊容器样式 */
 .diary-container {
     display: flex;
+    flex-direction: row;
     gap: 2rem;
+    align-items: flex-start;
 }
 
 /* 导航栏样式 */
