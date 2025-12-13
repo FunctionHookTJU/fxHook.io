@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
     <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/backgroundLoader.js"></script>
     <style>
         /* 这个页面使用block布局 */
         body {
@@ -24,7 +25,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(245, 245, 245, 0.29);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -32,7 +33,7 @@
         }
 
         .ad-content {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(245, 245, 245, 0.29);
             padding: 20px;
             border-radius: 15px;
             text-align: center;
@@ -41,7 +42,7 @@
             max-height: 90%;
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
             animation: popup-scale 0.3s ease-out;
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(245, 245, 245, 0.5);
         }
 
         @keyframes popup-scale {
@@ -96,6 +97,17 @@
     </style>
 </head>
 <body>
+    <script>
+        // 页面加载完成后初始化背景加载器
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('初始化背景加载器...');
+            window.initBackgroundLoader({
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
+            });
+        });
+    </script>
     
     <main class="container">
         

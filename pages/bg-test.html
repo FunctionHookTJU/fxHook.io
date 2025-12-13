@@ -10,20 +10,20 @@
             padding: 20px;
             font-family: Arial, sans-serif;
             color: white;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(245, 245, 245, 0.29);
         }
         
         .test-container {
             max-width: 800px;
             margin: 0 auto;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(245, 245, 245, 0.29);
             padding: 20px;
             border-radius: 10px;
         }
         
         .status {
-            background: rgba(0, 255, 0, 0.1);
-            border: 1px solid rgba(0, 255, 0, 0.3);
+            background: rgba(245, 245, 245, 0.29);
+            border: 1px solid rgba(245, 245, 245, 0.3);
             padding: 10px;
             border-radius: 5px;
             margin: 10px 0;
@@ -50,9 +50,9 @@
                 console.log('开始初始化背景加载器...');
                 
                 window.initBackgroundLoader({
-                    path: '../assets/images/bg/',
-                    blurAmount: 20,
-                    transitionDuration: 500
+                    path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                    blurAmount: 0,
+                    transitionDuration: 400
                 });
                 
                 statusEl.textContent = '背景加载器已初始化，请观察背景变化...';

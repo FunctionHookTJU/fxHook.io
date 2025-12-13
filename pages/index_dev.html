@@ -13,8 +13,20 @@
     <link rel="manifest" href="../site.webmanifest">
     <!-- 加载音频播放器 -->
     <script src="../scripts/audioPlayer.js" defer></script>
+    <script src="../scripts/backgroundLoader.js"></script>
 </head>
 <body>
+    <script>
+        // 页面加载完成后初始化背景加载器
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('初始化背景加载器...');
+            window.initBackgroundLoader({
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
+            });
+        });
+    </script>
     <!-- 🌟 超炫酷Header -->
     <header class="cyber-header">
         <nav class="cyber-nav">

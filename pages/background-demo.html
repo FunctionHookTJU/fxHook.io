@@ -20,7 +20,7 @@
         }
         
         .demo-container {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(245, 245, 245, 0.29);
             padding: 40px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
@@ -32,14 +32,14 @@
         .progress-container {
             margin: 30px 0;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.29);
             border-radius: 10px;
         }
         
         .progress-bar {
             width: 100%;
             height: 10px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.29);
             border-radius: 5px;
             overflow: hidden;
             margin: 10px 0;
@@ -148,9 +148,9 @@
             console.log('初始化背景加载器...');
             
             backgroundLoader = window.initBackgroundLoader({
-                path: '../assets/images/bg/',
-                blurAmount: 20,
-                transitionDuration: 500
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
             });
             
             // 监听加载进度

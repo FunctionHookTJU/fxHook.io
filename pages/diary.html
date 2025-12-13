@@ -10,10 +10,22 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
     <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/backgroundLoader.js"></script>
 </head>
 <body>
+    <script>
+        // 页面加载完成后初始化背景加载器
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('初始化背景加载器...');
+            window.initBackgroundLoader({
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
+            });
+        });
+    </script>
     <!-- 密码保护遮罩层 -->
-    <div id="password-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+    <div id="password-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(245, 245, 245, 0.29); display: flex; align-items: center; justify-content: center; z-index: 9999;">
         <!-- 欢迎文字 -->
         <div id="welcome-message" style="display: none; color: white; font-size: 32px; font-weight: bold; text-align: center; opacity: 0; transition: opacity 1s ease-in-out;">
             主人，欢迎回家！

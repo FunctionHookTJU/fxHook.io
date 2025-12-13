@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
     <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/backgroundLoader.js"></script>
     <style>
         /* 友链部分样式 */
         .friends-section {
@@ -103,6 +104,17 @@
     </style>
 </head>
 <body>
+    <script>
+        // 页面加载完成后初始化背景加载器
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('初始化背景加载器...');
+            window.initBackgroundLoader({
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
+            });
+        });
+    </script>
     <!-- Header 通过 JavaScript 动态加载 -->
     
     <main class="container">
