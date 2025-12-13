@@ -14,7 +14,7 @@ class BackgroundLoader {
             { name: 'background4k.webp', size: '4k' }
         ];
         
-        this.path = options.path || 'assets/images/bg/';
+        this.path = options.path || 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/';
         this.container = options.container || document.body;
         this.blurAmount = options.blurAmount || 20;
         this.transitionDuration = options.transitionDuration || 300;
