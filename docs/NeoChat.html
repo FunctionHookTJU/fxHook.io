@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
     <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/backgroundLoader.js"></script>
     <style>
         .back-button {
             display: inline-flex;
@@ -299,6 +300,15 @@
             element.style.transform = 'translateY(20px)';
             element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             element.style.transitionDelay = `${index * 0.1}s`;
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.initBackgroundLoader({
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
+            });
         });
     </script>
 </body>
