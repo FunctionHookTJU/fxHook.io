@@ -1,20 +1,22 @@
-// 图算法可视化 - Prim、Kruskal、拓扑排序、AOE 关键路径算法实现
+// 图算法可视化 - Prim、Kruskal、Dijkstra、拓扑排序、AOE 关键路径算法实现
 
 // 全局状态
-let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'topo', 'aoe'
-let currentMode = 'addNode'; // 当前模式: 'addNode', 'addEdge', 'delete'
+let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'dijkstra', 'topo', 'aoe'
+let currentMode = 'addNode'; // 当前模式: 'addNode', 'addEdge', 'delete', 'setStart'
 let nodes = []; // 节点数组
 let edges = []; // 边数组
 let selectedNode = null; // 选中的第一个节点（用于添加边）
 let tempEdgeEnd = null; // 临时边的终点（鼠标位置）
 let isRunning = false; // 算法是否正在运行
 let algorithmState = null; // 算法执行状态
+let dijkstraStartNode = -1; // Dijkstra 起点
 
 // 画布相关
 let canvas, ctx;
 let canvas2, ctx2; // Kruskal 的画布
 let canvas3, ctx3; // 拓扑排序的画布
 let canvas4, ctx4; // AOE 的画布
+let canvas5, ctx5; // Dijkstra 的画布
 
 // 节点和边的样式配置
 const NODE_RADIUS = 25;
@@ -22,9 +24,12 @@ const NODE_COLOR = '#667eea';
 const NODE_SELECTED_COLOR = '#764ba2';
 const NODE_IN_MST_COLOR = '#11998e';
 const NODE_TOPO_PROCESSED_COLOR = '#ff6b6b';
+const NODE_DIJKSTRA_START_COLOR = '#00b4db';
+const NODE_DIJKSTRA_CURRENT_COLOR = '#f093fb';
 const EDGE_COLOR = '#999';
 const EDGE_IN_MST_COLOR = '#11998e';
 const EDGE_TOPO_PROCESSED_COLOR = '#ff6b6b';
+const EDGE_DIJKSTRA_PATH_COLOR = '#00b4db';
 const EDGE_WIDTH = 2;
 const EDGE_IN_MST_WIDTH = 4;
 
@@ -73,6 +78,9 @@ window.addEventListener('load', function() {
 
     canvas4 = document.getElementById('aoeCanvas');
     ctx4 = canvas4.getContext('2d');
+
+    canvas5 = document.getElementById('dijkstraCanvas');
+    ctx5 = canvas5.getContext('2d');
     
     // 绑定事件
     canvas.addEventListener('click', handleCanvasClick);
@@ -84,6 +92,9 @@ window.addEventListener('load', function() {
 
     canvas4.addEventListener('click', handleCanvasClick);
     canvas4.addEventListener('mousemove', handleCanvasMouseMove);
+
+    canvas5.addEventListener('click', handleCanvasClick);
+    canvas5.addEventListener('mousemove', handleCanvasMouseMove);
     
     // 权重输入框回车确认
     document.getElementById('weightInput').addEventListener('keypress', function(e) {
@@ -115,6 +126,9 @@ function switchAlgorithm(algorithm) {
     } else if (algorithm === 'aoe') {
         document.querySelector('.aoe-tab').classList.add('active');
         document.getElementById('aoeTool').classList.add('active');
+    } else if (algorithm === 'dijkstra') {
+        document.querySelector('.dijkstra-tab').classList.add('active');
+        document.getElementById('dijkstraTool').classList.add('active');
     }
     
     // 重置状态
@@ -141,6 +155,8 @@ function setMode(mode) {
         document.getElementById(`${prefix}-add-edge`).classList.add('active');
     } else if (mode === 'delete') {
         document.getElementById(`${prefix}-delete`).classList.add('active');
+    } else if (mode === 'setStart' && prefix === 'dijkstra') {
+        document.getElementById(`${prefix}-set-start`).classList.add('active');
     }
     
     draw();
@@ -160,6 +176,19 @@ function handleCanvasClick(e) {
         handleEdgeClick(x, y);
     } else if (currentMode === 'delete') {
         handleDelete(x, y);
+    } else if (currentMode === 'setStart') {
+        handleSetStart(x, y);
+    }
+}
+
+// 处理设置起点（Dijkstra）
+function handleSetStart(x, y) {
+    const clickedNode = getNodeAt(x, y);
+    if (clickedNode !== null) {
+        dijkstraStartNode = clickedNode.id;
+        updateInfo();
+        updateDijkstraTable();
+        draw();
     }
 }
 
@@ -446,11 +475,15 @@ function clearCanvas() {
         selectedNode = null;
         tempEdgeEnd = null;
         algorithmState = null;
+        dijkstraStartNode = -1;
         
         // 重置所有算法的按钮状态
         resetAllButtons();
         
         updateInfo();
+        if (currentAlgorithm === 'dijkstra') {
+            updateDijkstraTable();
+        }
         draw();
     }
 }
@@ -480,9 +513,15 @@ function resetAllButtons() {
     const aoeRun = document.getElementById('aoe-run');
     if (aoeStep) aoeStep.disabled = true;
     if (aoeRun) aoeRun.disabled = false;
+
+    // Dijkstra
+    const dijkstraStep = document.getElementById('dijkstra-step');
+    const dijkstraRun = document.getElementById('dijkstra-run');
+    if (dijkstraStep) dijkstraStep.disabled = true;
+    if (dijkstraRun) dijkstraRun.disabled = false;
     
     // 隐藏所有步骤信息
-    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info', 'aoe-step-info'];
+    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info', 'aoe-step-info', 'dijkstra-step-info'];
     stepInfos.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -854,6 +893,197 @@ function stepTopo() {
     draw();
 }
 
+// ==================== Dijkstra 算法 ====================
+
+// 加载 Dijkstra 示例图
+function loadDijkstraExample() {
+    if (isRunning) return;
+
+    nodes = [
+        { id: 0, x: 100, y: 200, label: 'A' },
+        { id: 1, x: 250, y: 100, label: 'B' },
+        { id: 2, x: 250, y: 300, label: 'C' },
+        { id: 3, x: 450, y: 100, label: 'D' },
+        { id: 4, x: 450, y: 300, label: 'E' },
+        { id: 5, x: 600, y: 200, label: 'F' }
+    ];
+
+    edges = [
+        { from: 0, to: 1, weight: 4, inMST: false },
+        { from: 0, to: 2, weight: 2, inMST: false },
+        { from: 1, to: 2, weight: 1, inMST: false },
+        { from: 1, to: 3, weight: 5, inMST: false },
+        { from: 2, to: 4, weight: 10, inMST: false },
+        { from: 3, to: 4, weight: 2, inMST: false },
+        { from: 3, to: 5, weight: 6, inMST: false },
+        { from: 4, to: 5, weight: 3, inMST: false }
+    ];
+
+    dijkstraStartNode = 0;
+    selectedNode = null;
+    tempEdgeEnd = null;
+    algorithmState = null;
+    updateInfo();
+    updateDijkstraTable();
+    draw();
+}
+
+// 运行 Dijkstra 算法
+function runDijkstra() {
+    if (nodes.length === 0) {
+        alert('请先添加节点！');
+        return;
+    }
+
+    if (dijkstraStartNode === -1) {
+        alert('请先设置起点！');
+        return;
+    }
+
+    if (edges.length === 0) {
+        alert('请先添加边！');
+        return;
+    }
+
+    isRunning = true;
+
+    // 重置边状态
+    edges.forEach(e => e.inMST = false);
+
+    const n = nodes.length;
+    const dist = new Array(n).fill(Infinity);
+    const prev = new Array(n).fill(-1);
+    const visited = new Array(n).fill(false);
+
+    dist[dijkstraStartNode] = 0;
+
+    algorithmState = {
+        type: 'dijkstra',
+        dist: dist,
+        prev: prev,
+        visited: visited,
+        currentNode: -1,
+        currentStep: 0
+    };
+
+    document.getElementById('dijkstra-step').disabled = false;
+    document.getElementById('dijkstra-run').disabled = true;
+
+    updateStepInfo(`Dijkstra 算法开始，起点：${nodes[dijkstraStartNode].label}，距离设为 0`);
+    updateDijkstraTable();
+    draw();
+}
+
+// Dijkstra 单步执行
+function stepDijkstra() {
+    if (!algorithmState || algorithmState.type !== 'dijkstra') return;
+
+    const { dist, prev, visited } = algorithmState;
+    const n = nodes.length;
+
+    // 找未访问且距离最小的节点
+    let u = -1;
+    let minD = Infinity;
+    for (let i = 0; i < n; i++) {
+        if (!visited[i] && dist[i] < minD) {
+            minD = dist[i];
+            u = i;
+        }
+    }
+
+    if (u === -1) {
+        updateStepInfo('算法完成！所有可达节点均已处理。');
+        finishAlgorithm();
+        return;
+    }
+
+    visited[u] = true;
+    algorithmState.currentNode = u;
+    algorithmState.currentStep++;
+
+    // 松弛邻居
+    const updates = [];
+    edges.forEach(edge => {
+        let v = -1;
+        if (edge.from === u) v = edge.to;
+        else if (edge.to === u) v = edge.from;
+
+        if (v !== -1 && !visited[v]) {
+            const newDist = dist[u] + edge.weight;
+            if (newDist < dist[v]) {
+                dist[v] = newDist;
+                prev[v] = u;
+                updates.push(`${nodes[v].label}(${newDist})`);
+            }
+        }
+    });
+
+    // 更新边的路径高亮
+    edges.forEach(edge => {
+        edge.inMST = (prev[edge.to] === edge.from || prev[edge.from] === edge.to) && 
+                     (visited[edge.from] || visited[edge.to]);
+    });
+
+    const msg = updates.length > 0 
+        ? `步骤 ${algorithmState.currentStep}：访问节点 ${nodes[u].label}（距离 ${minD}），更新邻居：${updates.join(', ')}`
+        : `步骤 ${algorithmState.currentStep}：访问节点 ${nodes[u].label}（距离 ${minD}），无需更新`;
+
+    updateStepInfo(msg);
+    updateDijkstraTable();
+    updateInfo();
+    draw();
+
+    // 检查是否完成
+    const allVisited = visited.every(v => v) || visited.filter(v => v).length === n;
+    if (allVisited) {
+        setTimeout(() => {
+            updateStepInfo('算法完成！所有节点的最短路径已计算。');
+            finishAlgorithm();
+        }, 100);
+    }
+}
+
+// 更新 Dijkstra 表格
+function updateDijkstraTable() {
+    const tbody = document.querySelector('#dijkstraTable tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    nodes.forEach((node, i) => {
+        const tr = document.createElement('tr');
+
+        let distVal = '∞';
+        let prevVal = '-';
+        let status = '未访问';
+
+        if (algorithmState && algorithmState.type === 'dijkstra') {
+            distVal = algorithmState.dist[i] === Infinity ? '∞' : algorithmState.dist[i];
+            prevVal = algorithmState.prev[i] === -1 ? '-' : nodes[algorithmState.prev[i]].label;
+            if (algorithmState.visited[i]) {
+                status = '已确定';
+                tr.style.backgroundColor = 'rgba(17, 153, 142, 0.1)';
+            } else if (algorithmState.dist[i] !== Infinity) {
+                status = '待处理';
+            }
+            if (i === algorithmState.currentNode) {
+                tr.style.backgroundColor = 'rgba(0, 180, 219, 0.2)';
+            }
+        } else if (dijkstraStartNode !== -1) {
+            distVal = i === dijkstraStartNode ? 0 : '∞';
+            status = i === dijkstraStartNode ? '起点' : '未访问';
+        }
+
+        tr.innerHTML = `
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${node.label}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${distVal}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${prevVal}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${status}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 // ==================== Prim 算法 ====================
 
 // 运行 Prim 算法
@@ -1101,8 +1331,10 @@ function resetAlgorithm() {
 function updateInfo() {
     const prefix = currentAlgorithm;
     
-    document.getElementById(`${prefix}-node-count`).textContent = nodes.length;
-    document.getElementById(`${prefix}-edge-count`).textContent = edges.length;
+    const nodeCountEl = document.getElementById(`${prefix}-node-count`);
+    const edgeCountEl = document.getElementById(`${prefix}-edge-count`);
+    if (nodeCountEl) nodeCountEl.textContent = nodes.length;
+    if (edgeCountEl) edgeCountEl.textContent = edges.length;
     
     if (prefix === 'topo') {
         if (algorithmState && algorithmState.result) {
@@ -1126,11 +1358,19 @@ function updateInfo() {
             durationEl.textContent = '-';
             criticalEl.textContent = '-';
         }
+    } else if (prefix === 'dijkstra') {
+        const startNodeEl = document.getElementById('dijkstra-start-node');
+        if (startNodeEl) {
+            startNodeEl.textContent = dijkstraStartNode !== -1 ? nodes[dijkstraStartNode].label : '未设置';
+        }
     } else {
-        if (algorithmState) {
-            document.getElementById(`${prefix}-total-weight`).textContent = algorithmState.totalWeight;
-        } else {
-            document.getElementById(`${prefix}-total-weight`).textContent = '-';
+        const weightEl = document.getElementById(`${prefix}-total-weight`);
+        if (weightEl) {
+            if (algorithmState) {
+                weightEl.textContent = algorithmState.totalWeight;
+            } else {
+                weightEl.textContent = '-';
+            }
         }
     }
 }
@@ -1163,10 +1403,15 @@ function draw() {
     } else if (currentAlgorithm === 'aoe') {
         activeCanvas = canvas4;
         activeCtx = ctx4;
+    } else if (currentAlgorithm === 'dijkstra') {
+        activeCanvas = canvas5;
+        activeCtx = ctx5;
     }
+
+    if (!activeCanvas || !activeCtx) return;
     
     // 清空画布
-    activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+    activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);;
     
     // 绘制边
     for (let edge of edges) {
@@ -1202,23 +1447,33 @@ function draw() {
                 isProcessed = algorithmState.processed.has(node.id);
             } else if (algorithmState.type === 'aoe') {
                 isProcessed = algorithmState.processed.has(node.id);
+            } else if (algorithmState.type === 'dijkstra') {
+                isProcessed = algorithmState.visited[node.id];
             }
         }
         
         const isSelected = selectedNode && selectedNode.id === node.id;
-        drawNode(activeCtx, node, isSelected, isProcessed);
+        const isDijkstraStart = (currentAlgorithm === 'dijkstra' && dijkstraStartNode === node.id);
+        const isDijkstraCurrent = (currentAlgorithm === 'dijkstra' && algorithmState && algorithmState.currentNode === node.id);
+        drawNode(activeCtx, node, isSelected, isProcessed, isDijkstraStart, isDijkstraCurrent);
     }
 }
 
 // 绘制节点
-function drawNode(context, node, isSelected, isProcessed) {
+function drawNode(context, node, isSelected, isProcessed, isDijkstraStart = false, isDijkstraCurrent = false) {
     // 绘制圆形
     context.beginPath();
     context.arc(node.x, node.y, NODE_RADIUS, 0, 2 * Math.PI);
     
-    if (isProcessed) {
+    if (isDijkstraCurrent) {
+        context.fillStyle = NODE_DIJKSTRA_CURRENT_COLOR;
+    } else if (isDijkstraStart) {
+        context.fillStyle = NODE_DIJKSTRA_START_COLOR;
+    } else if (isProcessed) {
         if (currentAlgorithm === 'topo') {
             context.fillStyle = NODE_TOPO_PROCESSED_COLOR;
+        } else if (currentAlgorithm === 'dijkstra') {
+            context.fillStyle = NODE_IN_MST_COLOR;
         } else {
             context.fillStyle = NODE_IN_MST_COLOR;
         }

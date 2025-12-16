@@ -21,6 +21,7 @@
             --kruskal-color: #f093fb;
             --topo-color: #ff6b6b;
             --aoe-color: var(--theme-primary);
+            --dijkstra-color: #00b4db;
         }
 
         /* 工具选择标签页 */
@@ -67,6 +68,10 @@
 
         .tool-tab.active.aoe-tab {
             background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+        }
+
+        .tool-tab.active.dijkstra-tab {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
         }
 
         /* 工具内容区 */
@@ -162,6 +167,17 @@
         .control-btn.aoe-btn:hover,
         .control-btn.aoe-btn.active {
             background: var(--aoe-color);
+            color: white;
+        }
+
+        .control-btn.dijkstra-btn {
+            border-color: var(--dijkstra-color);
+            color: var(--dijkstra-color);
+        }
+
+        .control-btn.dijkstra-btn:hover,
+        .control-btn.dijkstra-btn.active {
+            background: var(--dijkstra-color);
             color: white;
         }
 
@@ -394,7 +410,7 @@
     <main class="container">
         <div class="page-header">
             <h1>🌐 图算法可视化</h1>
-            <p>交互式学习 Prim、Kruskal、拓扑排序与 AOE 关键路径算法</p>
+            <p>交互式学习 Prim、Kruskal、Dijkstra、拓扑排序与 AOE 关键路径算法</p>
         </div>
 
         <!-- 算法选择标签 -->
@@ -404,6 +420,9 @@
             </button>
             <button class="tool-tab kruskal-tab" onclick="switchAlgorithm('kruskal')">
                 Kruskal 算法
+            </button>
+            <button class="tool-tab dijkstra-tab" onclick="switchAlgorithm('dijkstra')">
+                Dijkstra 算法
             </button>
             <button class="tool-tab topo-tab" onclick="switchAlgorithm('topo')">
                 拓扑排序
@@ -634,6 +653,123 @@ vector&lt;<span class="type">pair</span>&lt;<span class="type">int</span>, <span
     }
     
     cout &lt;&lt; <span class="string">"MST权重和: "</span> &lt;&lt; totalWeight &lt;&lt; endl;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dijkstra 算法内容 -->
+        <div id="dijkstraTool" class="tool-content">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建节点</li>
+                        <li><strong>添加边：</strong>点击"添加边"按钮后，依次点击两个节点创建带权重的边</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>设置起点：</strong>点击"设置起点"后选择一个节点作为最短路径起点</li>
+                        <li><strong>运行算法：</strong>点击"运行 Dijkstra"按钮，从起点开始计算最短路径</li>
+                    </ul>
+                </div>
+
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>Dijkstra 算法是一种用于计算单源最短路径的贪心算法。其核心逻辑如下：</p>
+                    <ul>
+                        <li><strong>初始化：</strong>设起点距离为 0，其余节点距离为 ∞，所有节点标记为未访问。</li>
+                        <li><strong>选择节点：</strong>从未访问节点中选取距离最小的节点 u，标记为已访问。</li>
+                        <li><strong>松弛操作：</strong>对 u 的每个邻居 v，若 dist[u] + w(u,v) < dist[v]，则更新 dist[v]。</li>
+                        <li><strong>重复：</strong>重复步骤 2-3，直到所有节点都被访问或队列为空。</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn dijkstra-btn" id="dijkstra-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-add-edge" onclick="setMode('addEdge')">🔗 添加边</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-set-start" onclick="setMode('setStart')">📍 设置起点</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-run" onclick="runDijkstra()">▶️ 运行 Dijkstra</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-step" onclick="stepDijkstra()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn dijkstra-btn" id="dijkstra-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn dijkstra-btn" onclick="loadDijkstraExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="dijkstraCanvas" width="900" height="400"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="dijkstra-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>边数：</strong><span id="dijkstra-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>起点：</strong><span id="dijkstra-start-node">未设置</span>
+                        </div>
+                        <div id="dijkstra-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dijkstra 距离表格 -->
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow-x: auto;">
+                    <h3 style="margin-top: 0; color: var(--dijkstra-color);">📊 最短路径计算表</h3>
+                    <table id="dijkstraTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">节点</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">最短距离</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">前驱节点</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 由 JS 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例</h5>
+                    <pre><span class="comment">// Dijkstra 算法 - 单源最短路径</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">const int</span> INF = <span class="number">1e9</span>;
+<span class="keyword">const int</span> MAXN = <span class="number">1005</span>;
+
+<span class="type">int</span> n, m;
+vector&lt;<span class="type">pair</span>&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt; adj[MAXN];
+<span class="type">int</span> dist[MAXN];
+<span class="type">bool</span> visited[MAXN];
+
+<span class="type">void</span> <span class="function">dijkstra</span>(<span class="type">int</span> start) {
+    fill(dist, dist + n, INF);
+    fill(visited, visited + n, <span class="keyword">false</span>);
+    dist[start] = <span class="number">0</span>;
+    
+    priority_queue&lt;<span class="type">pair</span>&lt;<span class="type">int</span>, <span class="type">int</span>&gt;, vector&lt;<span class="type">pair</span>&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt;, greater&lt;&gt;&gt; pq;
+    pq.push({<span class="number">0</span>, start});
+    
+    <span class="keyword">while</span> (<span class="operator">!</span>pq.empty()) {
+        <span class="keyword">auto</span> [d, u] = pq.top();
+        pq.pop();
+        
+        <span class="keyword">if</span> (visited[u]) <span class="keyword">continue</span>;
+        visited[u] = <span class="keyword">true</span>;
+        
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : adj[u]) {
+            <span class="keyword">if</span> (dist[u] + w &lt; dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
 }</pre>
                 </div>
             </div>
