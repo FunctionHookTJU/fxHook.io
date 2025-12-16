@@ -101,6 +101,90 @@
         body {
             display: block;
         }
+
+        .comments-section {
+            max-width: 960px;
+            margin: 3rem auto 4rem;
+            padding: 0 1.5rem;
+        }
+
+        .comments-section h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .comment-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 0.75rem;
+        }
+
+        .comment-content {
+            font-size: 1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--text-color);
+        }
+
+        .comments-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .comments-form input,
+        .comments-form textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .comments-form button {
+            align-self: flex-end;
+            padding: 0.75rem 2.5rem;
+            border: none;
+            border-radius: 999px;
+            background: #3498db;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .comments-form button:hover {
+            background: #2c80b9;
+        }
+
+        .empty-comments {
+            text-align: center;
+            color: rgba(0, 0, 0, 0.5);
+            font-size: 0.95rem;
+            padding: 1.5rem 0;
+        }
+
+        .comments-error {
+            color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -217,12 +301,123 @@
         </section>
         
     </main>
-    <script src="https://utteranc.es/client.js"
-        repo="FunctionHookTJU/fxHook.io"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
+    <section class="comments-section" aria-labelledby="commentsTitle" data-endpoint="/api/comments">
+        <h2 id="commentsTitle">留言板</h2>
+        <form id="commentForm" class="comments-form">
+            <input type="text" id="commentName" name="name" placeholder="称呼" maxlength="24" required>
+            <textarea id="commentMessage" name="message" placeholder="想说点什么？" rows="4" maxlength="500" required></textarea>
+            <button type="submit">发布留言</button>
+        </form>
+        <div id="commentsList">
+            <p class="empty-comments" id="emptyComments">暂无留言，快来成为第一位吧！</p>
+        </div>
+    </section>
+    <script>
+        // 留言板：与服务器进行交互以持久化数据
+        document.addEventListener('DOMContentLoaded', () => {
+            const section = document.querySelector('.comments-section');
+            const endpoint = section?.dataset.endpoint || '/api/comments';
+            const form = document.getElementById('commentForm');
+            const nameInput = document.getElementById('commentName');
+            const messageInput = document.getElementById('commentMessage');
+            const commentsList = document.getElementById('commentsList');
+            const emptyState = document.getElementById('emptyComments');
+
+            const setEmptyState = (message, isError = false) => {
+                emptyState.textContent = message;
+                emptyState.classList.toggle('comments-error', isError);
+                emptyState.style.display = 'block';
+                commentsList.innerHTML = '';
+                commentsList.appendChild(emptyState);
+            };
+
+            const renderComments = (comments) => {
+                commentsList.innerHTML = '';
+
+                if (!comments.length) {
+                    setEmptyState('暂无留言，快来成为第一位吧！');
+                    return;
+                }
+
+                comments
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .forEach((comment) => {
+                        const card = document.createElement('article');
+                        card.className = 'comment-card';
+
+                        const createdAt = new Date(comment.createdAt);
+                        card.innerHTML = `
+                            <div class="comment-meta">
+                                <span>${comment.name || '匿名用户'}</span>
+                                <time datetime="${createdAt.toISOString()}">
+                                    ${createdAt.toLocaleString('zh-CN', { hour12: false })}
+                                </time>
+                            </div>
+                            <p class="comment-content"></p>
+                        `;
+
+                        card.querySelector('.comment-content').textContent = comment.message;
+                        commentsList.appendChild(card);
+                    });
+            };
+
+            const fetchComments = async () => {
+                setEmptyState('留言加载中...');
+                try {
+                    const response = await fetch(endpoint, { cache: 'no-store' });
+                    if (!response.ok) {
+                        throw new Error(`加载失败 (${response.status})`);
+                    }
+                    const comments = await response.json();
+                    renderComments(Array.isArray(comments) ? comments : comments.data || []);
+                } catch (error) {
+                    console.error('加载留言失败', error);
+                    setEmptyState('留言加载失败，请稍后重试。', true);
+                }
+            };
+
+            const submitComment = async (payload) => {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        throw new Error(`提交失败 (${response.status})`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    console.error('提交留言失败', error);
+                    throw error;
+                }
+            };
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const name = nameInput.value.trim();
+                const message = messageInput.value.trim();
+                if (!name || !message) {
+                    return;
+                }
+
+                form.querySelector('button').disabled = true;
+
+                try {
+                    await submitComment({ name, message });
+                    form.reset();
+                    await fetchComments();
+                } catch (error) {
+                    alert('提交失败，请稍后重试。');
+                } finally {
+                    form.querySelector('button').disabled = false;
+                }
+            });
+
+            fetchComments();
+        });
     </script>
     <!-- 页脚 -->
     <footer>
