@@ -294,8 +294,8 @@
     <div class="main-container">
         <!-- 工具选择标签页 -->
         <div class="tool-tabs">
-            <button class="tool-tab active" onclick="switchTool('huffman')">🌳 霍夫曼编码</button>
-            <button class="tool-tab tree-tab" onclick="switchTool('tree')">🌲 树与二叉树转换</button>
+            <button class="tool-tab active" onclick="switchTool('huffman', event)">🌳 霍夫曼编码</button>
+            <button class="tool-tab tree-tab" onclick="switchTool('tree', event)">🌲 树与二叉树转换</button>
         </div>
 
         <!-- ==================== 霍夫曼编码工具 ==================== -->
@@ -710,14 +710,14 @@
     <script src="../scripts/huffman.js"></script>
     
     <script>
-        // 保存霍夫曼脚本的函数引用（在 treeConversion.js 覆盖之前）
+        // 立即保存霍夫曼脚本的函数引用
         const huffmanFunctions = {
-            switchMode: switchMode,
-            setExample: setExample,
-            setWeightsExample: setWeightsExample,
-            resetAll: resetAll,
-            buildHuffman: buildHuffman,
-            buildStep: buildStep
+            switchMode: typeof switchMode !== 'undefined' ? switchMode : null,
+            setExample: typeof setExample !== 'undefined' ? setExample : null,
+            setWeightsExample: typeof setWeightsExample !== 'undefined' ? setWeightsExample : null,
+            resetAll: typeof resetAll !== 'undefined' ? resetAll : null,
+            buildHuffman: typeof buildHuffman !== 'undefined' ? buildHuffman : null,
+            buildStep: typeof buildStep !== 'undefined' ? buildStep : null
         };
     </script>
     
@@ -725,20 +725,22 @@
     <script src="../scripts/treeConversion.js"></script>
 
     <script>
-        // 保存树转换脚本的函数引用
+        // 立即保存树转换脚本的函数引用
         const treeFunctions = {
-            switchMode: switchMode,
-            setExample: setExample,
-            resetAll: resetAll,
-            parseAndDraw: parseAndDraw,
-            convert: convert
+            switchMode: typeof switchMode !== 'undefined' ? switchMode : null,
+            setExample: typeof setExample !== 'undefined' ? setExample : null,
+            resetAll: typeof resetAll !== 'undefined' ? resetAll : null,
+            parseAndDraw: typeof parseAndDraw !== 'undefined' ? parseAndDraw : null,
+            convert: typeof convert !== 'undefined' ? convert : null
         };
 
         // ==================== 工具切换逻辑 ====================
-        function switchTool(tool) {
+        function switchTool(tool, evt) {
             // 更新标签页状态
             document.querySelectorAll('.tool-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            }
 
             // 更新内容显示
             document.querySelectorAll('.tool-content').forEach(content => content.classList.remove('active'));
@@ -765,20 +767,41 @@
 
         // ==================== 霍夫曼函数适配 ====================
         function switchHuffmanMode(mode) {
-            huffmanFunctions.switchMode(mode);
+            if (huffmanFunctions.switchMode) {
+                huffmanFunctions.switchMode(mode);
+            }
         }
 
         function setHuffmanExample(text) {
-            huffmanFunctions.setExample(text);
+            if (huffmanFunctions.setExample) {
+                huffmanFunctions.setExample(text);
+            }
         }
 
         function setHuffmanWeightsExample(text) {
-            huffmanFunctions.setWeightsExample(text);
+            if (huffmanFunctions.setWeightsExample) {
+                huffmanFunctions.setWeightsExample(text);
+            }
         }
 
         function resetHuffman() {
-            huffmanFunctions.resetAll();
+            if (huffmanFunctions.resetAll) {
+                huffmanFunctions.resetAll();
+            }
         }
+
+        // 保持原有的 buildHuffman 和 buildStep 在全局可用（供 HTML 按钮调用）
+        window.buildHuffman = function() {
+            if (huffmanFunctions.buildHuffman) {
+                huffmanFunctions.buildHuffman();
+            }
+        };
+        
+        window.buildStep = function() {
+            if (huffmanFunctions.buildStep) {
+                huffmanFunctions.buildStep();
+            }
+        };
 
         // ==================== 树转换函数适配 ====================
         function switchTreeMode(mode) {
@@ -786,22 +809,39 @@
             const container = document.querySelector('.tree-content .mode-switch');
             if (container) {
                 container.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('active'));
-                if (event && event.target) {
+                if (typeof event !== 'undefined' && event.target) {
                     const option = event.target.closest('.mode-option');
                     if (option) option.classList.add('active');
                 }
             }
             
             // 调用树转换的 switchMode
-            treeFunctions.switchMode(mode);
+            if (treeFunctions.switchMode) {
+                treeFunctions.switchMode(mode);
+            }
         }
 
         function setTreeExample(mode, text) {
-            treeFunctions.setExample(mode, text);
+            if (treeFunctions.setExample) {
+                treeFunctions.setExample(mode, text);
+            }
         }
 
         function resetTree() {
-            treeFunctions.resetAll();
+            if (treeFunctions.resetAll) {
+                treeFunctions.resetAll();
+            }
+        }
+
+        // parseAndDraw 和 convert 保持原样，不需要包装
+        // 因为它们需要被 treeConversion.js 内部的事件监听器调用
+        // 如果需要的话，可以确保它们存在
+        if (!window.parseAndDraw && treeFunctions.parseAndDraw) {
+            window.parseAndDraw = treeFunctions.parseAndDraw;
+        }
+        
+        if (!window.convert && treeFunctions.convert) {
+            window.convert = treeFunctions.convert;
         }
     </script>
     <script>
