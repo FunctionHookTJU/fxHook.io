@@ -38,15 +38,38 @@
 
 ## 🚀 快速开始
 
-### 环境要求
+### 方式一：Docker 一键部署（推荐）
+
+使用 Docker Compose 可以快速部署整个项目（包括前端、后端和数据库）：
+
+```bash
+# 克隆项目
+git clone https://github.com/FunctionHookTJU/fxHook.io.git
+cd fxHook.io
+
+# 一键启动
+docker compose up -d --build
+
+# 访问网站
+# 打开浏览器访问 http://localhost
+```
+
+详细说明请查看 [Docker 部署文档](./DOCKER_DEPLOYMENT.md)
+
+### 方式二：本地运行
+
+#### 环境要求
 - 现代浏览器（Chrome、Firefox、Safari、Edge等）
 - 支持ES6+ JavaScript特性
+- （可选）Node.js 18+ 用于运行后端服务
+- （可选）MongoDB 用于日记系统
 
-### 使用方法
+#### 使用方法
 1. 克隆或下载本项目到本地
 2. 确保所有文件保持原始目录结构
 3. 使用浏览器直接打开`index.html`，或通过Live Server等工具启动本地服务器
-4. 开始浏览和学习！
+4. （可选）如需使用日记功能，参考[后端文档](./backend/README.md)启动后端服务
+5. 开始浏览和学习！
 
 ## 📝 功能说明
 

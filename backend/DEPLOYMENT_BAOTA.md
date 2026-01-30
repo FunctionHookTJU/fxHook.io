@@ -186,7 +186,7 @@ npm install
 3. 填写信息：
    - **项目名称**：fxhook-diary
    - **项目路径**：`/www/wwwroot/fxHook.io/backend`
-   - **启动文件**：`server.js`
+   - **启动文件**：`/www/wwwroot/fxHook.io/backend/server.js`
    - **运行目录**：`/www/wwwroot/fxHook.io/backend`
 4. 点击 **安装依赖**（会自动运行npm install）
 
