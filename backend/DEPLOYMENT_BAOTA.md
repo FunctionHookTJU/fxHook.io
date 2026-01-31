@@ -2,6 +2,84 @@
 
 > 适用于 Ubuntu 22.04 + 宝塔面板环境
 
+## 🐳 推荐方案：Docker 部署（最简单）
+
+### 快速开始
+
+```bash
+# 1. 进入项目目录
+cd /www/wwwroot/fxHook.io
+
+# 2. 使用宝塔专用配置启动（无 Nginx 容器）
+docker compose -f docker-compose.baota.yml up -d --build
+
+# 3. 检查状态
+docker compose -f docker-compose.baota.yml ps
+```
+
+这将启动：
+- **MongoDB** 数据库（容器内部）
+- **Backend** API 服务（端口 3000）
+
+前端静态文件由宝塔的 Nginx 直接服务。
+
+### 宝塔 Nginx 配置
+
+在宝塔面板中配置站点的 Nginx：
+
+1. **网站** → 选择你的站点 → **设置** → **配置文件**
+2. 添加以下反向代理配置：
+
+```nginx
+# API 反向代理到 Docker 后端
+location /api/ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
+```
+
+3. 保存并重载 Nginx
+
+### 访问测试
+
+```bash
+# 测试后端 API
+curl http://localhost:3000/api/health
+
+# 访问网站（使用你的域名或 IP）
+http://你的域名
+```
+
+### 常用命令
+
+```bash
+# 查看日志
+docker compose -f docker-compose.baota.yml logs -f
+
+# 重启服务
+docker compose -f docker-compose.baota.yml restart
+
+# 停止服务
+docker compose -f docker-compose.baota.yml down
+
+# 更新代码后重新部署
+git pull origin dynamic
+docker compose -f docker-compose.baota.yml up -d --build
+```
+
+---
+
+## 传统方案：手动部署
+
+如果不使用 Docker，可以按以下步骤手动部署：
+
 ## 系统架构
 
 - **前端**: 静态HTML页面 + JavaScript
