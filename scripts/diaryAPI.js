@@ -1,6 +1,8 @@
 // 日记API配置
-const API_BASE_URL = 'http://localhost:3000/api'; // 开发环境
-// const API_BASE_URL = 'https://your-domain.com/api'; // 生产环境
+// 自动检测环境：如果在 localhost 开发环境，使用 3000 端口，否则使用相对路径
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'  // 开发环境
+  : '/api';  // 生产环境（通过 Nginx 反向代理）
 
 // API请求封装
 const DiaryAPI = {
