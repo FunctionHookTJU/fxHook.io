@@ -8,8 +8,9 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: fxhook_diary
-    ports:
-      - "27017:27017"
+    # ports:
+    #   - "27017:27017"  # 注释掉端口映射，只在容器内部访问
+    #   - "27018:27017"  # 如需主机访问，可改用其他端口
     volumes:
       - mongodb_data:/data/db
     networks:
