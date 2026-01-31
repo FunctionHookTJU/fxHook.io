@@ -30,7 +30,7 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongodb:27017/fxhook_diary
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      - ALLOWED_ORIGINS=http://localhost,http://fxhook.io,https://fxhook.io
+      - ALLOWED_ORIGINS=http://localhost,http://fxhook.io,https://fxhook.io,http://你的IP地址
     depends_on:
       mongodb:
         condition: service_healthy
