@@ -9,23 +9,42 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS配置
+// CORS配置 - 生产环境允许所有来源（通过 Nginx 反向代理访问时更安全）
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
   : ['http://localhost:5500'];
 
+// 判断是否为允许的来源
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // 允许没有 origin 的请求
+  
+  // 检查是否在白名单中
+  if (allowedOrigins.includes(origin)) return true;
+  
+  // 允许所有 localhost 来源
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) return true;
+  
+  // 允许同一服务器的不同端口（通过 IP 访问）
+  const originHost = new URL(origin).hostname;
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(originHost)) return true;
+  
+  // 生产环境：允许所有来源（因为有 Nginx 反向代理保护）
+  if (process.env.NODE_ENV === 'production') return true;
+  
+  return false;
+};
+
 app.use(cors({
   origin: function(origin, callback) {
-    // 允许没有origin的请求（比如移动应用或Postman）
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'CORS policy: 该域名未被允许访问此资源';
-      return callback(new Error(msg), false);
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    const msg = 'CORS policy: 该域名未被允许访问此资源';
+    return callback(new Error(msg), false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // 数据库连接

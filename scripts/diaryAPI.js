@@ -1,15 +1,56 @@
 // 日记API配置
-// 自动检测环境：如果在 localhost 开发环境，使用 3000 端口，否则使用相对路径
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000/api'  // 开发环境
-  : '/api';  // 生产环境（通过 Nginx 反向代理）
+// 根据环境自动选择 API 地址
+function getApiBaseUrl() {
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  
+  // 本地开发环境
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // 如果是 8080 端口（Docker Nginx），使用相对路径
+    if (port === '8080') {
+      return '/api';
+    }
+    // 其他情况直接访问后端
+    return 'http://localhost:3000/api';
+  }
+  
+  // 生产环境：优先使用相对路径（通过 Nginx 反向代理）
+  return '/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
+
+// 备用 API 地址（如果主地址失败）
+const API_FALLBACK_URL = window.location.protocol + '//' + window.location.hostname + ':3000/api';
+
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('API_FALLBACK_URL:', API_FALLBACK_URL);
+
+// 带重试的 fetch 函数
+async function fetchWithFallback(url, options = {}) {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok && response.status === 0) {
+      throw new Error('Network error');
+    }
+    return response;
+  } catch (error) {
+    // 如果主 URL 失败，尝试备用 URL
+    if (url.startsWith(API_BASE_URL) && API_BASE_URL !== API_FALLBACK_URL) {
+      console.log('尝试备用 API 地址...');
+      const fallbackUrl = url.replace(API_BASE_URL, API_FALLBACK_URL);
+      return fetch(fallbackUrl, options);
+    }
+    throw error;
+  }
+}
 
 // API请求封装
 const DiaryAPI = {
   // 获取日记列表
   async getDiaries(page = 1, limit = 6) {
     try {
-      const response = await fetch(`${API_BASE_URL}/diaries?page=${page}&limit=${limit}`);
+      const response = await fetchWithFallback(`${API_BASE_URL}/diaries?page=${page}&limit=${limit}`);
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || '获取日记失败');
