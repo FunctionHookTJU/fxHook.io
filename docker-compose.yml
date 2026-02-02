@@ -7,6 +7,12 @@ services:
     volumes:
       # 挂载 docs 目录，使文档持久化
       - ./docs:/app/docs
+      # 挂载数据库目录，使数据持久化
+      - ./docs-editor/data:/app/data
+      # 挂载源代码，修改后只需重启容器
+      - ./docs-editor/server.js:/app/server.js:ro
+      - ./docs-editor/database.js:/app/database.js:ro
+      - ./docs-editor/public:/app/public:ro
     environment:
       - NODE_ENV=production
       - PORT=3000
