@@ -20,7 +20,12 @@ fs.ensureDirSync(DOCS_DIR);
 app.get('/api/docs', async (req, res) => {
   try {
     const files = await fs.readdir(DOCS_DIR);
-    const mdFiles = files.filter(file => file.endsWith('.md'));
+    // 过滤掉特殊文件（_sidebar.md 和 README.md）
+    const mdFiles = files.filter(file => 
+      file.endsWith('.md') && 
+      !file.startsWith('_') && 
+      file !== 'README.md'
+    );
     const docs = await Promise.all(
       mdFiles.map(async (file) => {
         const filePath = path.join(DOCS_DIR, file);
@@ -32,6 +37,8 @@ app.get('/api/docs', async (req, res) => {
         };
       })
     );
+    // 按修改时间排序，最新的在前
+    docs.sort((a, b) => b.modified - a.modified);
     res.json(docs);
   } catch (error) {
     res.status(500).json({ error: '获取文档列表失败', details: error.message });

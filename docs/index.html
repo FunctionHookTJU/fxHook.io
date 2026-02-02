@@ -64,7 +64,33 @@
         previousText: '上一页',
         nextText: '下一页',
         crossChapter: true
-      }
+      },
+      // 自定义插件：动态生成侧边栏
+      plugins: [
+        function(hook, vm) {
+          hook.beforeEach(async function(content) {
+            // 动态加载侧边栏
+            try {
+              const response = await fetch('http://localhost:3001/api/docs');
+              const docs = await response.json();
+              
+              // 生成侧边栏内容
+              let sidebar = '* [📖 首页](/)\n\n* 📚 技术文档\n';
+              docs.forEach(doc => {
+                const title = doc.name.replace('.md', '').replace(/_/g, ' ');
+                sidebar += `  * [${title}](${doc.name})\n`;
+              });
+              sidebar += '\n* 🔗 链接\n  * [✏️ 在线编辑器](http://localhost:3001)\n  * [🏠 返回主站](../)\n  * [GitHub](https://github.com/FunctionHookTJU)';
+              
+              // 更新侧边栏
+              vm.router.app.innerHTML = vm.compiler.sidebar(sidebar, vm.route.file);
+            } catch (error) {
+              console.log('使用静态侧边栏');
+            }
+            return content;
+          });
+        }
+      ]
     }
   </script>
   <!-- Docsify v4 -->
