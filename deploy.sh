@@ -58,16 +58,40 @@ echo -e "\n${YELLOW}[3/6] 构建博客系统...${NC}"
 if [ -d "blog-system" ]; then
     cd blog-system
     
+    # 清理旧的构建
+    if [ -d "node_modules" ]; then
+        echo -e "${GREEN}  → 清理旧的 node_modules...${NC}"
+        rm -rf node_modules
+    fi
+    if [ -d "dist" ]; then
+        echo -e "${GREEN}  → 清理旧的 dist...${NC}"
+        rm -rf dist
+    fi
+    
     # 安装依赖
-    echo -e "${GREEN}  → 安装 npm 依赖...${NC}"
-    npm install --silent
+    echo -e "${GREEN}  → 安装 npm 依赖（可能需要几分钟）...${NC}"
+    if ! npm install; then
+        echo -e "${RED}❌ npm install 失败${NC}"
+        exit 1
+    fi
+    
+    # 检查依赖是否安装成功
+    if [ ! -d "node_modules" ]; then
+        echo -e "${RED}❌ node_modules 目录不存在${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}  ✓ npm 依赖安装完成${NC}"
     
     # 构建项目
     echo -e "${GREEN}  → 执行构建...${NC}"
-    npm run build
+    if ! npm run build; then
+        echo -e "${RED}❌ npm run build 失败${NC}"
+        exit 1
+    fi
     
     if [ -d "dist" ]; then
         echo -e "${GREEN}  ✓ 构建成功！${NC}"
+        echo -e "${GREEN}  ✓ dist 目录大小: $(du -sh dist | cut -f1)${NC}"
     else
         echo -e "${RED}❌ 构建失败，dist 目录不存在${NC}"
         exit 1
