@@ -144,8 +144,34 @@ server {
     access_log /var/log/nginx/fxhook.access.log;
     error_log /var/log/nginx/fxhook.error.log;
     
-    # 主网站
+    # 主网站根目录
     location / {
+        try_files $uri $uri/ $uri/index.html =404;
+        autoindex off;
+    }
+    
+    # pages 目录
+    location /pages/ {
+        try_files $uri $uri/ =404;
+    }
+    
+    # docs 目录
+    location /docs/ {
+        try_files $uri $uri/ =404;
+    }
+    
+    # scripts 目录
+    location /scripts/ {
+        try_files $uri $uri/ =404;
+    }
+    
+    # styles 目录
+    location /styles/ {
+        try_files $uri $uri/ =404;
+    }
+    
+    # assets 目录
+    location /assets/ {
         try_files $uri $uri/ =404;
     }
     
