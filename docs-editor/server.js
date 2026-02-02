@@ -367,6 +367,11 @@ function extractTitle(content) {
   return match ? match[1].trim() : null;
 }
 
+// SPA 路由支持 - 所有非 API 请求返回 index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // 优雅关闭
 process.on('SIGINT', () => {
   console.log('\n正在关闭服务...');

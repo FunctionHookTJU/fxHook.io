@@ -1,4 +1,22 @@
-# 使用官方 Node.js 18 Alpine 镜像
+# 阶段1：构建 Vue 前端
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /frontend
+
+# 复制前端文件
+COPY frontend/package*.json ./
+
+# 安装前端依赖
+RUN npm install
+
+# 复制前端源码
+COPY frontend/ ./
+
+# 构建前端
+RUN npm run build
+
+
+# 阶段2：构建后端
 FROM node:18-alpine
 
 # 安装 better-sqlite3 编译依赖
@@ -16,7 +34,9 @@ RUN npm install --production
 # 复制应用代码
 COPY server.js ./
 COPY database.js ./
-COPY public ./public
+
+# 从前端构建阶段复制构建产物
+COPY --from=frontend-builder /frontend/dist ./public
 
 # 创建目录（将会被挂载）
 RUN mkdir -p /app/docs /app/data
