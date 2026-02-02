@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   docs-editor:
     build: ./docs-editor
     container_name: fxhook-docs-editor
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       # 挂载 docs 目录，使文档持久化
       - ./docs:/app/docs
