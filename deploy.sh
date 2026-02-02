@@ -68,10 +68,17 @@ if [ -d "blog-system" ]; then
         rm -rf dist
     fi
     
+    # 配置 npm 使用官方源
+    echo -e "${GREEN}  → 配置 npm 源...${NC}"
+    npm config set registry https://registry.npmjs.org/
+    npm cache clean --force 2>/dev/null || true
+    
     # 安装依赖
     echo -e "${GREEN}  → 安装 npm 依赖（可能需要几分钟）...${NC}"
     if ! npm install; then
         echo -e "${RED}❌ npm install 失败${NC}"
+        echo -e "${YELLOW}  → 尝试查看错误日志...${NC}"
+        cat ~/.npm/_logs/*-debug-0.log 2>/dev/null | tail -20
         exit 1
     fi
     
@@ -104,6 +111,25 @@ fi
 
 # 步骤 4: 配置 Nginx
 echo -e "\n${YELLOW}[4/6] 配置 Nginx...${NC}"
+
+# 创建必要的目录
+mkdir -p /etc/nginx/sites-available
+mkdir -p /etc/nginx/sites-enabled
+
+# 确保 nginx.conf 包含 sites-enabled
+if ! grep -q "sites-enabled" /etc/nginx/nginx.conf; then
+    echo -e "${GREEN}  → 配置 Nginx 主配置文件...${NC}"
+    sed -i '/http {/a\    include /etc/nginx/sites-enabled/*;' /etc/nginx/nginx.conf
+fi
+
+# 检查并停止占用 80 端口的进程
+echo -e "${GREEN}  → 检查 80 端口占用...${NC}"
+PORT_PID=$(lsof -ti:80 2>/dev/null || true)
+if [ -n "$PORT_PID" ]; then
+    echo -e "${YELLOW}  → 发现进程占用 80 端口 (PID: $PORT_PID)，正在停止...${NC}"
+    kill -9 $PORT_PID 2>/dev/null || true
+    sleep 1
+fi
 
 cat > "$NGINX_CONF" << 'EOF'
 server {
@@ -161,10 +187,11 @@ sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" "$NGINX_CONF"
 echo -e "${GREEN}  ✓ Nginx 配置文件已创建: ${NGINX_CONF}${NC}"
 
 # 启用站点
-if [ ! -L "/etc/nginx/sites-enabled/fxhook.io" ]; then
-    ln -s "$NGINX_CONF" /etc/nginx/sites-enabled/
-    echo -e "${GREEN}  ✓ 站点已启用${NC}"
+if [ -L "/etc/nginx/sites-enabled/fxhook.io" ]; then
+    rm -f /etc/nginx/sites-enabled/fxhook.io
 fi
+ln -s "$NGINX_CONF" /etc/nginx/sites-enabled/fxhook.io
+echo -e "${GREEN}  ✓ 站点已启用${NC}"
 
 # 测试配置
 echo -e "${GREEN}  → 测试 Nginx 配置...${NC}"
@@ -184,13 +211,21 @@ echo -e "${GREEN}  ✓ 权限设置完成${NC}"
 
 # 步骤 6: 重启 Nginx
 echo -e "\n${YELLOW}[6/6] 重启 Nginx...${NC}"
-systemctl restart nginx
+
+# 先停止可能存在的 Nginx 进程
+pkill nginx 2>/dev/null || true
+sleep 1
+
+# 启动 Nginx
+systemctl start nginx
 
 if systemctl is-active --quiet nginx; then
-    echo -e "${GREEN}  ✓ Nginx 已成功重启${NC}"
+    echo -e "${GREEN}  ✓ Nginx 已成功启动${NC}"
 else
     echo -e "${RED}❌ Nginx 启动失败${NC}"
-    systemctl status nginx
+    echo -e "${YELLOW}  → 查看详细错误信息：${NC}"
+    systemctl status nginx --no-pager
+    journalctl -xeu nginx.service --no-pager | tail -20
     exit 1
 fi
 
