@@ -1,42 +1,58 @@
 services:
+  # ==================== 文档编辑器后端服务 ====================
   docs-editor:
-    build: ./docs-editor
+    build:
+      context: ./docs-editor
+      dockerfile: Dockerfile
     container_name: fxhook-docs-editor
-    ports:
-      - "3001:3000"
-    volumes:
-      # 挂载 docs 目录，使文档持久化
-      - ./docs:/app/docs
-      # 挂载数据库目录，使数据持久化
-      - ./docs-editor/data:/app/data
-      # 挂载源代码，修改后只需重启容器
-      - ./docs-editor/server.js:/app/server.js:ro
-      - ./docs-editor/database.js:/app/database.js:ro
-      - ./docs-editor/public:/app/public:ro
+    restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
-    restart: unless-stopped
+      - TZ=Asia/Shanghai
+    volumes:
+      # 挂载 docs 目录（读写）
+      - ./docs:/app/docs
+      # 持久化数据库
+      - docs-db:/app/data
     networks:
       - fxhook-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
 
-  # 可选：Nginx 反向代理
-  nginx:
-    image: nginx:alpine
-    container_name: fxhook-nginx
+  # ==================== 主网站服务 (Nginx) ====================
+  fxhook-website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fxhook-website
+    restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
+    environment:
+      - TZ=Asia/Shanghai
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - .:/usr/share/nginx/html:ro
-      - ./docs:/usr/share/nginx/html/docs:ro
+      # Nginx 日志
+      - ./logs/nginx:/var/log/nginx
     depends_on:
       - docs-editor
-    restart: unless-stopped
     networks:
       - fxhook-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
 networks:
   fxhook-network:
     driver: bridge
+
+volumes:
+  docs-db:
+    driver: local

@@ -50,14 +50,6 @@
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
-      // 动态侧边栏 - 通过 nginx 代理访问 API
-      alias: {
-        '/_sidebar.md': '/api/sidebar',
-        '/.*/_sidebar.md': '/api/sidebar'
-      },
-      requestHeaders: {
-        'cache-control': 'no-cache'
-      },
       search: {
         placeholder: '搜索文档',
         noData: '没有找到结果',

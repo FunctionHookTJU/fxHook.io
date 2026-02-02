@@ -1,0 +1,67 @@
+# Git相关
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 依赖目录
+node_modules/
+**/node_modules/
+
+# 构建产物（会在容器内构建）
+blog-system/dist/
+blog-system/.vite/
+docs-editor/data/
+
+# 文档编辑器前端构建产物
+docs-editor/frontend/dist/
+docs-editor/frontend/node_modules/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 测试文件
+__tests__/
+*.test.js
+*.spec.js
+coverage/
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 部署相关
+deploy.sh
+diagnose.sh
+.htaccess
+.nojekyll
+
+# 文档和说明（不需要在容器中）
+README.md
+DEPLOYMENT.md
+REFACTORING.md
+LICENSE
+*.md
+!blog-system/**/*.md
+!docs/**/*.md

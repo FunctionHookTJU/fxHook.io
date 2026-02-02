@@ -40,11 +40,43 @@
 
 ## 🚀 快速开始
 
-### 环境要求
+### 方式一：Docker 容器化部署（推荐）
+
+**适用于生产环境，包含完整的前后端功能**
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/FunctionHookTJU/fxHook.io.git
+cd fxHook.io
+
+# 2. 切换到包含后端的分支
+git checkout test-SQLite
+
+# 3. 一键部署
+docker compose up -d --build
+
+# 或使用快速部署脚本
+bash quick-deploy.sh
+
+# 访问网站
+# 主站: http://localhost/
+# 博客: http://localhost/blog-system/
+# 文档: http://localhost/docs/
+# 编辑器: http://localhost/editor/
+```
+
+详细部署文档请查看 [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+
+### 方式二：本地开发
+
+**适用于本地预览和开发**
+
+#### 环境要求
 - 现代浏览器（Chrome、Firefox、Safari、Edge等）
 - 支持ES6+ JavaScript特性
+- Node.js 18+ (仅博客系统需要)
 
-### 使用方法
+#### 使用方法
 1. 克隆或下载本项目到本地
 2. 确保所有文件保持原始目录结构
 3. 使用浏览器直接打开`index.html`，或通过Live Server等工具启动本地服务器
