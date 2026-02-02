@@ -57,11 +57,11 @@ diagnose.sh
 .htaccess
 .nojekyll
 
-# 文档和说明（不需要在容器中）
-README.md
-DEPLOYMENT.md
-REFACTORING.md
-LICENSE
-*.md
-!blog-system/**/*.md
-!docs/**/*.md
+# 文档和说明（仅排除根目录的文档文件）
+/README.md
+/DEPLOYMENT.md
+/REFACTORING.md
+/DOCKER_DEPLOYMENT.md
+/LICENSE
+/quick-deploy.sh
+/test-deployment.sh
