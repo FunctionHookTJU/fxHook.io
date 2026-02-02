@@ -133,6 +133,54 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// 动态生成侧边栏 markdown
+app.get('/api/sidebar', async (req, res) => {
+  try {
+    const files = await fs.readdir(DOCS_DIR);
+    // 过滤掉特殊文件
+    const mdFiles = files.filter(file => 
+      file.endsWith('.md') && 
+      !file.startsWith('_') && 
+      file !== 'README.md'
+    );
+    
+    const docs = await Promise.all(
+      mdFiles.map(async (file) => {
+        const filePath = path.join(DOCS_DIR, file);
+        const stats = await fs.stat(filePath);
+        // 尝试从文件内容读取标题
+        let title = file.replace('.md', '').replace(/_/g, ' ');
+        try {
+          const content = await fs.readFile(filePath, 'utf-8');
+          const match = content.match(/^#\s+(.+)$/m);
+          if (match) {
+            title = match[1];
+          }
+        } catch (e) {}
+        return { name: file, title, modified: stats.mtime };
+      })
+    );
+    
+    // 按修改时间排序
+    docs.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    
+    // 生成 markdown 格式的侧边栏
+    let sidebar = '* [📖 首页](/)\n\n';
+    sidebar += '* 📚 文档列表\n';
+    docs.forEach(doc => {
+      sidebar += `  * [${doc.title}](${doc.name})\n`;
+    });
+    sidebar += '\n* 🔗 链接\n';
+    sidebar += '  * [✏️ 在线编辑器](http://localhost:3001)\n';
+    sidebar += '  * [🏠 返回主站](../)\n';
+    sidebar += '  * [GitHub](https://github.com/FunctionHookTJU)\n';
+    
+    res.type('text/markdown').send(sidebar);
+  } catch (error) {
+    res.status(500).send('* 加载失败');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`文档编辑服务运行在端口 ${PORT}`);
   console.log(`文档目录: ${DOCS_DIR}`);
