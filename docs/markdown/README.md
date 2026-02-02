@@ -16,7 +16,7 @@
 
 ## 🔗 相关链接
 
-- [返回主站](../)
+- [返回主站](../../)
 - [GitHub 仓库](https://github.com/FunctionHookTJU/fxHook.io)
 
 ---
