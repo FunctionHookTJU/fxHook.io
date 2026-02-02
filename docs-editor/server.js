@@ -280,7 +280,7 @@ app.get('/api/sidebar', (req, res) => {
     });
     
     sidebar += '* 🔗 链接\n';
-    sidebar += '  * [✏️ 在线编辑器](http://localhost:3001)\n';
+    sidebar += '  * [✏️ 在线编辑器](/editor/)\n';
     sidebar += '  * [🏠 返回主站](../)\n';
     sidebar += '  * [GitHub](https://github.com/FunctionHookTJU)\n';
     

@@ -50,10 +50,10 @@
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
-      // 将侧边栏请求重定向到动态 API
+      // 动态侧边栏 - 通过 nginx 代理访问 API
       alias: {
-        '/_sidebar.md': 'http://localhost:3001/api/sidebar',
-        '/.*/_sidebar.md': 'http://localhost:3001/api/sidebar'
+        '/_sidebar.md': '/api/sidebar',
+        '/.*/_sidebar.md': '/api/sidebar'
       },
       requestHeaders: {
         'cache-control': 'no-cache'
