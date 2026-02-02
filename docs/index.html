@@ -31,13 +31,21 @@
     .app-name-link img {
       width: 100%;
     }
+    
+    /* 返回主站按钮悬停效果 */
+    .app-name a:hover {
+      background-color: #6b1fb8 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(133, 39, 210, 0.3);
+    }
   </style>
 </head>
 <body>
   <div id="app">加载中...</div>
   <script>
     window.$docsify = {
-      name: '宇佐见函钩 - 文档中心',
+      name: '<a href="../index.html" style="display: inline-block; background-color: #8527d2b2; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: all 0.3s ease; margin-bottom: 10px;">🏠 返回主站</a><br><span style="font-size: 0.9em;">文档中心</span>',
+      nameLink: '../index.html',
       repo: 'FunctionHookTJU/fxHook.io',
       loadSidebar: true,
       subMaxLevel: 2,

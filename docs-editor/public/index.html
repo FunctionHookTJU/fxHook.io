@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown文档编辑器 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sidebar-header button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .sidebar-header button:hover {
+            background: #5568d3;
+        }
+
+        .docs-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .doc-item {
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .doc-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .doc-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .doc-item .delete-btn {
+            opacity: 0;
+            padding: 0.25rem 0.5rem;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .doc-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .doc-item.active .delete-btn {
+            background: #ff4458;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .editor-toolbar {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .editor-toolbar input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .editor-toolbar button {
+            padding: 0.5rem 1.5rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .editor-toolbar button:hover {
+            background: #218838;
+        }
+
+        .editor-toolbar button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .message {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.success {
+            border-left: 4px solid #28a745;
+        }
+
+        .message.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Markdown文档编辑器</h1>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button onclick="createNewDoc()">+ 新建文档</button>
+            </div>
+            <div class="docs-list" id="docsList">
+                <div class="empty-state">
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-toolbar">
+                <input type="text" id="filename" placeholder="文件名.md" />
+                <button onclick="saveDoc()" id="saveBtn">💾 保存</button>
+            </div>
+            <div class="editor-wrapper">
+                <textarea id="editor"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script>
+        const API_URL = window.location.origin;
+        let currentDoc = null;
+        let easyMDE;
+
+        // 初始化编辑器
+        document.addEventListener('DOMContentLoaded', () => {
+            easyMDE = new EasyMDE({
+                element: document.getElementById('editor'),
+                spellChecker: false,
+                placeholder: '在这里编写你的Markdown文档...',
+                autosave: {
+                    enabled: true,
+                    uniqueId: 'fxhook-docs-editor',
+                    delay: 1000,
+                },
+                toolbar: [
+                    'bold', 'italic', 'heading', '|',
+                    'quote', 'unordered-list', 'ordered-list', '|',
+                    'link', 'image', 'code', 'table', '|',
+                    'preview', 'side-by-side', 'fullscreen', '|',
+                    'guide'
+                ]
+            });
+
+            loadDocs();
+        });
+
+        // 加载文档列表
+        async function loadDocs() {
+            try {
+                const response = await fetch(`${API_URL}/api/docs`);
+                const docs = await response.json();
+                
+                const docsList = document.getElementById('docsList');
+                
+                if (docs.length === 0) {
+                    docsList.innerHTML = `
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <p>暂无文档</p>
+                            <p style="font-size: 0.875rem;">点击上方按钮创建新文档</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                docsList.innerHTML = docs.map(doc => `
+                    <div class="doc-item" onclick="loadDoc('${doc.name}')">
+                        <span>📄 ${doc.name}</span>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteDoc('${doc.name}')">删除</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showMessage('加载文档列表失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载单个文档
+        async function loadDoc(filename) {
+            try {
+                const response = await fetch(`${API_URL}/api/docs/${filename}`);
+                const data = await response.json();
+                
+                currentDoc = filename;
+                document.getElementById('filename').value = filename;
+                easyMDE.value(data.content);
+                
+                // 更新选中状态
+                document.querySelectorAll('.doc-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.textContent.includes(filename)) {
+                        item.classList.add('active');
+                    }
+                });
+            } catch (error) {
+                showMessage('加载文档失败: ' + error.message, 'error');
+            }
+        }
+
+        // 保存文档
+        async function saveDoc() {
+            const filename = document.getElementById('filename').value.trim();
+            
+            if (!filename) {
+                showMessage('请输入文件名', 'error');
+                return;
+            }
+            
+            if (!filename.endsWith('.md')) {
+                showMessage('文件名必须以.md结尾', 'error');
+                return;
+            }
+            
+            const content = easyMDE.value();
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '保存中...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/docs/${filename}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('文档保存成功！', 'success');
+                    currentDoc = filename;
+                    await loadDocs();
+                } else {
+                    showMessage('保存失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('保存失败: ' + error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 保存';
+            }
+        }
+
+        // 创建新文档
+        function createNewDoc() {
+            currentDoc = null;
+            document.getElementById('filename').value = '';
+            easyMDE.value('# 新文档\n\n在这里开始编写...');
+            document.querySelectorAll('.doc-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+
+        // 删除文档
+        async function deleteDoc(filename) {
+            if (!confirm(`确定要删除文档 "${filename}" 吗？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/docs/${filename}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('文档删除成功', 'success');
+                    if (currentDoc === filename) {
+                        createNewDoc();
+                    }
+                    await loadDocs();
+                } else {
+                    showMessage('删除失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示消息
+        function showMessage(text, type = 'success') {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }
+
+        // 快捷键保存
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveDoc();
+            }
+        });
+    </script>
+</body>
+</html>
