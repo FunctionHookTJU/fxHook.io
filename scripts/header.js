@@ -18,7 +18,7 @@
     // 导航链接配置（便于维护）
     const navItems = [
         { text: '首页', href: 'index.html' },
-        { text: '首页(测试)', href: 'pages/index_dev.html' },
+        { text: '博客', href: 'editor/' },
         { text: '日记', href: 'pages/diary.html' },
         { text: '学习笔记', href: 'pages/study.html' },
         { text: 'Github', href: 'https://github.com/FunctionHookTJU', external: true },

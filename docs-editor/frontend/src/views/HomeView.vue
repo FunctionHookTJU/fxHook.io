@@ -171,6 +171,15 @@ function clearSearch() {
 }
 
 async function togglePublish(doc) {
+  // 如果是要发布文档，需要验证密码
+  if (!doc.is_published) {
+    const password = prompt('请输入主人密码以发布文档：')
+    if (password !== 'yu153790') {
+      notify.error('密码错误，无权发布文档')
+      return
+    }
+  }
+  
   try {
     await docsStore.updatePublishStatus(doc.id, !doc.is_published)
     notify.success(doc.is_published ? '已取消发布' : '已发布')

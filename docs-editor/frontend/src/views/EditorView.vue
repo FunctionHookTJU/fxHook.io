@@ -197,6 +197,13 @@ async function saveDocument() {
 }
 
 async function saveAndPublish() {
+  // 密码验证
+  const password = prompt('请输入主人密码以发布文档：')
+  if (password !== 'yu153790') {
+    notify.error('密码错误，无权发布文档')
+    return
+  }
+  
   await saveDocument()
   // 获取文档ID并发布
   const doc = docsStore.docs.find(d => d.filename === filename.value)
@@ -300,7 +307,32 @@ document.addEventListener('keydown', (e) => {
 
 .editor-container {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
+  
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--bg-color);
+    border-radius: 6px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 6px;
+    border: 2px solid var(--bg-color);
+    
+    &:hover {
+      background: #a0aec0;
+    }
+  }
+  
+  // Firefox 滚动条样式
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 var(--bg-color);
 }
 
 .tags-bar {
