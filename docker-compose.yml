@@ -25,5 +25,3 @@ services:
 networks:
   fxhook-network:
     driver: bridge
-
-volumes:
