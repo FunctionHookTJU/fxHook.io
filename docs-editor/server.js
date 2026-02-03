@@ -369,7 +369,12 @@ function extractTitle(content) {
 
 // SPA 路由支持 - 所有非 API 请求返回 index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ error: '前端文件未找到，请检查构建' });
+  }
 });
 
 // 优雅关闭
