@@ -3,6 +3,9 @@
 .gitignore
 .gitattributes
 
+# 已废弃的文档编辑器系统
+docs-editor/
+
 # IDE
 .idea/
 .vscode/
