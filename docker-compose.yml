@@ -15,12 +15,43 @@ services:
       - ./logs/nginx:/var/log/nginx
     networks:
       - fxhook-network
+    depends_on:
+      - docs-editor
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 10s
+
+  # ==================== 文档编辑器后端服务 ====================
+  docs-editor:
+    build:
+      context: ./docs-editor
+      dockerfile: Dockerfile
+    container_name: docs-editor
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TZ=Asia/Shanghai
+    volumes:
+      # 数据库持久化
+      - docs-db:/app/data
+      # 文档目录映射到主项目docs目录
+      - ./docs:/app/docs
+    networks:
+      - fxhook-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/docs"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  docs-db:
+    driver: local
 
 networks:
   fxhook-network:

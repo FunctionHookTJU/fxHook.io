@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/blog'),
+  history: createWebHistory('/blog-system'),
   routes,
   scrollBehavior(_to, _from, savedPosition) {
     if (savedPosition) {

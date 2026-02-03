@@ -56,7 +56,7 @@ function markdownToHtmlPlugin() {
 }
 
 export default defineConfig({
-  base: '/blog/',
+  base: '/blog-system/',
   plugins: [vue(), markdownToHtmlPlugin()],
   resolve: {
     alias: {

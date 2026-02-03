@@ -25,10 +25,11 @@ app.get('/api/docs', (req, res) => {
     const { published } = req.query;
     const docs = published === 'true' ? db.getPublishedDocs() : db.getAllDocs();
     
-    // 解析 tags JSON
+    // 解析 tags JSON 并添加 published 字段
     const result = docs.map(doc => ({
       ...doc,
-      tags: JSON.parse(doc.tags || '[]')
+      tags: JSON.parse(doc.tags || '[]'),
+      published: doc.is_published === 1
     }));
     
     res.json(result);
