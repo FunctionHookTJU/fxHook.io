@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
     <link rel="manifest" href="../site.webmanifest">
     <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/loadFooter.js" defer></script>
     <script src="../scripts/backgroundLoader.js"></script>
     <style>
         :root {
@@ -934,6 +935,8 @@
             document.getElementById(id).addEventListener('input', saveToLocalStorage);
         });
     </script>
+
+    <div id="footer-placeholder"></div>
     
     <script>
         // 页面加载完成后检查元素是否存在
