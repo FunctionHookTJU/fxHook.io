@@ -94,9 +94,8 @@ class BackgroundLoader {
             this.loadNext();
         };
         
-        // 添加随机参数避免缓存
-        const timestamp = Date.now();
-        img.src = `${this.path}${imageInfo.name}?t=${timestamp}`;
+        // 使用稳定 URL，允许浏览器与 CDN 正常缓存
+        img.src = `${this.path}${imageInfo.name}`;
     }
     
     onImageLoad(imageInfo, img) {
