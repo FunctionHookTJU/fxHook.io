@@ -1,7 +1,7 @@
 // 图算法可视化 - Prim、Kruskal、Dijkstra、拓扑排序、AOE 关键路径算法实现
 
 // 全局状态
-let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'dijkstra', 'topo', 'aoe'
+let currentAlgorithm = 'prim'; // 当前算法: 'prim', 'kruskal', 'dijkstra', 'dijkstraDirected', 'topo', 'aoe'
 let currentMode = 'addNode'; // 当前模式: 'addNode', 'addEdge', 'delete', 'setStart'
 let nodes = []; // 节点数组
 let edges = []; // 边数组
@@ -10,6 +10,7 @@ let tempEdgeEnd = null; // 临时边的终点（鼠标位置）
 let isRunning = false; // 算法是否正在运行
 let algorithmState = null; // 算法执行状态
 let dijkstraStartNode = -1; // Dijkstra 起点
+let dijkstraDirectedStartNode = -1; // Dijkstra 有向图起点
 
 // 画布相关
 let canvas, ctx;
@@ -17,6 +18,7 @@ let canvas2, ctx2; // Kruskal 的画布
 let canvas3, ctx3; // 拓扑排序的画布
 let canvas4, ctx4; // AOE 的画布
 let canvas5, ctx5; // Dijkstra 的画布
+let canvas6, ctx6; // Dijkstra 有向图的画布
 
 // 节点和边的样式配置
 const NODE_RADIUS = 25;
@@ -81,6 +83,9 @@ window.addEventListener('load', function() {
 
     canvas5 = document.getElementById('dijkstraCanvas');
     ctx5 = canvas5.getContext('2d');
+
+    canvas6 = document.getElementById('dijkstraDirectedCanvas');
+    ctx6 = canvas6.getContext('2d');
     
     // 绑定事件
     canvas.addEventListener('click', handleCanvasClick);
@@ -95,6 +100,9 @@ window.addEventListener('load', function() {
 
     canvas5.addEventListener('click', handleCanvasClick);
     canvas5.addEventListener('mousemove', handleCanvasMouseMove);
+
+    canvas6.addEventListener('click', handleCanvasClick);
+    canvas6.addEventListener('mousemove', handleCanvasMouseMove);
     
     // 权重输入框回车确认
     document.getElementById('weightInput').addEventListener('keypress', function(e) {
@@ -129,6 +137,9 @@ function switchAlgorithm(algorithm) {
     } else if (algorithm === 'dijkstra') {
         document.querySelector('.dijkstra-tab').classList.add('active');
         document.getElementById('dijkstraTool').classList.add('active');
+    } else if (algorithm === 'dijkstraDirected') {
+        document.querySelector('.dijkstra-directed-tab').classList.add('active');
+        document.getElementById('dijkstraDirectedTool').classList.add('active');
     }
     
     // 重置状态
@@ -155,7 +166,7 @@ function setMode(mode) {
         document.getElementById(`${prefix}-add-edge`).classList.add('active');
     } else if (mode === 'delete') {
         document.getElementById(`${prefix}-delete`).classList.add('active');
-    } else if (mode === 'setStart' && prefix === 'dijkstra') {
+    } else if (mode === 'setStart' && (prefix === 'dijkstra' || prefix === 'dijkstraDirected')) {
         document.getElementById(`${prefix}-set-start`).classList.add('active');
     }
     
@@ -185,9 +196,14 @@ function handleCanvasClick(e) {
 function handleSetStart(x, y) {
     const clickedNode = getNodeAt(x, y);
     if (clickedNode !== null) {
-        dijkstraStartNode = clickedNode.id;
+        if (currentAlgorithm === 'dijkstra') {
+            dijkstraStartNode = clickedNode.id;
+            updateDijkstraTable();
+        } else if (currentAlgorithm === 'dijkstraDirected') {
+            dijkstraDirectedStartNode = clickedNode.id;
+            updateDijkstraDirectedTable();
+        }
         updateInfo();
-        updateDijkstraTable();
         draw();
     }
 }
@@ -292,6 +308,23 @@ function handleEdgeClick(x, y) {
                 showWeightModal(selectedNode, clickedNode, { directed: true });
                 return;
             }
+
+            // Dijkstra 有向图：有向 + 需要权重
+            if (currentAlgorithm === 'dijkstraDirected') {
+                const existingEdge = edges.find(e =>
+                    e.from === selectedNode.id && e.to === clickedNode.id
+                );
+
+                if (existingEdge) {
+                    selectedNode = null;
+                    tempEdgeEnd = null;
+                    draw();
+                    return;
+                }
+
+                showWeightModal(selectedNode, clickedNode, { directed: true });
+                return;
+            }
             
             // 检查是否已存在边（无向图）
             const existingEdge = edges.find(e => 
@@ -385,8 +418,17 @@ function handleDelete(x, y) {
             if (edge.from > clickedNode.id) edge.from--;
             if (edge.to > clickedNode.id) edge.to--;
         });
+
+        // 调整 Dijkstra 起点索引
+        if (dijkstraStartNode === clickedNode.id) dijkstraStartNode = -1;
+        else if (dijkstraStartNode > clickedNode.id) dijkstraStartNode--;
+
+        if (dijkstraDirectedStartNode === clickedNode.id) dijkstraDirectedStartNode = -1;
+        else if (dijkstraDirectedStartNode > clickedNode.id) dijkstraDirectedStartNode--;
         
         updateInfo();
+        updateDijkstraTable();
+        updateDijkstraDirectedTable();
         draw();
         return;
     }
@@ -476,6 +518,7 @@ function clearCanvas() {
         tempEdgeEnd = null;
         algorithmState = null;
         dijkstraStartNode = -1;
+        dijkstraDirectedStartNode = -1;
         
         // 重置所有算法的按钮状态
         resetAllButtons();
@@ -483,6 +526,8 @@ function clearCanvas() {
         updateInfo();
         if (currentAlgorithm === 'dijkstra') {
             updateDijkstraTable();
+        } else if (currentAlgorithm === 'dijkstraDirected') {
+            updateDijkstraDirectedTable();
         }
         draw();
     }
@@ -519,9 +564,15 @@ function resetAllButtons() {
     const dijkstraRun = document.getElementById('dijkstra-run');
     if (dijkstraStep) dijkstraStep.disabled = true;
     if (dijkstraRun) dijkstraRun.disabled = false;
+
+    // Dijkstra 有向图
+    const dijkstraDirectedStep = document.getElementById('dijkstraDirected-step');
+    const dijkstraDirectedRun = document.getElementById('dijkstraDirected-run');
+    if (dijkstraDirectedStep) dijkstraDirectedStep.disabled = true;
+    if (dijkstraDirectedRun) dijkstraDirectedRun.disabled = false;
     
     // 隐藏所有步骤信息
-    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info', 'aoe-step-info', 'dijkstra-step-info'];
+    const stepInfos = ['prim-step-info', 'kruskal-step-info', 'topo-step-info', 'aoe-step-info', 'dijkstra-step-info', 'dijkstraDirected-step-info'];
     stepInfos.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -928,6 +979,39 @@ function loadDijkstraExample() {
     draw();
 }
 
+// 加载 Dijkstra 有向图示例
+function loadDijkstraDirectedExample() {
+    if (isRunning) return;
+
+    nodes = [
+        { id: 0, x: 100, y: 200, label: 'A' },
+        { id: 1, x: 260, y: 100, label: 'B' },
+        { id: 2, x: 260, y: 300, label: 'C' },
+        { id: 3, x: 460, y: 100, label: 'D' },
+        { id: 4, x: 460, y: 300, label: 'E' },
+        { id: 5, x: 650, y: 200, label: 'F' }
+    ];
+
+    edges = [
+        { from: 0, to: 1, weight: 2, inMST: false, directed: true },
+        { from: 0, to: 2, weight: 5, inMST: false, directed: true },
+        { from: 1, to: 2, weight: 1, inMST: false, directed: true },
+        { from: 1, to: 3, weight: 3, inMST: false, directed: true },
+        { from: 2, to: 4, weight: 4, inMST: false, directed: true },
+        { from: 3, to: 4, weight: 1, inMST: false, directed: true },
+        { from: 3, to: 5, weight: 7, inMST: false, directed: true },
+        { from: 4, to: 5, weight: 2, inMST: false, directed: true }
+    ];
+
+    dijkstraDirectedStartNode = 0;
+    selectedNode = null;
+    tempEdgeEnd = null;
+    algorithmState = null;
+    updateInfo();
+    updateDijkstraDirectedTable();
+    draw();
+}
+
 // 运行 Dijkstra 算法
 function runDijkstra() {
     if (nodes.length === 0) {
@@ -1043,6 +1127,106 @@ function stepDijkstra() {
     }
 }
 
+// 运行 Dijkstra 有向图算法
+function runDijkstraDirected() {
+    if (nodes.length === 0) {
+        alert('请先添加节点！');
+        return;
+    }
+
+    if (dijkstraDirectedStartNode === -1) {
+        alert('请先设置起点！');
+        return;
+    }
+
+    if (edges.length === 0) {
+        alert('请先添加有向边！');
+        return;
+    }
+
+    isRunning = true;
+
+    edges.forEach(e => e.inMST = false);
+
+    const n = nodes.length;
+    const dist = new Array(n).fill(Infinity);
+    const prev = new Array(n).fill(-1);
+    const visited = new Array(n).fill(false);
+
+    dist[dijkstraDirectedStartNode] = 0;
+
+    algorithmState = {
+        type: 'dijkstraDirected',
+        dist: dist,
+        prev: prev,
+        visited: visited,
+        currentNode: -1,
+        currentStep: 0
+    };
+
+    document.getElementById('dijkstraDirected-step').disabled = false;
+    document.getElementById('dijkstraDirected-run').disabled = true;
+
+    updateStepInfo(`Dijkstra（有向）开始，起点：${nodes[dijkstraDirectedStartNode].label}，距离设为 0`);
+    updateDijkstraDirectedTable();
+    draw();
+}
+
+// Dijkstra 有向图单步执行
+function stepDijkstraDirected() {
+    if (!algorithmState || algorithmState.type !== 'dijkstraDirected') return;
+
+    const { dist, prev, visited } = algorithmState;
+    const n = nodes.length;
+
+    let u = -1;
+    let minD = Infinity;
+    for (let i = 0; i < n; i++) {
+        if (!visited[i] && dist[i] < minD) {
+            minD = dist[i];
+            u = i;
+        }
+    }
+
+    if (u === -1) {
+        updateStepInfo('算法完成！所有可达节点均已处理。');
+        finishAlgorithm();
+        return;
+    }
+
+    visited[u] = true;
+    algorithmState.currentNode = u;
+    algorithmState.currentStep++;
+
+    const updates = [];
+    edges.forEach(edge => {
+        if (edge.from !== u) return;
+        const v = edge.to;
+
+        if (!visited[v]) {
+            const newDist = dist[u] + edge.weight;
+            if (newDist < dist[v]) {
+                dist[v] = newDist;
+                prev[v] = u;
+                updates.push(`${nodes[v].label}(${newDist})`);
+            }
+        }
+    });
+
+    edges.forEach(edge => {
+        edge.inMST = (prev[edge.to] === edge.from) && (visited[edge.from] || visited[edge.to]);
+    });
+
+    const msg = updates.length > 0
+        ? `步骤 ${algorithmState.currentStep}：访问节点 ${nodes[u].label}（距离 ${minD}），更新出边邻居：${updates.join(', ')}`
+        : `步骤 ${algorithmState.currentStep}：访问节点 ${nodes[u].label}（距离 ${minD}），无需更新`;
+
+    updateStepInfo(msg);
+    updateDijkstraDirectedTable();
+    updateInfo();
+    draw();
+}
+
 // 更新 Dijkstra 表格
 function updateDijkstraTable() {
     const tbody = document.querySelector('#dijkstraTable tbody');
@@ -1072,6 +1256,47 @@ function updateDijkstraTable() {
         } else if (dijkstraStartNode !== -1) {
             distVal = i === dijkstraStartNode ? 0 : '∞';
             status = i === dijkstraStartNode ? '起点' : '未访问';
+        }
+
+        tr.innerHTML = `
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${node.label}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${distVal}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${prevVal}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${status}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// 更新 Dijkstra 有向图表格
+function updateDijkstraDirectedTable() {
+    const tbody = document.querySelector('#dijkstraDirectedTable tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    nodes.forEach((node, i) => {
+        const tr = document.createElement('tr');
+
+        let distVal = '∞';
+        let prevVal = '-';
+        let status = '未访问';
+
+        if (algorithmState && algorithmState.type === 'dijkstraDirected') {
+            distVal = algorithmState.dist[i] === Infinity ? '∞' : algorithmState.dist[i];
+            prevVal = algorithmState.prev[i] === -1 ? '-' : nodes[algorithmState.prev[i]].label;
+            if (algorithmState.visited[i]) {
+                status = '已确定';
+                tr.style.backgroundColor = 'rgba(17, 153, 142, 0.1)';
+            } else if (algorithmState.dist[i] !== Infinity) {
+                status = '待处理';
+            }
+            if (i === algorithmState.currentNode) {
+                tr.style.backgroundColor = 'rgba(255, 138, 0, 0.2)';
+            }
+        } else if (dijkstraDirectedStartNode !== -1) {
+            distVal = i === dijkstraDirectedStartNode ? 0 : '∞';
+            status = i === dijkstraDirectedStartNode ? '起点' : '未访问';
         }
 
         tr.innerHTML = `
@@ -1322,6 +1547,12 @@ function resetAlgorithm() {
     // 隐藏步骤信息
     const stepInfo = document.getElementById(`${prefix}-step-info`);
     if (stepInfo) stepInfo.style.display = 'none';
+
+    if (prefix === 'dijkstra') {
+        updateDijkstraTable();
+    } else if (prefix === 'dijkstraDirected') {
+        updateDijkstraDirectedTable();
+    }
     
     updateInfo();
     draw();
@@ -1362,6 +1593,11 @@ function updateInfo() {
         const startNodeEl = document.getElementById('dijkstra-start-node');
         if (startNodeEl) {
             startNodeEl.textContent = dijkstraStartNode !== -1 ? nodes[dijkstraStartNode].label : '未设置';
+        }
+    } else if (prefix === 'dijkstraDirected') {
+        const startNodeEl = document.getElementById('dijkstraDirected-start-node');
+        if (startNodeEl) {
+            startNodeEl.textContent = dijkstraDirectedStartNode !== -1 ? nodes[dijkstraDirectedStartNode].label : '未设置';
         }
     } else {
         const weightEl = document.getElementById(`${prefix}-total-weight`);
@@ -1406,6 +1642,9 @@ function draw() {
     } else if (currentAlgorithm === 'dijkstra') {
         activeCanvas = canvas5;
         activeCtx = ctx5;
+    } else if (currentAlgorithm === 'dijkstraDirected') {
+        activeCanvas = canvas6;
+        activeCtx = ctx6;
     }
 
     if (!activeCanvas || !activeCtx) return;
@@ -1418,7 +1657,7 @@ function draw() {
         const fromNode = nodes[edge.from];
         const toNode = nodes[edge.to];
         
-        if (currentAlgorithm === 'topo' || currentAlgorithm === 'aoe') {
+        if (currentAlgorithm === 'topo' || currentAlgorithm === 'aoe' || currentAlgorithm === 'dijkstraDirected') {
             drawDirectedEdge(activeCtx, fromNode, toNode, edge.inMST, edge.weight);
         } else {
             drawEdge(activeCtx, fromNode, toNode, edge.weight, edge.inMST);
@@ -1449,12 +1688,18 @@ function draw() {
                 isProcessed = algorithmState.processed.has(node.id);
             } else if (algorithmState.type === 'dijkstra') {
                 isProcessed = algorithmState.visited[node.id];
+            } else if (algorithmState.type === 'dijkstraDirected') {
+                isProcessed = algorithmState.visited[node.id];
             }
         }
         
         const isSelected = selectedNode && selectedNode.id === node.id;
-        const isDijkstraStart = (currentAlgorithm === 'dijkstra' && dijkstraStartNode === node.id);
-        const isDijkstraCurrent = (currentAlgorithm === 'dijkstra' && algorithmState && algorithmState.currentNode === node.id);
+        const isDijkstraStart =
+            (currentAlgorithm === 'dijkstra' && dijkstraStartNode === node.id) ||
+            (currentAlgorithm === 'dijkstraDirected' && dijkstraDirectedStartNode === node.id);
+        const isDijkstraCurrent =
+            ((currentAlgorithm === 'dijkstra' || currentAlgorithm === 'dijkstraDirected') &&
+            algorithmState && algorithmState.currentNode === node.id);
         drawNode(activeCtx, node, isSelected, isProcessed, isDijkstraStart, isDijkstraCurrent);
     }
 }

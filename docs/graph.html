@@ -22,6 +22,7 @@
             --topo-color: #ff6b6b;
             --aoe-color: var(--theme-primary);
             --dijkstra-color: #00b4db;
+            --dijkstra-directed-color: #ff8a00;
         }
 
         /* 工具选择标签页 */
@@ -72,6 +73,10 @@
 
         .tool-tab.active.dijkstra-tab {
             background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+        }
+
+        .tool-tab.active.dijkstra-directed-tab {
+            background: linear-gradient(135deg, #ff8a00 0%, #e52e71 100%);
         }
 
         /* 工具内容区 */
@@ -178,6 +183,17 @@
         .control-btn.dijkstra-btn:hover,
         .control-btn.dijkstra-btn.active {
             background: var(--dijkstra-color);
+            color: white;
+        }
+
+        .control-btn.dijkstra-directed-btn {
+            border-color: var(--dijkstra-directed-color);
+            color: var(--dijkstra-directed-color);
+        }
+
+        .control-btn.dijkstra-directed-btn:hover,
+        .control-btn.dijkstra-directed-btn.active {
+            background: var(--dijkstra-directed-color);
             color: white;
         }
 
@@ -423,6 +439,9 @@
             </button>
             <button class="tool-tab dijkstra-tab" onclick="switchAlgorithm('dijkstra')">
                 Dijkstra 算法
+            </button>
+            <button class="tool-tab dijkstra-directed-tab" onclick="switchAlgorithm('dijkstraDirected')">
+                Dijkstra 有向图
             </button>
             <button class="tool-tab topo-tab" onclick="switchAlgorithm('topo')">
                 拓扑排序
@@ -771,6 +790,140 @@ vector&lt;<span class="type">pair</span>&lt;<span class="type">int</span>, <span
         }
     }
 }</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dijkstra 有向图算法内容 -->
+        <div id="dijkstraDirectedTool" class="tool-content">
+            <div class="section">
+                <div class="instructions">
+                    <h4>📖 使用说明</h4>
+                    <ul>
+                        <li><strong>添加节点：</strong>点击"添加节点"按钮后，在画布上点击创建节点</li>
+                        <li><strong>添加有向边：</strong>点击"添加边"按钮后，依次点击两个节点创建有向边，并输入权重</li>
+                        <li><strong>删除：</strong>点击"删除"按钮后，点击节点或边进行删除</li>
+                        <li><strong>设置起点：</strong>点击"设置起点"后选择一个节点作为最短路径起点</li>
+                        <li><strong>运行算法：</strong>点击"运行 Dijkstra（有向）"按钮，从起点开始计算最短路径</li>
+                    </ul>
+                </div>
+
+                <div class="instructions">
+                    <h4>🧠 算法逻辑规则</h4>
+                    <p>该演示用于<strong>有向图</strong>上的 Dijkstra 单源最短路径。每条边仅按箭头方向参与松弛：</p>
+                    <ul>
+                        <li><strong>初始化：</strong>起点距离设为 0，其余为 ∞。</li>
+                        <li><strong>选点：</strong>每步选取当前未确定且距离最小的节点 u。</li>
+                        <li><strong>有向松弛：</strong>仅遍历 u 的出边 (u→v)，尝试更新 dist[v]。</li>
+                        <li><strong>结束：</strong>当不存在可继续扩展的未确定节点时算法结束。</li>
+                    </ul>
+                </div>
+
+                <div class="control-panel">
+                    <div class="control-buttons">
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-add-node" onclick="setMode('addNode')">➕ 添加节点</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-add-edge" onclick="setMode('addEdge')">🔗 添加有向边</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-delete" onclick="setMode('delete')">🗑️ 删除</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-set-start" onclick="setMode('setStart')">📍 设置起点</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-run" onclick="runDijkstraDirected()">▶️ 运行 Dijkstra（有向）</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-step" onclick="stepDijkstraDirected()" disabled>⏭️ 单步执行</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-reset" onclick="resetAlgorithm()">🔄 重置</button>
+                        <button class="control-btn dijkstra-directed-btn" id="dijkstraDirected-clear" onclick="clearCanvas()">🗑️ 清空画布</button>
+                        <button class="control-btn dijkstra-directed-btn" onclick="loadDijkstraDirectedExample()">📝 加载示例</button>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="dijkstraDirectedCanvas" width="900" height="400"></canvas>
+                    <div class="info-panel">
+                        <h3>算法信息</h3>
+                        <div class="info-item">
+                            <strong>节点数：</strong><span id="dijkstraDirected-node-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>边数：</strong><span id="dijkstraDirected-edge-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>起点：</strong><span id="dijkstraDirected-start-node">未设置</span>
+                        </div>
+                        <div id="dijkstraDirected-step-info" class="step-info" style="display:none;">
+                            当前步骤信息将在这里显示
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow-x: auto;">
+                    <h3 style="margin-top: 0; color: var(--dijkstra-directed-color);">📊 有向图最短路径计算表</h3>
+                    <table id="dijkstraDirectedTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">节点</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">最短距离</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">前驱节点</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 由 JS 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="code-block">
+                    <h5>💻 C++ 实现示例（有向图）</h5>
+                    <pre><span class="comment">// Dijkstra（有向图）- 邻接表 + 小根堆</span>
+<span class="keyword">#include</span> <span class="string">&lt;bits/stdc++.h&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="keyword">const int</span> INF = <span class="number">1e9</span>;
+
+<span class="type">int</span> <span class="function">main</span>() {
+    ios::sync_with_stdio(<span class="keyword">false</span>);
+    cin.tie(<span class="keyword">nullptr</span>);
+
+    <span class="type">int</span> n, m, s;
+    cin &gt;&gt; n &gt;&gt; m &gt;&gt; s;
+
+    vector&lt;vector&lt;pair&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt;&gt; g(n);
+    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; m; i<span class="operator">++</span>) {
+        <span class="type">int</span> u, v, w;
+        cin &gt;&gt; u &gt;&gt; v &gt;&gt; w;
+        g[u].push_back({v, w}); <span class="comment">// 有向边 u -&gt; v</span>
+    }
+
+    vector&lt;<span class="type">int</span>&gt; dist(n, INF), pre(n, <span class="number">-1</span>);
+    vector&lt;<span class="type">bool</span>&gt; vis(n, <span class="keyword">false</span>);
+
+    priority_queue&lt;pair&lt;<span class="type">int</span>, <span class="type">int</span>&gt;, vector&lt;pair&lt;<span class="type">int</span>, <span class="type">int</span>&gt;&gt;, greater&lt;&gt;&gt; pq;
+    dist[s] = <span class="number">0</span>;
+    pq.push({<span class="number">0</span>, s});
+
+    <span class="keyword">while</span> (!pq.empty()) {
+        <span class="keyword">auto</span> [d, u] = pq.top();
+        pq.pop();
+        <span class="keyword">if</span> (vis[u]) <span class="keyword">continue</span>;
+        vis[u] = <span class="keyword">true</span>;
+
+        <span class="keyword">for</span> (<span class="keyword">auto</span> [v, w] : g[u]) {
+            <span class="keyword">if</span> (dist[u] + w &lt; dist[v]) {
+                dist[v] = dist[u] + w;
+                pre[v] = u;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+
+    <span class="keyword">return</span> <span class="number">0</span>;
+}</pre>
+                </div>
+
+                <div class="instructions">
+                    <h4>⏱️ 算法复杂度分析</h4>
+                    <ul>
+                        <li><strong>时间复杂度：</strong>使用邻接表 + 优先队列时为 O((V + E) log V)</li>
+                        <li><strong>空间复杂度：</strong>O(V + E)</li>
+                        <li><strong>适用条件：</strong>边权需为非负；本演示按有向边方向进行最短路计算</li>
+                    </ul>
                 </div>
             </div>
         </div>
