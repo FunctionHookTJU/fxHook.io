@@ -1089,8 +1089,13 @@
             }
 
             if (node.level === s.n - 1) {
+                // 用原始代价矩阵计算完整路径的实际总代价（归约矩阵中返回边已被设为INF）
+                let totalCost = 0;
+                for (let i = 0; i < node.path.length - 1; i++) {
+                    totalCost += s.matrix[node.path[i]][node.path[i + 1]];
+                }
                 const lastCity = node.path[node.path.length - 1];
-                const totalCost = node.cost + node.matrix[lastCity][0];
+                totalCost += s.matrix[lastCity][0];
                 if (totalCost < s.bestCost) {
                     s.bestCost = totalCost;
                     s.bestNode = node;
