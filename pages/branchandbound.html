@@ -1124,7 +1124,9 @@
                 newMatrix[nextCity][node.path[0]] = TSP_INF;
 
                 const { reduction: newReduction } = tspReduceMatrix(newMatrix);
-                const newBound = newCost + newReduction;
+                // 子节点下界 = 父节点下界 + 归约边代价 + 新矩阵归约量
+                //   （父节点下界已包含所有历史归约值，不可丢失）
+                const newBound = node.bound + edgeCost + newReduction;
 
                 const childNode = {
                     id: s.nextId++, level: node.level + 1,
