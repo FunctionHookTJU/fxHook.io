@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分支限界法 - 宇佐见函钩</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/demo-common.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="../site.webmanifest">
+    <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/backgroundLoader.js"></script>
+    <style>
+        :root {
+            --theme-primary: #667eea;
+            --theme-secondary: #764ba2;
+            --knapsack-primary: #8914d7;
+            --knapsack-secondary: #e31795;
+            --tsp-primary: #11998e;
+            --tsp-secondary: #38ef7d;
+        }
+
+        .main-container {
+            max-width: 1600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .tool-tabs {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+        }
+
+        .tool-tab {
+            flex: 1;
+            padding: 18px 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: #666;
+        }
+
+        .tool-tab:hover { background: #e8e8e8; }
+
+        .tool-tab.active {
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+            color: white;
+        }
+
+        .tool-tab.active.knapsack-tab {
+            background: linear-gradient(135deg, var(--knapsack-primary) 0%, var(--knapsack-secondary) 100%);
+        }
+
+        .tool-tab.active.tsp-tab {
+            background: linear-gradient(135deg, var(--tsp-primary) 0%, var(--tsp-secondary) 100%);
+        }
+
+        .tool-content { display: none; animation: fadeIn 0.3s ease; }
+        .tool-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 0;
+        }
+
+        .page-header.knapsack-header {
+            background: linear-gradient(135deg, var(--knapsack-primary) 0%, var(--knapsack-secondary) 100%);
+        }
+
+        .page-header.tsp-header {
+            background: linear-gradient(135deg, var(--tsp-primary) 0%, var(--tsp-secondary) 100%);
+        }
+
+        .page-header h1 { font-size: 2.2em; margin-bottom: 8px; }
+        .subtitle { font-size: 1.05em; opacity: 0.9; }
+
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            padding: 25px;
+            flex-wrap: wrap;
+        }
+
+        .left-panel { flex: 1; min-width: 340px; max-width: 480px; }
+        .right-panel { flex: 2; min-width: 620px; }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 18px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section h2 {
+            color: var(--theme-primary);
+            margin-bottom: 12px;
+            font-size: 1.2em;
+            border-bottom: 2px solid var(--theme-primary);
+            padding-bottom: 8px;
+        }
+
+        .knapsack-content .section h2 { color: var(--knapsack-primary); border-bottom-color: var(--knapsack-primary); }
+        .tsp-content .section h2 { color: var(--tsp-primary); border-bottom-color: var(--tsp-primary); }
+
+        .section p { margin-bottom: 10px; font-size: 14px; }
+
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; font-size: 14px; }
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus { outline: none; border-color: var(--theme-primary); }
+
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .item-table th {
+            background: var(--knapsack-primary);
+            color: white;
+            padding: 8px 10px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .item-table td {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .item-table input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .item-table .del-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .item-table .del-btn:hover { background: #d32f2f; }
+
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--knapsack-primary) 0%, var(--knapsack-secondary) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(233,30,99,0.4); }
+
+        .tsp-content .btn-primary {
+            background: linear-gradient(135deg, var(--tsp-primary) 0%, var(--tsp-secondary) 100%);
+        }
+
+        .tsp-content .btn-primary:hover { box-shadow: 0 5px 20px rgba(17,153,142,0.4); }
+
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background: #d0d0d0; }
+
+        .btn-step {
+            background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+            color: white;
+        }
+
+        .btn-step:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255,152,0,0.4); }
+
+        .btn-sm {
+            padding: 6px 14px;
+            border: 1px solid #999;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover { background: #f0f0f0; }
+
+        .examples { margin-top: 10px; }
+        .examples span { font-weight: 600; margin-right: 8px; font-size: 13px; }
+
+        .example-btn {
+            padding: 5px 10px;
+            margin: 2px;
+            border: 1px solid var(--knapsack-primary);
+            background: white;
+            color: var(--knapsack-primary);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .example-btn:hover { background: var(--knapsack-primary); color: white; }
+
+        .tsp-content .example-btn { border-color: var(--tsp-primary); color: var(--tsp-primary); }
+        .tsp-content .example-btn:hover { background: var(--tsp-primary); color: white; }
+
+        .tsp-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .tsp-matrix th {
+            background: var(--tsp-primary);
+            color: white;
+            padding: 6px 8px;
+            font-size: 12px;
+        }
+
+        .tsp-matrix td {
+            padding: 4px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .tsp-matrix input {
+            width: 52px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .canvas-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 520px;
+            position: relative;
+            min-height: 350px;
+        }
+
+        .canvas-container svg { display: block; }
+
+        .status-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-item strong { color: #555; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .badge-exploring { background: #2196f3; color: white; }
+        .badge-pruned { background: #f44336; color: white; }
+        .badge-best { background: #ff9800; color: white; }
+        .badge-queued { background: #4caf50; color: white; }
+
+        .legend-bar {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #999;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        .legend-dot.explored { background: #e8f5e9; border-color: #4caf50; }
+        .legend-dot.queued { background: #fff3e0; border-color: #ff9800; }
+        .legend-dot.active { background: #e3f2fd; border-color: #2196f3; }
+        .legend-dot.pruned { background: #ffebee; border-color: #f44336; }
+        .legend-dot.best { background: #fff8e1; border-color: #ffc107; }
+
+        .code-section {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .code-section h3 { color: #61dafb; margin-bottom: 12px; font-size: 1.1em; }
+
+        .code-kw { color: #c678dd; }
+        .code-fn { color: #61dafb; }
+        .code-str { color: #98c379; }
+        .code-cmt { color: #5c6370; font-style: italic; }
+        .code-num { color: #d19a66; }
+
+        .step-desc {
+            background: linear-gradient(135deg, #e0f7fa 0%, #f1f8e9 100%);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            min-height: 40px;
+            line-height: 1.5;
+        }
+
+        .best-solution {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .best-solution h4 { color: #e65100; margin-bottom: 6px; }
+
+        @media (max-width: 1100px) {
+            .content-wrapper { flex-direction: column; }
+            .left-panel, .right-panel { min-width: 100%; max-width: 100%; }
+            .page-header h1 { font-size: 1.6em; }
+        }
+    </style>
+</head>
+<body>
+    <div id="header-placeholder"></div>
+
+    <div class="main-container">
+        <div class="tool-tabs">
+            <button class="tool-tab active knapsack-tab" onclick="switchTool('knapsack', event)">🎒 0/1背包问题</button>
+            <button class="tool-tab" onclick="switchTool('tsp', event)">🗺️ 旅行商问题(TSP)</button>
+        </div>
+
+        <!-- ==================== 0/1 背包问题 ==================== -->
+        <div id="knapsackTool" class="tool-content active knapsack-content">
+            <header class="page-header knapsack-header">
+                <h1>🎒 0/1背包问题 — 分支限界法</h1>
+                <p class="subtitle">0/1 Knapsack Problem · Best-First Branch and Bound</p>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="left-panel">
+                    <div class="section">
+                        <h2>📚 算法原理</h2>
+                        <p><strong>分支限界法</strong>使用<strong>优先队列</strong>（最大堆），每次选取<strong>上界最大</strong>的节点扩展。</p>
+                        <p><strong>限界函数：</strong>用分数背包（贪心）计算当前节点的价值上界。若上界 ≤ 当前最优解，则<strong>剪枝</strong>。</p>
+                        <p><strong>步骤：</strong></p>
+                        <ol style="padding-left:20px;font-size:13px;line-height:1.8;">
+                            <li>按价值/重量比降序排列物品</li>
+                            <li>根节点入优先队列</li>
+                            <li>每次弹出上界最大的节点</li>
+                            <li>生成左子节点（放入）和右子节点（不放入）</li>
+                            <li>计算上界，剪去无效分支</li>
+                            <li>找到完整解时更新最优值</li>
+                        </ol>
+                    </div>
+
+                    <div class="section">
+                        <h2>✏️ 物品数据</h2>
+                        <table class="item-table" id="itemTable">
+                            <thead>
+                                <tr><th>物品名</th><th>重量</th><th>价值</th><th>操作</th></tr>
+                            </thead>
+                            <tbody id="itemTableBody"></tbody>
+                        </table>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button class="btn-sm" onclick="addItem()" style="border-color:var(--knapsack-primary);color:var(--knapsack-primary);">+ 添加物品</button>
+                            <span style="font-size:13px;">容量:</span>
+                            <input type="number" id="capacityInput" value="10" min="1" max="100" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:4px;text-align:center;font-size:13px;">
+                        </div>
+                        <div class="examples">
+                            <span>示例：</span>
+                            <button class="example-btn" onclick="setKnapsackExample('classic')">经典4物品</button>
+                            <button class="example-btn" onclick="setKnapsackExample('5items')">5物品</button>
+                            <button class="example-btn" onclick="setKnapsackExample('6items')">6物品</button>
+                            <button class="example-btn" onclick="setKnapsackExample('simple')">简单3物品</button>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-step" onclick="knapsackStep()">👣 单步执行</button>
+                        <button class="btn btn-primary" onclick="knapsackRunAll()">🚀 自动演示</button>
+                        <button class="btn btn-secondary" onclick="knapsackReset()">🗑️ 重置</button>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="section">
+                        <h2>🌳 搜索树可视化</h2>
+                        <div class="canvas-container" id="knapsackCanvasContainer">
+                            <svg id="knapsackSvg"></svg>
+                        </div>
+                        <div class="legend-bar">
+                            <span><span class="legend-dot explored"></span> 已探索</span>
+                            <span><span class="legend-dot queued"></span> 队列中</span>
+                            <span><span class="legend-dot active"></span> 当前节点</span>
+                            <span><span class="legend-dot pruned"></span> 已剪枝</span>
+                            <span><span class="legend-dot best"></span> 最优解</span>
+                        </div>
+                        <div class="step-desc" id="knapsackStepDesc">点击"单步执行"或"自动演示"开始...</div>
+                        <div class="status-bar" id="knapsackStatusBar">
+                            <div class="status-item"><strong>队列大小:</strong> <span id="knapsackQueueSize">0</span></div>
+                            <div class="status-item"><strong>已探索:</strong> <span id="knapsackExplored">0</span></div>
+                            <div class="status-item"><strong>已剪枝:</strong> <span id="knapsackPruned">0</span></div>
+                            <div class="status-item"><strong>当前最优:</strong> <span id="knapsackBest">-</span></div>
+                        </div>
+                        <div class="best-solution" id="knapsackBestSolution" style="display:none;">
+                            <h4>🏆 最优解</h4>
+                            <div id="knapsackBestDetail"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>💻 C++ 实现代码</h2>
+                        <div class="code-section" id="knapsackCodeSection"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 旅行商问题 (TSP) ==================== -->
+        <div id="tspTool" class="tool-content tsp-content">
+            <header class="page-header tsp-header">
+                <h1>🗺️ 旅行商问题(TSP) — 分支限界法</h1>
+                <p class="subtitle">Traveling Salesman Problem · Best-First Branch and Bound</p>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="left-panel">
+                    <div class="section">
+                        <h2>📚 算法原理</h2>
+                        <p><strong>分支限界法</strong>求解TSP：从起点出发，逐步扩展部分路径。使用<strong>优先队列</strong>（最小堆），每次选取<strong>下界最小</strong>的节点。</p>
+                        <p><strong>限界函数：</strong>利用<strong>归约矩阵</strong>计算路径下界。对代价矩阵做行列归约，归约常数之和即为下界。</p>
+                        <p><strong>步骤：</strong></p>
+                        <ol style="padding-left:20px;font-size:13px;line-height:1.8;">
+                            <li>构建代价矩阵，行列归约得根节点下界</li>
+                            <li>根节点入优先队列（最小堆）</li>
+                            <li>每次弹出下界最小的节点</li>
+                            <li>对每个未访问城市生成子节点</li>
+                            <li>更新矩阵（禁止回路），重新归约得下界</li>
+                            <li>下界 ≥ 当前最优时剪枝</li>
+                        </ol>
+                    </div>
+
+                    <div class="section">
+                        <h2>✏️ 代价矩阵</h2>
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                            <span style="font-size:13px;">城市数:</span>
+                            <select id="tspCityCount" onchange="tspUpdateMatrixSize()" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
+                                <option value="3">3</option>
+                                <option value="4" selected>4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="tsp-matrix" id="tspMatrix">
+                                <thead id="tspMatrixHead"></thead>
+                                <tbody id="tspMatrixBody"></tbody>
+                            </table>
+                        </div>
+                        <p style="font-size:12px;color:#888;">∞ 表示不可达（对角线自动设为∞）</p>
+                        <div class="examples">
+                            <span>示例：</span>
+                            <button class="example-btn" onclick="setTSPExample('4cities')">4城市</button>
+                            <button class="example-btn" onclick="setTSPExample('4cities2')">4城市B</button>
+                            <button class="example-btn" onclick="setTSPExample('5cities')">5城市</button>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-step" onclick="tspStep()">👣 单步执行</button>
+                        <button class="btn btn-primary" onclick="tspRunAll()">🚀 自动演示</button>
+                        <button class="btn btn-secondary" onclick="tspReset()">🗑️ 重置</button>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="section">
+                        <h2>🌳 搜索树可视化</h2>
+                        <div class="canvas-container" id="tspCanvasContainer">
+                            <svg id="tspSvg"></svg>
+                        </div>
+                        <div class="legend-bar">
+                            <span><span class="legend-dot explored"></span> 已探索</span>
+                            <span><span class="legend-dot queued"></span> 队列中</span>
+                            <span><span class="legend-dot active"></span> 当前节点</span>
+                            <span><span class="legend-dot pruned"></span> 已剪枝</span>
+                            <span><span class="legend-dot best"></span> 最优解</span>
+                        </div>
+                        <div class="step-desc" id="tspStepDesc">点击"单步执行"或"自动演示"开始...</div>
+                        <div class="status-bar" id="tspStatusBar">
+                            <div class="status-item"><strong>队列大小:</strong> <span id="tspQueueSize">0</span></div>
+                            <div class="status-item"><strong>已探索:</strong> <span id="tspExplored">0</span></div>
+                            <div class="status-item"><strong>已剪枝:</strong> <span id="tspPruned">0</span></div>
+                            <div class="status-item"><strong>当前最优:</strong> <span id="tspBest">-</span></div>
+                        </div>
+                        <div class="best-solution" id="tspBestSolution" style="display:none;">
+                            <h4>🏆 最优路径</h4>
+                            <div id="tspBestDetail"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>💻 C++ 实现代码</h2>
+                        <div class="code-section" id="tspCodeSection"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html#about">关于我</a>
+                    <a href="https://github.com/FunctionHookTJU" target="_blank" rel="noopener noreferrer">Github</a>
+                </div>
+                <p class="copyright">© 2025 宇佐见函钩. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== 优先队列 ====================
+        class PriorityQueue {
+            constructor(compareFn) {
+                this.heap = [];
+                this.compare = compareFn || ((a,b) => a.bound - b.bound);
+            }
+
+            push(node) {
+                this.heap.push(node);
+                this._siftUp(this.heap.length - 1);
+            }
+
+            pop() {
+                if (this.heap.length === 0) return null;
+                const top = this.heap[0];
+                const last = this.heap.pop();
+                if (this.heap.length > 0) {
+                    this.heap[0] = last;
+                    this._siftDown(0);
+                }
+                return top;
+            }
+
+            peek() { return this.heap.length > 0 ? this.heap[0] : null; }
+            size() { return this.heap.length; }
+            empty() { return this.heap.length === 0; }
+
+            _siftUp(i) {
+                while (i > 0) {
+                    const p = (i - 1) >> 1;
+                    if (this.compare(this.heap[p], this.heap[i]) <= 0) break;
+                    [this.heap[p], this.heap[i]] = [this.heap[i], this.heap[p]];
+                    i = p;
+                }
+            }
+
+            _siftDown(i) {
+                const n = this.heap.length;
+                while (true) {
+                    let smallest = i;
+                    const l = 2 * i + 1, r = 2 * i + 2;
+                    if (l < n && this.compare(this.heap[l], this.heap[smallest]) < 0) smallest = l;
+                    if (r < n && this.compare(this.heap[r], this.heap[smallest]) < 0) smallest = r;
+                    if (smallest === i) break;
+                    [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
+                    i = smallest;
+                }
+            }
+
+            toArray() { return [...this.heap]; }
+        }
+
+        // ==================== 0/1 背包分支限界 ====================
+        let knapsackState = null;
+
+        function knapsackBound(level, weight, value, items, capacity) {
+            if (weight >= capacity) return 0;
+            let bound = value;
+            let w = weight;
+            for (let i = level + 1; i < items.length; i++) {
+                if (w + items[i].w <= capacity) {
+                    w += items[i].w;
+                    bound += items[i].v;
+                } else {
+                    bound += (capacity - w) * (items[i].v / items[i].w);
+                    break;
+                }
+            }
+            return bound;
+        }
+
+        function initKnapsack() {
+            const raw = getKnapsackItems();
+            if (raw.length === 0) { alert('请至少添加一个物品！'); return false; }
+            const cap = parseFloat(document.getElementById('capacityInput').value) || 10;
+            let items = raw.map((it, i) => ({ ...it, id: i, ratio: it.v / it.w }));
+            items.sort((a, b) => b.ratio - a.ratio);
+
+            const rootBound = knapsackBound(-1, 0, 0, items, cap);
+            const root = {
+                id: 0, level: -1, weight: 0, value: 0, bound: rootBound,
+                included: [], parent: null, state: 'queued', branch: ''
+            };
+
+            const pq = new PriorityQueue((a, b) => b.bound - a.bound);
+            pq.push(root);
+
+            knapsackState = {
+                items, capacity: cap, pq,
+                nodes: [root], nextId: 1,
+                bestValue: 0, bestNode: null,
+                explored: 0, pruned: 0,
+                done: false, lastAction: ''
+            };
+            updateKnapsackUI();
+            renderKnapsackTree();
+            return true;
+        }
+
+        function knapsackStep() {
+            if (!knapsackState) { if (!initKnapsack()) return; }
+            const s = knapsackState;
+            if (s.done) {
+                document.getElementById('knapsackStepDesc').innerHTML = '✅ 算法已完成！';
+                return;
+            }
+
+            if (s.pq.empty()) {
+                s.done = true;
+                document.getElementById('knapsackStepDesc').innerHTML = '✅ 优先队列为空，算法结束。';
+                updateKnapsackUI();
+                renderKnapsackTree();
+                return;
+            }
+
+            const node = s.pq.pop();
+            node.state = 'active';
+            s.explored++;
+
+            if (node.bound <= s.bestValue) {
+                node.state = 'pruned';
+                s.pruned++;
+                s.lastAction = `节点上界 ${node.bound.toFixed(1)} ≤ 最优 ${s.bestValue}，剪枝`;
+                updateKnapsackUI();
+                renderKnapsackTree();
+                return;
+            }
+
+            const nextLevel = node.level + 1;
+            if (nextLevel >= s.items.length) {
+                if (node.value > s.bestValue) {
+                    s.bestValue = node.value;
+                    s.bestNode = node;
+                    node.state = 'best';
+                }
+                s.lastAction = `到达叶节点，价值=${node.value}`;
+                updateKnapsackUI();
+                renderKnapsackTree();
+                return;
+            }
+
+            const item = s.items[nextLevel];
+
+            const includeNode = {
+                id: s.nextId++, level: nextLevel,
+                weight: node.weight + item.w, value: node.value + item.v,
+                bound: 0, included: [...node.included, nextLevel],
+                parent: node.id, state: 'queued', branch: '1'
+            };
+
+            const excludeNode = {
+                id: s.nextId++, level: nextLevel,
+                weight: node.weight, value: node.value,
+                bound: 0, included: [...node.included],
+                parent: node.id, state: 'queued', branch: '0'
+            };
+
+            const children = [];
+            if (includeNode.weight <= s.capacity) {
+                includeNode.bound = knapsackBound(nextLevel, includeNode.weight, includeNode.value, s.items, s.capacity);
+                if (includeNode.bound > s.bestValue) {
+                    children.push(includeNode);
+                } else {
+                    includeNode.state = 'pruned'; s.pruned++;
+                }
+            } else {
+                includeNode.state = 'pruned'; s.pruned++;
+            }
+            children.push(includeNode);
+
+            excludeNode.bound = knapsackBound(nextLevel, excludeNode.weight, excludeNode.value, s.items, s.capacity);
+            if (excludeNode.bound > s.bestValue) {
+                children.push(excludeNode);
+            } else {
+                excludeNode.state = 'pruned'; s.pruned++;
+            }
+
+            for (const ch of children) {
+                s.nodes.push(ch);
+                if (ch.state === 'queued') s.pq.push(ch);
+            }
+
+            node.state = 'explored';
+            s.lastAction = `展开物品"${item.name}"(w=${item.w},v=${item.v})：放入上界=${includeNode.bound.toFixed(1)}，不放入上界=${excludeNode.bound.toFixed(1)}`;
+            updateKnapsackUI();
+            renderKnapsackTree();
+        }
+
+        function knapsackRunAll() {
+            if (!knapsackState) { if (!initKnapsack()) return; }
+            const runOne = () => {
+                if (knapsackState && !knapsackState.done) {
+                    knapsackStep();
+                    setTimeout(runOne, 400);
+                }
+            };
+            runOne();
+        }
+
+        function knapsackReset() {
+            knapsackState = null;
+            document.getElementById('knapsackSvg').innerHTML = '';
+            document.getElementById('knapsackStepDesc').innerHTML = '点击"单步执行"或"自动演示"开始...';
+            document.getElementById('knapsackQueueSize').textContent = '0';
+            document.getElementById('knapsackExplored').textContent = '0';
+            document.getElementById('knapsackPruned').textContent = '0';
+            document.getElementById('knapsackBest').textContent = '-';
+            document.getElementById('knapsackBestSolution').style.display = 'none';
+        }
+
+        function updateKnapsackUI() {
+            if (!knapsackState) return;
+            const s = knapsackState;
+            document.getElementById('knapsackQueueSize').textContent = s.pq.size();
+            document.getElementById('knapsackExplored').textContent = s.explored;
+            document.getElementById('knapsackPruned').textContent = s.pruned;
+            document.getElementById('knapsackBest').textContent = s.bestValue > 0 ? s.bestValue : '-';
+            document.getElementById('knapsackStepDesc').innerHTML = s.lastAction || '等待操作...';
+
+            if (s.bestNode) {
+                document.getElementById('knapsackBestSolution').style.display = 'block';
+                const includedItems = s.bestNode.included.map(i => s.items[i].name).join(', ');
+                document.getElementById('knapsackBestDetail').innerHTML =
+                    `总价值: <strong>${s.bestValue}</strong> &nbsp; 总重量: <strong>${s.bestNode.weight}</strong> &nbsp; 装入物品: <strong>${includedItems || '(空)'}</strong>`;
+            }
+        }
+
+        function renderKnapsackTree() {
+            if (!knapsackState || knapsackState.nodes.length === 0) return;
+            const s = knapsackState;
+            const svg = document.getElementById('knapsackSvg');
+            const nodes = s.nodes;
+
+            const nodeMap = {};
+            nodes.forEach(n => { nodeMap[n.id] = n; });
+
+            const tree = {};
+            nodes.forEach(n => {
+                if (n.parent !== null && n.parent !== undefined) {
+                    if (!tree[n.parent]) tree[n.parent] = [];
+                    tree[n.parent].push(n.id);
+                }
+            });
+
+            const LEVEL_H = 95, NODE_R = 24, MIN_GAP = 60;
+            const pos = {};
+
+            const totalDepth = s.items.length;
+            const totalWidth = Math.pow(2, totalDepth + 1) * MIN_GAP;
+
+            function computePositions(nid, depth, left, right) {
+                const n = nodeMap[nid];
+                if (!n) return;
+                const children = tree[nid] || [];
+                if (children.length === 0) {
+                    const x = (left + right) / 2;
+                    pos[nid] = { x, y: depth * LEVEL_H + 50 };
+                    return;
+                }
+                if (children.length === 1) {
+                    computePositions(children[0], depth + 1, left, right);
+                    pos[nid] = { x: pos[children[0]].x, y: depth * LEVEL_H + 50 };
+                    return;
+                }
+                const mid = (left + right) / 2;
+                computePositions(children[0], depth + 1, left, mid);
+                computePositions(children[1], depth + 1, mid, right);
+                pos[nid] = { x: (pos[children[0]].x + pos[children[1]].x) / 2, y: depth * LEVEL_H + 50 };
+            }
+
+            const rootId = nodes[0].id;
+            computePositions(rootId, 0, 0, totalWidth);
+
+            const xs = Object.values(pos).map(p => p.x);
+            const minX = Math.min(...xs), maxX = Math.max(...xs);
+            const contentW = maxX - minX;
+            const minView = 500;
+            const maxView = Math.max(minView, (totalDepth + 1) * MIN_GAP * 3);
+            const viewW = Math.min(Math.max(contentW + 400, minView), maxView);
+            const centerX = (minX + maxX) / 2;
+            const viewX = Math.max(0, centerX - viewW / 2);
+            const h = (totalDepth + 1) * LEVEL_H + 80;
+
+            svg.setAttribute('viewBox', `${viewX} 0 ${viewW} ${h}`);
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', h);
+
+            let html = '';
+
+            const colors = {
+                queued: { fill: '#fff3e0', stroke: '#ff9800', text: '#333' },
+                active: { fill: '#bbdefb', stroke: '#2196f3', text: '#333' },
+                explored: { fill: '#e8f5e9', stroke: '#4caf50', text: '#333' },
+                pruned: { fill: '#ffebee', stroke: '#f44336', text: '#999' },
+                best: { fill: '#fff8e1', stroke: '#ffc107', text: '#333' }
+            };
+
+            const edgeLabel = { '1': '放入', '0': '不放入' };
+
+            for (const n of nodes) {
+                if (n.parent !== null && n.parent !== undefined && pos[n.parent] && pos[n.id]) {
+                    const px = pos[n.parent].x, py = pos[n.parent].y;
+                    const cx = pos[n.id].x, cy = pos[n.id].y;
+                    const mx = (px + cx) / 2, my = (py + cy) / 2;
+                    const dash = n.branch === '0' ? ' stroke-dasharray="6,4"' : '';
+                    const ec = n.state === 'pruned' ? '#f44336' : '#888';
+                    const ew = n.state === 'best' ? 2.5 : 1.5;
+                    html += `<line x1="${px}" y1="${py + NODE_R}" x2="${cx}" y2="${cy - NODE_R}" stroke="${ec}" stroke-width="${ew}"${dash}/>`;
+                    if (edgeLabel[n.branch]) {
+                        html += `<text x="${mx}" y="${my - 5}" text-anchor="middle" font-size="12" fill="${ec}" font-weight="600">${edgeLabel[n.branch]}</text>`;
+                    }
+                }
+            }
+
+            for (const n of nodes) {
+                const p = pos[n.id];
+                if (!p) continue;
+                const c = colors[n.state] || colors.queued;
+                const sw = n.state === 'best' ? 3 : 2;
+                html += `<circle cx="${p.x}" cy="${p.y}" r="${NODE_R}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="${sw}"/>`;
+                html += `<text x="${p.x}" y="${p.y - 3}" text-anchor="middle" font-size="11" fill="${c.text}">w:${n.weight.toFixed(n.weight%1?1:0)}</text>`;
+                html += `<text x="${p.x}" y="${p.y + 11}" text-anchor="middle" font-size="11" fill="${c.text}">v:${n.value.toFixed(n.value%1?1:0)}</text>`;
+                html += `<text x="${p.x}" y="${p.y - 20}" text-anchor="middle" font-size="11" fill="${c.stroke}" font-weight="bold">b:${n.bound.toFixed(1)}</text>`;
+            }
+
+            svg.innerHTML = html;
+            const knapSvgEl = document.getElementById('knapsackSvg');
+            const knapCtn = document.getElementById('knapsackCanvasContainer');
+            if (knapSvgEl.clientWidth > 0 && viewW > 0) {
+                const scale = knapSvgEl.clientWidth / viewW;
+                const screenCenter = (centerX - viewX) * scale;
+                knapCtn.scrollLeft = screenCenter - knapCtn.clientWidth / 2;
+            }
+        }
+
+        function getKnapsackItems() {
+            const rows = document.querySelectorAll('#itemTableBody tr');
+            const items = [];
+            rows.forEach(row => {
+                const name = row.querySelector('.item-name').value.trim();
+                const w = parseFloat(row.querySelector('.item-w').value);
+                const v = parseFloat(row.querySelector('.item-v').value);
+                if (name && !isNaN(w) && !isNaN(v) && w > 0 && v >= 0) {
+                    items.push({ name, w, v });
+                }
+            });
+            return items;
+        }
+
+        function addItem(name = '', w = '', v = '') {
+            const tbody = document.getElementById('itemTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input class="item-name" value="${name}" placeholder="物品"></td>
+                <td><input class="item-w" type="number" value="${w}" placeholder="重量" min="0.1" step="any"></td>
+                <td><input class="item-v" type="number" value="${v}" placeholder="价值" min="0" step="any"></td>
+                <td><button class="del-btn" onclick="this.closest('tr').remove();knapsackReset();">删除</button></td>
+            `;
+            tbody.appendChild(row);
+            knapsackReset();
+        }
+
+        function setKnapsackExample(type) {
+            const tbody = document.getElementById('itemTableBody');
+            tbody.innerHTML = '';
+            document.getElementById('capacityInput').value = '10';
+            let items;
+            switch (type) {
+                case 'classic': items = [{ n:'A',w:2,v:40},{n:'B',w:3,v:50},{n:'C',w:4,v:70},{n:'D',w:5,v:100}]; break;
+                case '5items': items = [{ n:'A',w:2,v:40},{n:'B',w:3,v:50},{n:'C',w:4,v:70},{n:'D',w:5,v:100},{n:'E',w:3,v:60}]; break;
+                case '6items': document.getElementById('capacityInput').value = '15';
+                    items = [{ n:'A',w:3,v:45},{n:'B',w:5,v:80},{n:'C',w:2,v:30},{n:'D',w:4,v:55},{n:'E',w:6,v:90},{n:'F',w:3,v:40}]; break;
+                case 'simple': document.getElementById('capacityInput').value = '5';
+                    items = [{ n:'A',w:2,v:30},{n:'B',w:3,v:40},{n:'C',w:2,v:25}]; break;
+                default: items = [{ n:'A',w:2,v:40},{n:'B',w:3,v:50},{n:'C',w:4,v:70},{n:'D',w:5,v:100}];
+            }
+            items.forEach(it => addItem(it.n, it.w, it.v));
+        }
+
+        function saveKnapsackToStorage() {
+            const items = getKnapsackItems();
+            const cap = document.getElementById('capacityInput').value;
+            localStorage.setItem('bb_knapsack_data', JSON.stringify({ items, capacity: cap }));
+        }
+
+        function loadKnapsackFromStorage() {
+            const saved = localStorage.getItem('bb_knapsack_data');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    document.getElementById('itemTableBody').innerHTML = '';
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(it => addItem(it.name, it.w, it.v));
+                    }
+                    if (data.capacity) document.getElementById('capacityInput').value = data.capacity;
+                    return;
+                } catch (e) {}
+            }
+            setKnapsackExample('classic');
+        }
+
+        ['itemTableBody', 'capacityInput'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', saveKnapsackToStorage);
+        });
+        ['itemTableBody', 'capacityInput'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', knapsackReset);
+        });
+
+        // ==================== TSP 分支限界 ====================
+        let tspState = null;
+        const TSP_INF = 999999;
+
+        function tspReduceMatrix(matrix) {
+            const n = matrix.length;
+            const m = matrix.map(row => [...row]);
+            let reduction = 0;
+            for (let i = 0; i < n; i++) {
+                const minVal = Math.min(...m[i]);
+                if (minVal > 0 && minVal < TSP_INF) {
+                    reduction += minVal;
+                    for (let j = 0; j < n; j++) {
+                        if (m[i][j] < TSP_INF) m[i][j] -= minVal;
+                    }
+                }
+            }
+            for (let j = 0; j < n; j++) {
+                let minVal = TSP_INF;
+                for (let i = 0; i < n; i++) {
+                    if (m[i][j] < minVal) minVal = m[i][j];
+                }
+                if (minVal > 0 && minVal < TSP_INF) {
+                    reduction += minVal;
+                    for (let i = 0; i < n; i++) {
+                        if (m[i][j] < TSP_INF) m[i][j] -= minVal;
+                    }
+                }
+            }
+            return { matrix: m, reduction };
+        }
+
+        function initTSP() {
+            const matrix = getTSPMatrix();
+            const n = matrix.length;
+            if (n < 3) { alert('至少需要3个城市！'); return false; }
+
+            const { matrix: reduced, reduction } = tspReduceMatrix(matrix);
+            const root = {
+                id: 0, level: 0, path: [0], cost: 0,
+                bound: reduction, matrix: reduced,
+                parent: null, state: 'queued', branch: '', branchLabel: ''
+            };
+
+            const pq = new PriorityQueue((a, b) => a.bound - b.bound);
+            pq.push(root);
+
+            tspState = {
+                n, matrix,
+                pq,
+                nodes: [root], nextId: 1,
+                bestCost: TSP_INF, bestNode: null,
+                explored: 0, pruned: 0,
+                done: false, lastAction: ''
+            };
+            updateTSPUI();
+            renderTSPTree();
+            return true;
+        }
+
+        function tspStep() {
+            if (!tspState) { if (!initTSP()) return; }
+            const s = tspState;
+            if (s.done) {
+                document.getElementById('tspStepDesc').innerHTML = '✅ 算法已完成！';
+                return;
+            }
+
+            if (s.pq.empty()) {
+                s.done = true;
+                document.getElementById('tspStepDesc').innerHTML = '✅ 优先队列为空，算法结束。';
+                updateTSPUI();
+                renderTSPTree();
+                return;
+            }
+
+            const node = s.pq.pop();
+            node.state = 'active';
+            s.explored++;
+
+            if (node.bound >= s.bestCost) {
+                node.state = 'pruned';
+                s.pruned++;
+                s.lastAction = `节点下界 ${node.bound} ≥ 最优 ${s.bestCost < TSP_INF ? s.bestCost : '∞'}，剪枝`;
+                updateTSPUI();
+                renderTSPTree();
+                return;
+            }
+
+            if (node.level === s.n - 1) {
+                const lastCity = node.path[node.path.length - 1];
+                const totalCost = node.cost + node.matrix[lastCity][0];
+                if (totalCost < s.bestCost) {
+                    s.bestCost = totalCost;
+                    s.bestNode = node;
+                    node.state = 'best';
+                }
+                s.lastAction = `到达叶节点，完整路径=(${node.path.join('→')}→0)，总代价=${totalCost}`;
+                updateTSPUI();
+                renderTSPTree();
+                return;
+            }
+
+            const currentCity = node.path[node.path.length - 1];
+            const visited = new Set(node.path);
+            let childCount = 0;
+
+            for (let nextCity = 0; nextCity < s.n; nextCity++) {
+                if (visited.has(nextCity)) continue;
+                if (node.matrix[currentCity][nextCity] >= TSP_INF) continue;
+
+                const edgeCost = node.matrix[currentCity][nextCity];
+                const newCost = node.cost + edgeCost;
+
+                const newMatrix = node.matrix.map(row => [...row]);
+                for (let j = 0; j < s.n; j++) newMatrix[currentCity][j] = TSP_INF;
+                for (let i = 0; i < s.n; i++) newMatrix[i][nextCity] = TSP_INF;
+                newMatrix[nextCity][node.path[0]] = TSP_INF;
+
+                const { reduction: newReduction } = tspReduceMatrix(newMatrix);
+                const newBound = newCost + newReduction;
+
+                const childNode = {
+                    id: s.nextId++, level: node.level + 1,
+                    path: [...node.path, nextCity],
+                    cost: newCost, bound: newBound,
+                    matrix: newMatrix,
+                    parent: node.id, state: 'queued',
+                    branch: String(nextCity), branchLabel: nextCity
+                };
+
+                s.nodes.push(childNode);
+
+                if (newBound >= s.bestCost) {
+                    childNode.state = 'pruned';
+                    s.pruned++;
+                } else {
+                    s.pq.push(childNode);
+                    childCount++;
+                }
+            }
+
+            node.state = 'explored';
+            s.lastAction = `从城市${currentCity}出发，生成${childCount}个子节点（访问剩余城市）`;
+            updateTSPUI();
+            renderTSPTree();
+        }
+
+        function tspRunAll() {
+            if (!tspState) { if (!initTSP()) return; }
+            const runOne = () => {
+                if (tspState && !tspState.done) {
+                    tspStep();
+                    setTimeout(runOne, 500);
+                }
+            };
+            runOne();
+        }
+
+        function tspReset() {
+            tspState = null;
+            document.getElementById('tspSvg').innerHTML = '';
+            document.getElementById('tspStepDesc').innerHTML = '点击"单步执行"或"自动演示"开始...';
+            document.getElementById('tspQueueSize').textContent = '0';
+            document.getElementById('tspExplored').textContent = '0';
+            document.getElementById('tspPruned').textContent = '0';
+            document.getElementById('tspBest').textContent = '-';
+            document.getElementById('tspBestSolution').style.display = 'none';
+        }
+
+        function updateTSPUI() {
+            if (!tspState) return;
+            const s = tspState;
+            document.getElementById('tspQueueSize').textContent = s.pq.size();
+            document.getElementById('tspExplored').textContent = s.explored;
+            document.getElementById('tspPruned').textContent = s.pruned;
+            document.getElementById('tspBest').textContent = s.bestCost < TSP_INF ? s.bestCost : '-';
+            document.getElementById('tspStepDesc').innerHTML = s.lastAction || '等待操作...';
+
+            if (s.bestNode) {
+                document.getElementById('tspBestSolution').style.display = 'block';
+                document.getElementById('tspBestDetail').innerHTML =
+                    `路径: <strong>${s.bestNode.path.join('→')}→0</strong> &nbsp;&nbsp; 总代价: <strong>${s.bestCost}</strong>`;
+            }
+        }
+
+        function renderTSPTree() {
+            if (!tspState || tspState.nodes.length === 0) return;
+            const s = tspState;
+            const svg = document.getElementById('tspSvg');
+            const nodes = s.nodes;
+
+            const nodeMap = {};
+            nodes.forEach(n => { nodeMap[n.id] = n; });
+
+            const tree = {};
+            nodes.forEach(n => {
+                if (n.parent !== null && n.parent !== undefined) {
+                    if (!tree[n.parent]) tree[n.parent] = [];
+                    tree[n.parent].push(n.id);
+                }
+            });
+
+            const LEVEL_H = 100, NODE_R = 26, LEAF_GAP = 80;
+            const pos = {};
+
+            function factorial(x) {
+                let r = 1;
+                for (let i = 2; i <= x; i++) r *= i;
+                return r;
+            }
+
+            const totalLeaves = factorial(s.n - 1);
+            const totalWidth = totalLeaves * LEAF_GAP + LEAF_GAP;
+
+            function tspPathToX(path) {
+                let offset = 0;
+                const visited = new Set();
+                visited.add(0);
+                for (let step = 1; step < path.length; step++) {
+                    const chosen = path[step];
+                    let smaller = 0;
+                    for (let c = 0; c < chosen; c++) {
+                        if (!visited.has(c)) smaller++;
+                    }
+                    const remainingAfter = s.n - step - 1;
+                    offset += smaller * factorial(remainingAfter);
+                    visited.add(chosen);
+                }
+                const remaining = s.n - path.length;
+                const subtreeWidth = factorial(remaining) * LEAF_GAP;
+                return offset * LEAF_GAP + subtreeWidth / 2;
+            }
+
+            for (const n of nodes) {
+                pos[n.id] = {
+                    x: tspPathToX(n.path),
+                    y: n.level * LEVEL_H + 50
+                };
+            }
+
+            const xs = Object.values(pos).map(p => p.x);
+            const minX = Math.min(...xs), maxX = Math.max(...xs);
+            const contentW = maxX - minX;
+            const minView = 400;
+            const maxView = Math.max(minView, s.n * LEAF_GAP * 3);
+            const viewW = Math.min(Math.max(contentW + 250, minView), maxView);
+            const centerX = (minX + maxX) / 2;
+            const viewX = Math.max(0, centerX - viewW / 2);
+            const h = s.n * LEVEL_H + 80;
+
+            svg.setAttribute('viewBox', `${viewX} 0 ${viewW} ${h}`);
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', h);
+
+            let html = '';
+
+            const colors = {
+                queued: { fill: '#fff3e0', stroke: '#ff9800', text: '#333' },
+                active: { fill: '#bbdefb', stroke: '#2196f3', text: '#333' },
+                explored: { fill: '#e8f5e9', stroke: '#4caf50', text: '#333' },
+                pruned: { fill: '#ffebee', stroke: '#f44336', text: '#999' },
+                best: { fill: '#fff8e1', stroke: '#ffc107', text: '#333' }
+            };
+
+            for (const n of nodes) {
+                if (n.parent !== null && n.parent !== undefined && pos[n.parent] && pos[n.id]) {
+                    const px = pos[n.parent].x, py = pos[n.parent].y;
+                    const cx = pos[n.id].x, cy = pos[n.id].y;
+                    const mx = (px + cx) / 2, my = (py + cy) / 2;
+                    const ec = n.state === 'pruned' ? '#f44336' : n.state === 'best' ? '#ffc107' : '#888';
+                    const ew = n.state === 'best' ? 2.5 : 1.5;
+                    html += `<line x1="${px}" y1="${py + NODE_R}" x2="${cx}" y2="${cy - NODE_R}" stroke="${ec}" stroke-width="${ew}"/>`;
+                    if (n.branchLabel !== '') {
+                        html += `<text x="${mx}" y="${my - 5}" text-anchor="middle" font-size="11" fill="${ec}" font-weight="600">${n.branchLabel}</text>`;
+                    }
+                }
+            }
+
+            for (const n of nodes) {
+                const p = pos[n.id];
+                if (!p) continue;
+                const c = colors[n.state] || colors.queued;
+                const sw = n.state === 'best' ? 3 : 2;
+                html += `<circle cx="${p.x}" cy="${p.y}" r="${NODE_R}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="${sw}"/>`;
+                const pathStr = n.path.join(',');
+                html += `<text x="${p.x}" y="${p.y + 2}" text-anchor="middle" font-size="11" fill="${c.text}">[${pathStr}]</text>`;
+                html += `<text x="${p.x}" y="${p.y - 10}" text-anchor="middle" font-size="11" fill="${c.stroke}" font-weight="bold">b:${n.bound}</text>`;
+            }
+
+            svg.innerHTML = html;
+            const tspSvgEl = document.getElementById('tspSvg');
+            const tspCtn = document.getElementById('tspCanvasContainer');
+            if (tspSvgEl.clientWidth > 0 && viewW > 0) {
+                const scale = tspSvgEl.clientWidth / viewW;
+                const screenCenter = (centerX - viewX) * scale;
+                tspCtn.scrollLeft = screenCenter - tspCtn.clientWidth / 2;
+            }
+        }
+
+        function getTSPMatrix() {
+            const n = parseInt(document.getElementById('tspCityCount').value) || 4;
+            const matrix = [];
+            for (let i = 0; i < n; i++) {
+                const row = [];
+                for (let j = 0; j < n; j++) {
+                    if (i === j) { row.push(TSP_INF); continue; }
+                    const input = document.getElementById(`tspCell_${i}_${j}`);
+                    const val = input ? parseInt(input.value) : 0;
+                    row.push(isNaN(val) ? TSP_INF : val);
+                }
+                matrix.push(row);
+            }
+            return matrix;
+        }
+
+        function tspUpdateMatrixSize() {
+            const n = parseInt(document.getElementById('tspCityCount').value) || 4;
+            buildTSPMatrixUI(n);
+            tspReset();
+        }
+
+        function buildTSPMatrixUI(n, values = null) {
+            const thead = document.getElementById('tspMatrixHead');
+            const tbody = document.getElementById('tspMatrixBody');
+
+            let headHtml = '<tr><th></th>';
+            for (let j = 0; j < n; j++) headHtml += `<th>城市${j}</th>`;
+            headHtml += '</tr>';
+            thead.innerHTML = headHtml;
+
+            let bodyHtml = '';
+            for (let i = 0; i < n; i++) {
+                bodyHtml += `<tr><th>城市${i}</th>`;
+                for (let j = 0; j < n; j++) {
+                    if (i === j) {
+                        bodyHtml += '<td style="color:#999;">∞</td>';
+                    } else {
+                        const val = values ? values[i][j] : '';
+                        bodyHtml += `<td><input id="tspCell_${i}_${j}" type="number" value="${val}" min="0"></td>`;
+                    }
+                }
+                bodyHtml += '</tr>';
+            }
+            tbody.innerHTML = bodyHtml;
+            tspReset();
+        }
+
+        function setTSPExample(type) {
+            let n, values;
+            switch (type) {
+                case '4cities':
+                    n = 4;
+                    values = [[TSP_INF,10,15,20],[10,TSP_INF,35,25],[15,35,TSP_INF,30],[20,25,30,TSP_INF]];
+                    break;
+                case '4cities2':
+                    n = 4;
+                    values = [[TSP_INF,16,4,8],[16,TSP_INF,11,19],[4,11,TSP_INF,14],[8,19,14,TSP_INF]];
+                    break;
+                case '5cities':
+                    n = 5;
+                    values = [[TSP_INF,10,8,12,14],[10,TSP_INF,6,9,15],[8,6,TSP_INF,11,7],[12,9,11,TSP_INF,5],[14,15,7,5,TSP_INF]];
+                    break;
+                default:
+                    n = 4;
+                    values = [[TSP_INF,10,15,20],[10,TSP_INF,35,25],[15,35,TSP_INF,30],[20,25,30,TSP_INF]];
+            }
+            document.getElementById('tspCityCount').value = n;
+            buildTSPMatrixUI(n, values);
+        }
+
+        // ==================== C++ 代码 ====================
+        const knapsackCPP = `<span class="code-cmt">// 0/1背包问题 — 分支限界法 (优先队列 / 最佳优先搜索)</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;iostream&gt;</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;queue&gt;</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;vector&gt;</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;algorithm&gt;</span>
+<span class="code-kw">using namespace std</span>;
+
+<span class="code-cmt">// 物品结构体</span>
+<span class="code-kw">struct</span> Item {
+    <span class="code-kw">double</span> w, v;  <span class="code-cmt">// 重量、价值</span>
+    <span class="code-kw">int</span> idx;
+    <span class="code-kw">double</span> ratio() <span class="code-kw">const</span> { <span class="code-kw">return</span> v / w; }
+};
+
+<span class="code-cmt">// 搜索树节点</span>
+<span class="code-kw">struct</span> Node {
+    <span class="code-kw">int</span> level;          <span class="code-cmt">// 当前考虑的物品索引</span>
+    <span class="code-kw">double</span> weight, value; <span class="code-cmt">// 当前重量、价值</span>
+    <span class="code-kw">double</span> bound;        <span class="code-cmt">// 价值上界</span>
+    vector&lt;<span class="code-kw">int</span>&gt; included; <span class="code-cmt">// 已装入的物品</span>
+
+    <span class="code-cmt">// 最大堆（上界大的优先）</span>
+    <span class="code-kw">bool operator</span>&lt;(<span class="code-kw">const</span> Node&amp; other) <span class="code-kw">const</span> {
+        <span class="code-kw">return</span> bound &lt; other.bound;
+    }
+};
+
+<span class="code-cmt">// 限界函数：分数背包上界</span>
+<span class="code-kw">double</span> <span class="code-fn">calcBound</span>(<span class="code-kw">const</span> Node&amp; node, <span class="code-kw">const</span> vector&lt;Item&gt;&amp; items, <span class="code-kw">double</span> cap) {
+    <span class="code-kw">if</span> (node.weight &gt;= cap) <span class="code-kw">return</span> 0;
+    <span class="code-kw">double</span> bound = node.value;
+    <span class="code-kw">double</span> w = node.weight;
+    <span class="code-kw">for</span> (<span class="code-kw">int</span> i = node.level + 1; i &lt; items.size(); i++) {
+        <span class="code-kw">if</span> (w + items[i].w &lt;= cap) {
+            w += items[i].w;
+            bound += items[i].v;
+        } <span class="code-kw">else</span> {
+            bound += (cap - w) * items[i].ratio();
+            <span class="code-kw">break</span>;
+        }
+    }
+    <span class="code-kw">return</span> bound;
+}
+
+<span class="code-cmt">// 分支限界法求解0/1背包</span>
+<span class="code-kw">double</span> <span class="code-fn">knapsackBB</span>(vector&lt;Item&gt;&amp; items, <span class="code-kw">double</span> capacity, vector&lt;<span class="code-kw">int</span>&gt;&amp; bestItems) {
+    <span class="code-cmt">// 按价值/重量比降序排列</span>
+    sort(items.begin(), items.end(), [](<span class="code-kw">const</span> Item&amp; a, <span class="code-kw">const</span> Item&amp; b) {
+        <span class="code-kw">return</span> a.ratio() &gt; b.ratio();
+    });
+
+    priority_queue&lt;Node&gt; pq;
+    Node root{-1, 0, 0, 0, {}};
+    root.bound = calcBound(root, items, capacity);
+    pq.push(root);
+
+    <span class="code-kw">double</span> bestValue = 0;
+    <span class="code-kw">int</span> n = items.size();
+
+    <span class="code-kw">while</span> (!pq.empty()) {
+        Node node = pq.top(); pq.pop();
+
+        <span class="code-cmt">// 上界不如当前最优，剪枝</span>
+        <span class="code-kw">if</span> (node.bound &lt;= bestValue) <span class="code-kw">continue</span>;
+
+        <span class="code-kw">int</span> nextLevel = node.level + 1;
+        <span class="code-kw">if</span> (nextLevel &gt;= n) {
+            <span class="code-kw">if</span> (node.value &gt; bestValue) {
+                bestValue = node.value;
+                bestItems = node.included;
+            }
+            <span class="code-kw">continue</span>;
+        }
+
+        <span class="code-cmt">// 左子节点：放入当前物品</span>
+        Node left = node;
+        left.level = nextLevel;
+        left.weight += items[nextLevel].w;
+        left.value += items[nextLevel].v;
+        left.included.push_back(items[nextLevel].idx);
+
+        <span class="code-kw">if</span> (left.weight &lt;= capacity) {
+            left.bound = calcBound(left, items, capacity);
+            <span class="code-kw">if</span> (left.bound &gt; bestValue) pq.push(left);
+        }
+
+        <span class="code-cmt">// 右子节点：不放入当前物品</span>
+        Node right = node;
+        right.level = nextLevel;
+        right.bound = calcBound(right, items, capacity);
+        <span class="code-kw">if</span> (right.bound &gt; bestValue) pq.push(right);
+    }
+    <span class="code-kw">return</span> bestValue;
+}
+
+<span class="code-kw">int</span> <span class="code-fn">main</span>() {
+    vector&lt;Item&gt; items = {{2,40,0},{3,50,1},{4,70,2},{5,100,3}};
+    <span class="code-kw">double</span> capacity = 10;
+    vector&lt;<span class="code-kw">int</span>&gt; bestItems;
+
+    <span class="code-kw">double</span> best = knapsackBB(items, capacity, bestItems);
+    cout &lt;&lt; <span class="code-str">"最优价值: "</span> &lt;&lt; best &lt;&lt; endl;
+    cout &lt;&lt; <span class="code-str">"装入物品: "</span>;
+    <span class="code-kw">for</span> (<span class="code-kw">int</span> idx : bestItems) cout &lt;&lt; idx &lt;&lt; <span class="code-str">" "</span>;
+    cout &lt;&lt; endl;
+    <span class="code-kw">return</span> 0;
+}`;
+
+        const tspCPP = `<span class="code-cmt">// 旅行商问题(TSP) — 分支限界法 (优先队列 + 归约矩阵)</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;iostream&gt;</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;queue&gt;</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;vector&gt;</span>
+<span class="code-kw">#include</span> <span class="code-str">&lt;climits&gt;</span>
+<span class="code-kw">using namespace std</span>;
+
+<span class="code-kw">const int</span> INF = <span class="code-num">999999</span>;
+
+<span class="code-cmt">// 搜索树节点</span>
+<span class="code-kw">struct</span> TSPNode {
+    vector&lt;vector&lt;<span class="code-kw">int</span>&gt;&gt; matrix;  <span class="code-cmt">// 归约后的代价矩阵</span>
+    vector&lt;<span class="code-kw">int</span>&gt; path;            <span class="code-cmt">// 当前部分路径</span>
+    <span class="code-kw">int</span> cost;                    <span class="code-cmt">// 当前路径代价</span>
+    <span class="code-kw">int</span> bound;                   <span class="code-cmt">// 下界</span>
+    <span class="code-kw">int</span> level;                   <span class="code-cmt">// 已访问城市数 - 1</span>
+
+    <span class="code-cmt">// 最小堆（下界小的优先）</span>
+    <span class="code-kw">bool operator</span>&lt;(<span class="code-kw">const</span> TSPNode&amp; other) <span class="code-kw">const</span> {
+        <span class="code-kw">return</span> bound &gt; other.bound;
+    }
+};
+
+<span class="code-cmt">// 归约矩阵，返回归约常量之和</span>
+<span class="code-kw">int</span> <span class="code-fn">reduceMatrix</span>(vector&lt;vector&lt;<span class="code-kw">int</span>&gt;&gt;&amp; m, <span class="code-kw">int</span> n) {
+    <span class="code-kw">int</span> reduction = 0;
+    <span class="code-cmt">// 行归约</span>
+    <span class="code-kw">for</span> (<span class="code-kw">int</span> i = 0; i &lt; n; i++) {
+        <span class="code-kw">int</span> rmin = INF;
+        <span class="code-kw">for</span> (<span class="code-kw">int</span> j = 0; j &lt; n; j++) rmin = min(rmin, m[i][j]);
+        <span class="code-kw">if</span> (rmin &gt; 0 && rmin &lt; INF) {
+            reduction += rmin;
+            <span class="code-kw">for</span> (<span class="code-kw">int</span> j = 0; j &lt; n; j++)
+                <span class="code-kw">if</span> (m[i][j] &lt; INF) m[i][j] -= rmin;
+        }
+    }
+    <span class="code-cmt">// 列归约</span>
+    <span class="code-kw">for</span> (<span class="code-kw">int</span> j = 0; j &lt; n; j++) {
+        <span class="code-kw">int</span> cmin = INF;
+        <span class="code-kw">for</span> (<span class="code-kw">int</span> i = 0; i &lt; n; i++) cmin = min(cmin, m[i][j]);
+        <span class="code-kw">if</span> (cmin &gt; 0 && cmin &lt; INF) {
+            reduction += cmin;
+            <span class="code-kw">for</span> (<span class="code-kw">int</span> i = 0; i &lt; n; i++)
+                <span class="code-kw">if</span> (m[i][j] &lt; INF) m[i][j] -= cmin;
+        }
+    }
+    <span class="code-kw">return</span> reduction;
+}
+
+<span class="code-cmt">// 分支限界法求解TSP</span>
+<span class="code-kw">int</span> <span class="code-fn">tspBB</span>(<span class="code-kw">const</span> vector&lt;vector&lt;<span class="code-kw">int</span>&gt;&gt;&amp; costMatrix, vector&lt;<span class="code-kw">int</span>&gt;&amp; bestTour) {
+    <span class="code-kw">int</span> n = costMatrix.size();
+    priority_queue&lt;TSPNode&gt; pq;
+
+    <span class="code-cmt">// 根节点：从城市0出发</span>
+    TSPNode root;
+    root.matrix = costMatrix;
+    root.path = {0};
+    root.cost = 0;
+    root.level = 0;
+    root.bound = reduceMatrix(root.matrix, n);
+    pq.push(root);
+
+    <span class="code-kw">int</span> bestCost = INF;
+
+    <span class="code-kw">while</span> (!pq.empty()) {
+        TSPNode node = pq.top(); pq.pop();
+
+        <span class="code-cmt">// 下界不优于最优，剪枝</span>
+        <span class="code-kw">if</span> (node.bound &gt;= bestCost) <span class="code-kw">continue</span>;
+
+        <span class="code-cmt">// 到达叶节点（访问了所有城市）</span>
+        <span class="code-kw">if</span> (node.level == n - 1) {
+            <span class="code-kw">int</span> last = node.path.back();
+            <span class="code-kw">int</span> total = node.cost + node.matrix[last][0];
+            <span class="code-kw">if</span> (total &lt; bestCost) {
+                bestCost = total;
+                bestTour = node.path;
+                bestTour.push_back(0);
+            }
+            <span class="code-kw">continue</span>;
+        }
+
+        <span class="code-kw">int</span> curr = node.path.back();
+        <span class="code-cmt">// 分支：选择下一个城市</span>
+        <span class="code-kw">for</span> (<span class="code-kw">int</span> nxt = 0; nxt &lt; n; nxt++) {
+            <span class="code-kw">if</span> (find(node.path.begin(), node.path.end(), nxt) != node.path.end())
+                <span class="code-kw">continue</span>;
+            <span class="code-kw">if</span> (node.matrix[curr][nxt] &gt;= INF) <span class="code-kw">continue</span>;
+
+            TSPNode child = node;
+            child.path.push_back(nxt);
+            child.cost += child.matrix[curr][nxt];
+            child.level = node.level + 1;
+
+            <span class="code-cmt">// 更新矩阵：禁止回路</span>
+            <span class="code-kw">for</span> (<span class="code-kw">int</span> j = 0; j &lt; n; j++)
+                child.matrix[curr][j] = INF;
+            <span class="code-kw">for</span> (<span class="code-kw">int</span> i = 0; i &lt; n; i++)
+                child.matrix[i][nxt] = INF;
+            child.matrix[nxt][child.path[0]] = INF;
+
+            <span class="code-kw">int</span> r = reduceMatrix(child.matrix, n);
+            child.bound = child.cost + r;
+
+            <span class="code-kw">if</span> (child.bound &lt; bestCost) pq.push(child);
+        }
+    }
+    <span class="code-kw">return</span> bestCost;
+}
+
+<span class="code-kw">int</span> <span class="code-fn">main</span>() {
+    <span class="code-cmt">// 4城市代价矩阵（对角线为INF）</span>
+    vector&lt;vector&lt;<span class="code-kw">int</span>&gt;&gt; matrix = {
+        {INF, 10, 15, 20},
+        {10, INF, 35, 25},
+        {15, 35, INF, 30},
+        {20, 25, 30, INF}
+    };
+    vector&lt;<span class="code-kw">int</span>&gt; bestTour;
+
+    <span class="code-kw">int</span> best = tspBB(matrix, bestTour);
+    cout &lt;&lt; <span class="code-str">"最优代价: "</span> &lt;&lt; best &lt;&lt; endl;
+    cout &lt;&lt; <span class="code-str">"最优路径: "</span>;
+    <span class="code-kw">for</span> (<span class="code-kw">int</span> c : bestTour) cout &lt;&lt; c &lt;&lt; <span class="code-str">" → "</span>;
+    cout &lt;&lt; <span class="code-str">"0"</span> &lt;&lt; endl;
+    <span class="code-kw">return</span> 0;
+}`;
+
+        document.getElementById('knapsackCodeSection').innerHTML =
+            '<h3>📝 C++ — 0/1背包分支限界法</h3><pre><code>' + knapsackCPP + '</code></pre>';
+        document.getElementById('tspCodeSection').innerHTML =
+            '<h3>📝 C++ — TSP分支限界法</h3><pre><code>' + tspCPP + '</code></pre>';
+
+        // ==================== Tab 切换 ====================
+        function switchTool(tool, evt) {
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active', 'knapsack-tab', 'tsp-tab'));
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+                if (tool === 'knapsack') evt.target.classList.add('knapsack-tab');
+                if (tool === 'tsp') evt.target.classList.add('tsp-tab');
+            }
+            document.querySelectorAll('.tool-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tool + 'Tool').classList.add('active');
+            localStorage.setItem('bb_current_tool', tool);
+
+            setTimeout(() => {
+                if (tool === 'knapsack' && knapsackState) renderKnapsackTree();
+                if (tool === 'tsp' && tspState) renderTSPTree();
+            }, 100);
+        }
+
+        // ==================== 初始化 ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadKnapsackFromStorage();
+            buildTSPMatrixUI(4);
+            setTSPExample('4cities');
+
+            const savedTool = localStorage.getItem('bb_current_tool');
+            if (savedTool === 'tsp') {
+                document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active', 'knapsack-tab', 'tsp-tab'));
+                const tspTab = document.querySelectorAll('.tool-tab')[1];
+                if (tspTab) { tspTab.classList.add('active', 'tsp-tab'); }
+                document.querySelectorAll('.tool-content').forEach(c => c.classList.remove('active'));
+                document.getElementById('tspTool').classList.add('active');
+            }
+
+            window.initBackgroundLoader({
+                path: 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/bg/',
+                blurAmount: 0,
+                transitionDuration: 400
+            });
+
+            document.getElementById('knapsackCodeSection').innerHTML =
+                '<h3>📝 C++ — 0/1背包分支限界法</h3><pre><code>' + knapsackCPP + '</code></pre>';
+            document.getElementById('tspCodeSection').innerHTML =
+                '<h3>📝 C++ — TSP分支限界法</h3><pre><code>' + tspCPP + '</code></pre>';
+        });
+    </script>
+</body>
+</html>

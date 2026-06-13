@@ -131,7 +131,6 @@
         
         const script = document.createElement('script');
         script.src = `${prefix}scripts/audioPlayer.js`;
-        script.defer = true;
         document.head.appendChild(script);
     }
     

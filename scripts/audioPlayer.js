@@ -3,7 +3,7 @@ class AudioPlayer {
         this.audio = null;
         this.isInitialized = false;
         this.isMuted = false;
-        this.previousVolume = 0.3;
+        this.previousVolume = 0.06;
         this.isFirstLoad = true;
         
         // 音乐列表 - 使用CDN加速的本地音频文件
@@ -40,7 +40,13 @@ class AudioPlayer {
         
         this.audio = new Audio(audioPath);
         this.audio.loop = true;
-        this.audio.volume = 0.06;
+        
+        // 应用恢复的音量状态（必须在 audio 创建之后）
+        if (this.isMuted) {
+            this.audio.volume = 0;
+        } else {
+            this.audio.volume = this.previousVolume;
+        }
         
         this.audio.addEventListener('error', (e) => {
             console.error('音频加载失败');
@@ -347,20 +353,8 @@ class AudioPlayer {
             }
             
             // 恢复音量和静音状态
-            this.previousVolume = state.previousVolume || 0.3;
+            this.previousVolume = state.previousVolume || 0.06;
             this.isMuted = state.isMuted || false;
-            
-            if (this.audio) {
-                if (state.currentTime > 0) {
-                    this.audio.currentTime = state.currentTime;
-                }
-                
-                if (this.isMuted) {
-                    this.audio.volume = 0;
-                } else {
-                    this.audio.volume = state.volume || 0.3;
-                }
-            }
         } catch (error) {
             console.warn('恢复播放状态失败:', error);
         }
@@ -377,20 +371,22 @@ window.addEventListener('headerLoaded', () => {
     }
 });
 
-// 页面加载完成后设置播放器UI
-window.addEventListener('DOMContentLoaded', () => {
+// 页面加载完成后设置播放器UI（兼容动态加载场景：DOMContentLoaded 可能已触发）
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAudioPlayerUI);
+} else {
     setupAudioPlayerUI();
-});
+}
 
 function setupAudioPlayerUI() {
     const playerContainer = document.createElement('div');
     playerContainer.id = 'audio-player';
     playerContainer.innerHTML = `
         <div class="player-controls">
-            <button id="play-pause-btn" class="player-btn">🔇</button>
+            <button id="play-pause-btn" class="player-btn">▶️</button>
             <button id="toggle-audio-source-player" class="player-btn">🎵1</button>
             <div class="volume-slider-container">
-                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.3">
+                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.06">
             </div>
             <span class="music-title">${window.audioPlayer.getCurrentMusicName()}</span>
         </div>
@@ -418,7 +414,7 @@ function setupAudioPlayerUI() {
         if (savedState) {
             try {
                 const state = JSON.parse(savedState);
-                volumeSlider.value = state.isMuted ? 0 : (state.volume || 0.3);
+                volumeSlider.value = state.isMuted ? 0 : (state.volume || 0.06);
             } catch (error) {
                 console.warn('恢复音量滑块状态失败:', error);
             }
@@ -437,7 +433,7 @@ function setupAudioPlayerUI() {
     
     function updatePlayButton() {
         if (!playPauseBtn) return;
-        playPauseBtn.textContent = window.audioPlayer.isPlaying() ? '🔊' : '🔇';
+        playPauseBtn.textContent = window.audioPlayer.isPlaying() ? '⏸️' : '▶️';
     }
     
     updatePlayButton();

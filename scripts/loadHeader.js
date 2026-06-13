@@ -103,7 +103,6 @@ async function loadAudioPlayer(pathPrefix) {
     return new Promise((resolve) => {
         const script = document.createElement('script');
         script.src = `${pathPrefix}scripts/audioPlayer.js`;
-        script.defer = true;
         script.onload = resolve;
         document.head.appendChild(script);
     });
