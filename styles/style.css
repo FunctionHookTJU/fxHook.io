@@ -460,6 +460,10 @@ main {
     border-bottom: none;
 }
 
+.diary-entry.hidden {
+    display: none;
+}
+
 .entry-date {
     font-weight: bold;
     color: var(--primary-color);
