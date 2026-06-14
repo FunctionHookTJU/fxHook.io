@@ -248,7 +248,7 @@
         
         // 日记 MD 加载 + 分页 + 日历
         document.addEventListener('DOMContentLoaded', function() {
-            var entriesPerPage = 6;
+            var entriesPerPage = 8;
             var currentPage = 1;
             var diaryEntries = [];
             var totalPages = 1;
@@ -290,39 +290,42 @@
                     return response.text();
                 })
                 .then(function(mdText) {
-                    // 用 marked 解析 MD → HTML
-                    var html = marked.parse(mdText);
+                    // 在 MD 文本层面按 "## " 切分条目（比解析 HTML 后遍历 DOM 更可靠）
+                    // 先去掉开头的空白，然后按 "\n## " 分割
+                    var trimmed = mdText.replace(/^\s+/, '');
+                    var chunks = trimmed.split(/\r?\n## /);
 
-                    // 创建临时容器提取条目
-                    var tmp = document.createElement('div');
-                    tmp.innerHTML = html;
+                    for (var i = 0; i < chunks.length; i++) {
+                        var chunk = chunks[i];
+                        // 第一行是日期标题（去掉可能的前导 ## 空格）
+                        var lines = chunk.split(/\r?\n/);
+                        var title = lines[0].replace(/^##\s*/, '').trim();
+                        // 剩余部分是正文 Markdown
+                        var bodyMd = lines.slice(1).join('\n').trim();
 
-                    // 按 <h2> 切分条目：遍历所有子元素，遇到 h2 就开始新条目
-                    var entryDate = '';
-                    var entryBody = '';
+                        if (!title) continue;
 
-                    var children = Array.from(tmp.childNodes);
+                        // 用 marked 解析正文为 HTML
+                        var bodyHtml = bodyMd ? marked.parse(bodyMd) : '';
 
-                    for (var i = 0; i < children.length; i++) {
-                        var node = children[i];
-                        if (node.nodeName === 'H2') {
-                            // 保存上一个条目
-                            if (entryDate) {
-                                appendEntry(container, entryDate, entryBody);
-                            }
-                            entryDate = node.textContent.trim();
-                            entryBody = '';
-                        } else if (entryDate) {
-                            // 收集条目正文（包括 HTML 元素和文本）
-                            entryBody += node.outerHTML || node.textContent || '';
-                        }
+                        // 创建条目 DOM
+                        var entryDiv = document.createElement('div');
+                        entryDiv.className = 'diary-entry hidden';
+
+                        var dateDiv = document.createElement('div');
+                        dateDiv.className = 'entry-date';
+                        dateDiv.textContent = title;
+
+                        var contentDiv = document.createElement('div');
+                        contentDiv.className = 'entry-content';
+                        contentDiv.innerHTML = bodyHtml;
+
+                        entryDiv.appendChild(dateDiv);
+                        entryDiv.appendChild(contentDiv);
+                        container.appendChild(entryDiv);
                     }
-                    // 保存最后一个条目
-                    if (entryDate) {
-                        appendEntry(container, entryDate, entryBody);
-                    }
 
-                    // 刷新 diaryEntries 列表并初始化分页
+                    // 刷新 diaryEntries 并初始化分页
                     diaryEntries = Array.from(container.querySelectorAll('.diary-entry'));
                     totalPages = Math.ceil(diaryEntries.length / entriesPerPage);
                     if (totalPages < 1) totalPages = 1;
@@ -332,24 +335,6 @@
                     console.error(err);
                     container.innerHTML = '<p style="color:red;">日记加载失败，请稍后重试。</p>';
                 });
-
-            // 辅助：向容器追加一条日记条目
-            function appendEntry(container, date, bodyHtml) {
-                var entryDiv = document.createElement('div');
-                entryDiv.className = 'diary-entry hidden';
-
-                var dateDiv = document.createElement('div');
-                dateDiv.className = 'entry-date';
-                dateDiv.textContent = date;
-
-                var contentDiv = document.createElement('div');
-                contentDiv.className = 'entry-content';
-                contentDiv.innerHTML = bodyHtml;
-
-                entryDiv.appendChild(dateDiv);
-                entryDiv.appendChild(contentDiv);
-                container.appendChild(entryDiv);
-            }
 
             // ===== 日历功能（不变） =====
             var calendarBody = document.getElementById('calendar-body');
