@@ -43,20 +43,8 @@ if not exist "%REPO_PATH%\.git" (
     exit /b 1
 )
 
-:: 获取当前分支
-if "%BRANCH%"=="" (
-    pushd "%REPO_PATH%"
-    for /f "delims=" %%i in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "BRANCH=%%i"
-    popd
-    if "%BRANCH%"=="" (
-        echo [错误] 无法获取当前分支名称，请使用 -Branch 参数指定
-        exit /b 1
-    )
-    if "%BRANCH%"=="HEAD" (
-        echo [错误] 处于 detached HEAD 状态，请使用 -Branch 参数指定
-        exit /b 1
-    )
-)
+:: 默认分支为 master
+if "%BRANCH%"=="" set "BRANCH=master"
 
 if "%ONCE%"=="1" (set "MODE_TEXT=单次") else (set "MODE_TEXT=持续监听")
 
@@ -151,7 +139,7 @@ echo 用法: auto-pull.cmd [选项]
 echo.
 echo 选项:
 echo   -RepoPath ^<路径^>    Git 仓库本地路径 (默认: 项目根目录)
-echo   -Branch   ^<分支名^>  监听的分支 (默认: 当前分支)
+echo   -Branch   ^<分支名^>  监听的分支 (默认: master)
 echo   -Interval ^<秒数^>   检查间隔 (默认: 60)
 echo   -Remote   ^<名称^>   远程仓库名 (默认: origin)
 echo   -Once               仅执行一次后退出
