@@ -10,10 +10,15 @@
     // 版本号 - 修改此值可强制刷新缓存
     const VERSION = '1.0.0';
     
-    // 检测是否在子文件夹中
-    const path = window.location.pathname;
-    const isSubPage = path.includes('/pages/') || path.includes('/docs/');
-    const prefix = isSubPage ? '../' : '';
+    // 按当前路径的目录深度计算相对前缀，保证在任意层级的子页面里导航链接都能对上站点根目录。
+    // /            -> ''
+    // /pages/x.html -> '../'
+    // /docs/a/x.html -> '../../'
+    const prefix = (function () {
+        const segs = window.location.pathname.split('/').filter(Boolean);
+        segs.pop(); // 去掉文件名，只保留目录层级
+        return segs.map(() => '../').join('');
+    })();
     
     // 导航链接配置（便于维护）
     const navItems = [
