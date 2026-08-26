@@ -49,7 +49,7 @@ async function loadHeader() {
         
         // 动态调整导航链接路径
         if (isInSubfolder) {
-            const navLinks = document.querySelectorAll('.nav-links a');
+            const navLinks = document.querySelectorAll('.nav-links a, .logo');
             navLinks.forEach(link => {
                 const href = link.getAttribute('href');
                 // 只处理相对路径，跳过绝对路径和锚点
@@ -84,7 +84,6 @@ function highlightCurrentPage() {
             (link.getAttribute('href') === 'index.html' && currentPath === '/')) {
             link.style.fontWeight = 'bold';
             link.style.color = '#fff';
-            link.style.textDecoration = 'underline';
         }
     });
 }

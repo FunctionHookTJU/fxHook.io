@@ -57,16 +57,26 @@
     
     // Header HTML模板
     const headerHTML = `
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+            <clipPath id="liquid-tab" clipPathUnits="objectBoundingBox">
+                <path d="M 0.03 0 L 0.97 0 L 0.97 0.05 C 0.92 0.06 0.88 0.13 0.86 0.20 L 0.86 0.78 Q 0.86 1 0.74 1 L 0.26 1 Q 0.14 1 0.14 0.78 L 0.14 0.20 C 0.12 0.13 0.08 0.06 0.03 0.05 Z"/>
+            </clipPath>
+        </defs>
+    </svg>
     <header>
         <nav>
-            <div class="logo">宇佐见函钩</div>
+            <a class="logo" href="${prefix}index.html">
+                <img class="logo-avatar" src="${prefix}assets/images/avatar_me.jpg" alt="宇佐见函钩头像">
+                <span class="logo-text">宇佐见函钩</span>
+            </a>
             <ul class="nav-links">
                 ${generateNavLinks()}
                 <li id="mute-button-container">
-                    <button id="mute-button" class="mute-btn" title="静音/取消静音">🔊</button>
+                    <button id="mute-button" class="icon-btn" title="静音/取消静音" aria-label="静音/取消静音">🔊</button>
                 </li>
                 <li id="toggle-audio-source-container">
-                    <button id="toggle-audio-source" class="audio-source-btn" title="切换音频源">🎵1</button>
+                    <button id="toggle-audio-source" class="icon-btn" title="切换音频源" aria-label="切换音频源">🎵1</button>
                 </li>
             </ul>
             <div class="mobile-menu-btn" id="mobile-menu-btn">
@@ -100,7 +110,6 @@
         const links = document.querySelectorAll('.nav-links a.active');
         links.forEach(link => {
             link.style.fontWeight = 'bold';
-            link.style.textDecoration = 'underline';
         });
     }
     
