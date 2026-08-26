@@ -12,10 +12,8 @@
 (function () {
     'use strict';
 
-    // 图片根路径：用相对路径直接读仓库里的 assets/images，
-    // 不依赖 jsdelivr CDN 的缓存/推送，新增图片放进仓库即显示。
-    // 相对于 pages/picture.html，指向仓库根目录下的 assets/images/。
-    var CDN = '../assets/images/';
+    // 图片 CDN 根路径（与仓库 assets/images 结构一致，推送后 jsdelivr 即可访问）
+    var CDN = 'https://cdn.jsdelivr.net/gh/FunctionHookTJU/fxHook.io@master/assets/images/';
 
     // 每套图的配置
     //  - containerId: 页面里挂载点的 id
@@ -37,6 +35,7 @@
             subdir: 'maodie',
             label: '耄耋图',
             files: [
+                'md_1.gif', 'md_1.jpg', 'md_2.gif', 'md_2.jpg', 'md_3.jpg',
                 'next (1).png', 'next (1).jpeg', 'next (2).jpeg', 'next (3).jpeg',
                 'next (4).jpeg', 'next (1).gif', 'next (5).jpeg', 'next (6).jpeg',
                 'next (7).jpeg', 'next (8).jpeg', 'next (2).gif', 'next (3).gif',
@@ -45,8 +44,7 @@
                 '6.jpg', '7.jpg', '8.jpg', '9.jpg', '10.jpg', '11.jpg', '12.jpg',
                 '13.jpg', '14.jpg', '15.jpg', '16.jpg', '17.jpg', '18.jpg', '19.jpg',
                 '20.jpg', '21.jpg', '22.jpg', '23.jpg', '24.gif', '25.jpg', '26.jpg',
-                '27.jpg', 'hit.gif', '30.jpeg',
-                'md_1.gif', 'md_1.jpg', 'md_2.gif', 'md_2.jpg', 'md_3.jpg'
+                '27.jpg', 'hit.gif', '30.jpeg'
             ]
         },
         {
